@@ -18,15 +18,15 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@task-sync/eslint": "workspace:*",
+    "eslint": "^9.29.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
-    "eslint": "^9.29.0",
     "prettier": "^3.6.1",
     "turbo": "^2.5.4",
-    "typescript": "5.8.2",
-    "@task-sync/eslint": "workspace:*"
+    "typescript": "5.8.2"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.12.3",
   "engines": {
     "node": ">=18"
   }
