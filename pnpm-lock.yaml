@@ -45,6 +45,15 @@ importers:
         specifier: 5.8.2
         version: 5.8.2
 
+  apps/api:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.4
+        version: 24.0.4
+      typescript:
+        specifier: 5.8.2
+        version: 5.8.2
+
   config/eslint:
     devDependencies:
       '@eslint/eslintrc':
