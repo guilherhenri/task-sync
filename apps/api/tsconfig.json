@@ -2,6 +2,7 @@
   "extends": "@task-sync/tsconfig/node",
   "include": ["src"],
   "compilerOptions": {
+    "isolatedModules": true,
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]
