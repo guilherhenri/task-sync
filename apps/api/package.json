@@ -11,6 +11,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.3",
   "devDependencies": {
+    "@task-sync/eslint": "workspace:*",
+    "@task-sync/tsconfig": "workspace:*",
     "@types/node": "^24.0.4",
     "typescript": "5.8.2"
   }

@@ -47,6 +47,12 @@ importers:
 
   apps/api:
     devDependencies:
+      '@task-sync/eslint':
+        specifier: workspace:*
+        version: link:../../config/eslint
+      '@task-sync/tsconfig':
+        specifier: workspace:*
+        version: link:../../config/tsconfig
       '@types/node':
         specifier: ^24.0.4
         version: 24.0.4

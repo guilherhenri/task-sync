@@ -1,0 +1,10 @@
+{
+  "extends": "@task-sync/tsconfig/node",
+  "include": ["src"],
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
