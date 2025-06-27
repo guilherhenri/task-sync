@@ -1,11 +1,12 @@
 {
   "extends": "@task-sync/tsconfig/node",
-  "include": ["src"],
+  "include": ["src", "test"],
   "compilerOptions": {
     "isolatedModules": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@test/*": ["test/*"]
     }
   }
 }
