@@ -1,0 +1,50 @@
+name: Unit and E2E Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      - run: pnpm ci
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .turbo
+          key: ${{ runner.os }}-turbo-${Aldo Costa - 26/06/2025 09:02:24 AM
+          key: ${{ runner.os }}-turbo-${{ hashFiles('**/package-lock.json') }}
+
+  backend:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      - run: pnpm ci
+      - name: Unit tests
+        run: pnpm test --filter=@task-sync/api
