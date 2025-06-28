@@ -22,7 +22,6 @@ export default tseslint.config(
   {
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.recommended,
       ...compat.extends('@rocketseat/eslint-config/react'),
       ...compat.extends('prettier'),
     ],

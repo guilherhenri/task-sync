@@ -1,0 +1,23 @@
+{
+  "name": "@task-sync/api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.3",
+  "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "@task-sync/eslint": "workspace:*",
+    "@task-sync/tsconfig": "workspace:*",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.4",
+    "jest": "^30.0.3",
+    "ts-jest": "^29.4.0",
+    "typescript": "5.8.2"
+  }
+}
