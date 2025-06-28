@@ -1,7 +1,8 @@
-import { Entity } from '@/core/entities/entity'
+import { AggregateRoot } from '@/core/entities/aggregate-root'
 import type { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import type { Optional } from '@/core/types/optional'
 
+import type { TaskAttachment } from './task-attachment'
 import { Slug } from './value-objects/slug'
 import { TaskStatus } from './value-objects/task-status'
 
@@ -19,11 +20,12 @@ export interface TaskProps {
   dueDate: Date | null
   completedAt?: Date
   tags: Array<string>
+  attachments: Array<TaskAttachment>
   createdAt: Date
   updatedAt?: Date
 }
 
-export class Task extends Entity<TaskProps> {
+export class Task extends AggregateRoot<TaskProps> {
   /**
    * Gets the title of the task.
    * @returns {string} The task title.
@@ -120,6 +122,22 @@ export class Task extends Entity<TaskProps> {
     this.props.tags = [...new Set(tags.filter((tag) => tag.trim() !== ''))]
   }
 
+  /**
+   * Gets the list of attachments.
+   * @returns {Array<TaskAttachment>} The attachment list.
+   */
+  get attachments(): Array<TaskAttachment> {
+    return this.props.attachments
+  }
+
+  /**
+   * Sets the attachments list.
+   * @param {Array<TaskAttachment>} attachments - The new attachments list.
+   */
+  set attachments(attachments: Array<TaskAttachment>) {
+    this.props.attachments = attachments
+  }
+
   get createdAt() {
     return this.props.createdAt
   }
@@ -163,7 +181,10 @@ export class Task extends Entity<TaskProps> {
   }
 
   static create(
-    props: Optional<TaskProps, 'slug' | 'status' | 'dueDate' | 'createdAt'>,
+    props: Optional<
+      TaskProps,
+      'slug' | 'status' | 'dueDate' | 'attachments' | 'createdAt'
+    >,
     id?: UniqueEntityID,
   ) {
     const task = new Task(
@@ -173,6 +194,7 @@ export class Task extends Entity<TaskProps> {
         status: new TaskStatus(),
         dueDate: props.dueDate ?? null,
         tags: [...new Set(props.tags.filter((tag) => tag.trim() !== ''))],
+        attachments: props.attachments ?? [],
         createdAt: new Date(),
       },
       id,
