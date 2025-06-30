@@ -1,7 +1,10 @@
+import { createHash, randomUUID } from 'node:crypto'
+
 import { type Either, left, right } from '@/core/either'
 
 import { User } from '../../enterprise/entities/user'
 import type { UsersRepository } from '../repositories/users-repository'
+import type { TokenService } from '../services/token-service'
 
 interface EnrollIdentityUseCaseRequest {
   name: string
@@ -13,7 +16,10 @@ interface EnrollIdentityUseCaseRequest {
 type EnrollIdentityUseCaseResponse = Either<Error, { user: User }>
 
 export class EnrollIdentityUseCase {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private tokenService: TokenService,
+  ) {}
 
   async execute({
     name,
@@ -35,6 +41,21 @@ export class EnrollIdentityUseCase {
     })
 
     await this.usersRepository.create(user)
+
+    const token = randomUUID()
+    const tokenHash = createHash('sha256').update(token).digest('hex')
+    const key = `email:verify:${tokenHash}`
+
+    const twentyFourHoursInSeconds = 24 * 60 * 60
+
+    const value = JSON.stringify({
+      userId: user.id.toString(),
+      expiresAt: new Date(
+        Date.now() + twentyFourHoursInSeconds * 1000,
+      ).toISOString(),
+    })
+
+    await this.tokenService.save(key, value, twentyFourHoursInSeconds)
 
     return right({ user })
   }
