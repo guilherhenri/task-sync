@@ -1,16 +1,22 @@
 import { faker } from '@faker-js/faker'
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
+import { InMemoryTokenService } from '@test/services/in-memory-token-service'
 
 import { EnrollIdentityUseCase } from './enroll-identity'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
+let inMemoryTokenService: InMemoryTokenService
 let sut: EnrollIdentityUseCase
 
 describe('Enroll Identity Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    sut = new EnrollIdentityUseCase(inMemoryUsersRepository)
+    inMemoryTokenService = new InMemoryTokenService()
+    sut = new EnrollIdentityUseCase(
+      inMemoryUsersRepository,
+      inMemoryTokenService,
+    )
   })
 
   it('should be able to enroll identity', async () => {
@@ -28,6 +34,8 @@ describe('Enroll Identity Use-case', () => {
       expect(user.email).toEqual('example@email.com')
       expect(inMemoryUsersRepository.items[0].id).toEqual(user.id)
     }
+
+    expect(inMemoryTokenService.items.size).toEqual(1)
   })
 
   it('should not be able to enroll identity with an email that is already in use', async () => {
