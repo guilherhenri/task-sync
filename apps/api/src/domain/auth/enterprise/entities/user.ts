@@ -96,7 +96,7 @@ export class User extends Entity<UserProps> {
 
   static async create(
     props: Optional<
-      Omit<UserProps, 'passwordHash'>,
+      Omit<UserProps, 'passwordHash' | 'emailVerified'>,
       'avatarUrl' | 'createdAt'
     > & {
       password: string
@@ -108,6 +108,7 @@ export class User extends Entity<UserProps> {
         ...props,
         passwordHash: await PasswordHash.create(props.password),
         avatarUrl: props.avatarUrl ?? null,
+        emailVerified: false,
         createdAt: new Date(),
       },
       id,
