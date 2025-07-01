@@ -11,4 +11,12 @@ export class InMemoryAuthTokensRepository implements AuthTokensRepository {
   async create(authToken: AuthToken): Promise<void> {
     this.items.push(authToken)
   }
+
+  async delete(authToken: AuthToken): Promise<void> {
+    const authTokenIndex = this.items.findIndex(
+      (item) => item.id === authToken.id,
+    )
+
+    this.items.splice(authTokenIndex, 1)
+  }
 }
