@@ -29,13 +29,13 @@ export class AuthenticateSessionUseCase {
     const user = await this.usersRepository.findByEmail(email)
 
     if (!user) {
-      return left(Error('E-mail ou senha inválidos.'))
+      return left(new Error('E-mail ou senha inválidos.'))
     }
 
     const isPasswordMatch = await user.verifyPassword(password)
 
     if (!isPasswordMatch) {
-      return left(Error('E-mail ou senha inválidos.'))
+      return left(new Error('E-mail ou senha inválidos.'))
     }
 
     const accessToken = this.authService.generateAccessToken(user.id.toString())
