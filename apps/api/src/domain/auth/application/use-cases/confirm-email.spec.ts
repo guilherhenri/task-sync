@@ -41,6 +41,7 @@ describe('Confirm Email Use-case', () => {
 
     expect(response.isRight()).toBeTruthy()
     expect(inMemoryUsersRepository.items[0].emailVerified).toBeTruthy()
+    expect(inMemoryTokenService.items.size).toEqual(0)
   })
 
   it("should not be able to confirm a user's email with a invalid token", async () => {

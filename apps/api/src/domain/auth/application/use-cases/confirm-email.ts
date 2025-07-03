@@ -48,6 +48,7 @@ export class ConfirmEmailUseCase {
     user.verifyEmail()
 
     await this.usersRepository.save(user)
+    await this.tokenService.delete(key)
 
     return right({})
   }
