@@ -115,7 +115,7 @@ describe('Renew Token Use-case', () => {
       user.id.toString(),
     )
 
-    const expiresAt = new Date()
+    const expiresAt = new Date(Date.now() - 1000) // past
 
     const authToken = AuthToken.create({
       userId: user.id,
@@ -124,9 +124,6 @@ describe('Renew Token Use-case', () => {
     })
 
     inMemoryAuthTokensRepository.items.push(authToken)
-
-    // Wait for token expires
-    await new Promise((resolve) => setTimeout(resolve, 100))
 
     const response = await sut.execute({
       userId: user.id.toString(),
