@@ -22,4 +22,14 @@ export class InMemoryTokenService implements TokenService {
   async delete(key: string): Promise<void> {
     this.items.delete(key)
   }
+
+  async revokeTokensByUserId(userId: string): Promise<void> {
+    const pattern = new RegExp(`"userId"\\s*:\\s*"${userId}"`)
+
+    for (const [key, item] of this.items.entries()) {
+      if (pattern.test(item.value)) {
+        this.items.delete(key)
+      }
+    }
+  }
 }
