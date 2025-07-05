@@ -1,7 +1,8 @@
-import { Entity } from '@/core/entities/entity'
+import { AggregateRoot } from '@/core/entities/aggregate-root'
 import type { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import type { Optional } from '@/core/types/optional'
 
+import { UserRegisteredEvent } from '../events/user-registered-event'
 import { PasswordHash } from './value-objects/password-hash'
 
 export interface UserProps {
@@ -14,7 +15,7 @@ export interface UserProps {
   updatedAt?: Date
 }
 
-export class User extends Entity<UserProps> {
+export class User extends AggregateRoot<UserProps> {
   get name() {
     return this.props.name
   }
@@ -113,6 +114,12 @@ export class User extends Entity<UserProps> {
       },
       id,
     )
+
+    const isNewUser = !id
+
+    if (isNewUser) {
+      user.addDomainEvent(new UserRegisteredEvent(user))
+    }
 
     return user
   }
