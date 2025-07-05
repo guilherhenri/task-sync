@@ -8,13 +8,11 @@ import type { Optional } from '@/core/types/optional'
 import { EmailUpdateVerificationRequestedEvent } from '../events/email-update-verification-requested-event'
 import { EmailVerificationRequestedEvent } from '../events/email-verification-requested-event'
 import { PasswordRecoveryRequestedEvent } from '../events/password-recovery-requested-event'
-import { PasswordResetEvent } from '../events/password-reset-event'
 
 export type TokenType =
   | 'email:verify'
   | 'email:update:verify'
   | 'password:recovery'
-  | 'password:reset'
 
 export interface VerificationTokenProps {
   userId: UniqueEntityID
@@ -31,7 +29,6 @@ const eventMap: Record<
   'email:verify': EmailVerificationRequestedEvent,
   'email:update:verify': EmailUpdateVerificationRequestedEvent,
   'password:recovery': PasswordRecoveryRequestedEvent,
-  'password:reset': PasswordResetEvent,
 }
 
 export class VerificationToken extends AggregateRoot<VerificationTokenProps> {
