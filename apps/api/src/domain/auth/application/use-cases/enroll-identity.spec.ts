@@ -1,25 +1,39 @@
 import { faker } from '@faker-js/faker'
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
-import { InMemoryTokenService } from '@test/services/in-memory-token-service'
+import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
+import { DomainEvents } from '@/core/events/domain-events'
+
+import { EmailVerificationRequestedEvent } from '../../enterprise/events/email-verification-requested-event'
+import { UserRegisteredEvent } from '../../enterprise/events/user-registered-event'
 import { EnrollIdentityUseCase } from './enroll-identity'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let inMemoryTokenService: InMemoryTokenService
+let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let sut: EnrollIdentityUseCase
 
 describe('Enroll Identity Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    inMemoryTokenService = new InMemoryTokenService()
+    inMemoryVerificationTokensRepository =
+      new InMemoryVerificationTokensRepository()
     sut = new EnrollIdentityUseCase(
       inMemoryUsersRepository,
-      inMemoryTokenService,
+      inMemoryVerificationTokensRepository,
     )
   })
 
   it('should be able to enroll identity', async () => {
+    const userRegisteredEventSpy = jest.fn()
+    const emailVerificationRequestedEventSpy = jest.fn()
+
+    DomainEvents.register(userRegisteredEventSpy, UserRegisteredEvent.name)
+    DomainEvents.register(
+      emailVerificationRequestedEventSpy,
+      EmailVerificationRequestedEvent.name,
+    )
+
     const response = await sut.execute({
       name: 'Name Test',
       email: 'example@email.com',
@@ -35,7 +49,10 @@ describe('Enroll Identity Use-case', () => {
       expect(inMemoryUsersRepository.items[0].id).toEqual(user.id)
     }
 
-    expect(inMemoryTokenService.items.size).toEqual(1)
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(1)
+
+    expect(userRegisteredEventSpy).toHaveBeenCalled()
+    expect(emailVerificationRequestedEventSpy).toHaveBeenCalled()
   })
 
   it('should not be able to enroll identity with an email that is already in use', async () => {
