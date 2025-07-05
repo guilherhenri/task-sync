@@ -1,7 +1,9 @@
 import { type Either, left, right } from '@/core/either'
 
 import { PasswordHash } from '../../enterprise/entities/value-objects/password-hash'
+import { VerificationToken } from '../../enterprise/entities/verification-token'
 import type { UsersRepository } from '../repositories/users-repository'
+import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
 interface RefineProfileUseCaseRequest {
   userId: string
@@ -13,7 +15,10 @@ interface RefineProfileUseCaseRequest {
 type RefineProfileUseCaseResponse = Either<Error, unknown>
 
 export class RefineProfileUseCase {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private verificationTokensRepository: VerificationTokensRepository,
+  ) {}
 
   async execute({
     userId,
@@ -27,12 +32,19 @@ export class RefineProfileUseCase {
       return left(new Error('Usuário não encontrado.'))
     }
 
+    let verificationToken: VerificationToken | null = null
+
     if (user.email !== email) {
       const emailAlreadyInUse = await this.usersRepository.findByEmail(email)
 
       if (emailAlreadyInUse) {
         return left(new Error('Este e-mail já está em uso.'))
       }
+
+      verificationToken = VerificationToken.create({
+        userId: user.id,
+        type: 'email:update:verify',
+      })
     }
 
     if (newPassword) {
@@ -43,7 +55,11 @@ export class RefineProfileUseCase {
     user.name = name
     user.email = email
 
-    await this.usersRepository.save(user)
+    await Promise.all([
+      this.usersRepository.save(user),
+      verificationToken &&
+        this.verificationTokensRepository.save(verificationToken),
+    ])
 
     return right({})
   }
