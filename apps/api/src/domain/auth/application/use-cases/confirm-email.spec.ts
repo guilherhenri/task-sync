@@ -1,67 +1,86 @@
 import { makeUser } from '@test/factories/make-user'
+import { makeVerificationToken } from '@test/factories/make-verification-token'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
-import { InMemoryTokenService } from '@test/services/in-memory-token-service'
-import { createHash, randomUUID } from 'crypto'
+import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
+
+import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 
 import { ConfirmEmailUseCase } from './confirm-email'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let inMemoryTokenService: InMemoryTokenService
+let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let sut: ConfirmEmailUseCase
 
 describe('Confirm Email Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    inMemoryTokenService = new InMemoryTokenService()
-    sut = new ConfirmEmailUseCase(inMemoryUsersRepository, inMemoryTokenService)
+    inMemoryVerificationTokensRepository =
+      new InMemoryVerificationTokensRepository()
+    sut = new ConfirmEmailUseCase(
+      inMemoryUsersRepository,
+      inMemoryVerificationTokensRepository,
+    )
   })
 
-  it("should be able to confirm a user's email with a valid token", async () => {
+  it('should be able to confirm a email with a valid token', async () => {
     const user = await makeUser()
     inMemoryUsersRepository.items.push(user)
 
-    const token = randomUUID()
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-    const key = `email:verify:${tokenHash}`
-
-    const twentyFourHoursInSeconds = 24 * 60 * 60
-
-    const value = JSON.stringify({
-      userId: user.id.toString(),
-      expiresAt: new Date(
-        Date.now() + twentyFourHoursInSeconds * 1000,
-      ).toISOString(),
+    const verificationToken = makeVerificationToken({
+      userId: user.id,
+      type: 'email:verify',
     })
-
-    inMemoryTokenService.save(key, value, twentyFourHoursInSeconds)
+    inMemoryVerificationTokensRepository.save(verificationToken)
 
     const response = await sut.execute({
-      token,
+      token: verificationToken.token,
     })
 
     expect(response.isRight()).toBeTruthy()
     expect(inMemoryUsersRepository.items[0].emailVerified).toBeTruthy()
-    expect(inMemoryTokenService.items.size).toEqual(0)
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
 
-  it("should not be able to confirm a user's email with a invalid token", async () => {
+  it('should be able to confirm a updated email with a valid token', async () => {
     const user = await makeUser()
     inMemoryUsersRepository.items.push(user)
 
-    const token = randomUUID()
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-    const key = `email:verify:${tokenHash}`
+    const verificationToken = makeVerificationToken({
+      userId: user.id,
+      type: 'email:update:verify',
+    })
+    inMemoryVerificationTokensRepository.save(verificationToken)
 
-    const twentyFourHoursInSeconds = 24 * 60 * 60
-
-    const value = JSON.stringify({
-      userId: user.id.toString(),
-      expiresAt: new Date(
-        Date.now() + twentyFourHoursInSeconds * 1000,
-      ).toISOString(),
+    const response = await sut.execute({
+      token: verificationToken.token,
     })
 
-    inMemoryTokenService.save(key, value, twentyFourHoursInSeconds)
+    expect(response.isRight()).toBeTruthy()
+    expect(inMemoryUsersRepository.items[0].emailVerified).toBeTruthy()
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
+  })
+
+  it('should not be able to confirm a email with a token that does not exist', async () => {
+    const response = await sut.execute({
+      token: 'invalid-token',
+    })
+
+    expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toHaveProperty('message', 'Token não encontrado.')
+  })
+
+  it('should not be able to confirm a email with an invalid token', async () => {
+    const user = await makeUser()
+    inMemoryUsersRepository.items.push(user)
+
+    const verificationToken = makeVerificationToken({
+      userId: user.id,
+      type: 'email:verify',
+    })
+
+    jest
+      .spyOn(inMemoryVerificationTokensRepository, 'get')
+      .mockImplementation(async () => verificationToken)
 
     const response = await sut.execute({
       token: 'invalid-token',
@@ -72,31 +91,25 @@ describe('Confirm Email Use-case', () => {
     expect(inMemoryUsersRepository.items[0].emailVerified).toBeFalsy()
   })
 
-  it("should not be able to confirm a user's email with a expired token", async () => {
+  it('should not be able to confirm a email with a expired token', async () => {
     const user = await makeUser()
     inMemoryUsersRepository.items.push(user)
 
-    const token = randomUUID()
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-    const key = `email:verify:${tokenHash}`
+    const oneSecondAgo = new Date(Date.now() - 1000)
 
-    const ttlSeconds = 1
-
-    const value = JSON.stringify({
-      userId: user.id.toString(),
-      expiresAt: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+    const verificationToken = makeVerificationToken({
+      userId: user.id,
+      type: 'email:verify',
+      expiresAt: oneSecondAgo,
     })
-
-    inMemoryTokenService.save(key, value, ttlSeconds)
-
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    inMemoryVerificationTokensRepository.save(verificationToken)
 
     jest
-      .spyOn(inMemoryTokenService, 'get')
-      .mockImplementation(async () => value)
+      .spyOn(inMemoryVerificationTokensRepository, 'get')
+      .mockImplementation(async () => verificationToken)
 
     const response = await sut.execute({
-      token,
+      token: verificationToken.token,
     })
 
     expect(response.isLeft()).toBeTruthy()
@@ -105,23 +118,13 @@ describe('Confirm Email Use-case', () => {
   })
 
   it('should not be able to confirm an email from a user that does not exist', async () => {
-    const token = randomUUID()
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-    const key = `email:verify:${tokenHash}`
-
-    const twentyFourHoursInSeconds = 24 * 60 * 60
-
-    const value = JSON.stringify({
-      userId: 'user-1',
-      expiresAt: new Date(
-        Date.now() + twentyFourHoursInSeconds * 1000,
-      ).toISOString(),
+    const verificationToken = makeVerificationToken({
+      userId: new UniqueEntityID('user-id'),
     })
-
-    inMemoryTokenService.save(key, value, twentyFourHoursInSeconds)
+    inMemoryVerificationTokensRepository.save(verificationToken)
 
     const response = await sut.execute({
-      token,
+      token: verificationToken.token,
     })
 
     expect(response.isLeft()).toBeTruthy()
