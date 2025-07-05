@@ -1,6 +1,6 @@
 import { type Either, right } from '@/core/either'
 
-import type { TokenService } from '../services/token-service'
+import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
 interface RevokeTokensUseCaseRequest {
   userId: string
@@ -9,12 +9,14 @@ interface RevokeTokensUseCaseRequest {
 type RevokeTokensUseCaseResponse = Either<void, unknown>
 
 export class RevokeTokensUseCase {
-  constructor(private tokenService: TokenService) {}
+  constructor(
+    private verificationTokensRepository: VerificationTokensRepository,
+  ) {}
 
   async execute({
     userId,
   }: RevokeTokensUseCaseRequest): Promise<RevokeTokensUseCaseResponse> {
-    await this.tokenService.revokeTokensByUserId(userId)
+    await this.verificationTokensRepository.revokeTokensByUserId(userId)
 
     return right({})
   }
