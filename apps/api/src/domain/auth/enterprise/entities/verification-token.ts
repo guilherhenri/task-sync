@@ -16,7 +16,7 @@ export type TokenType =
   | 'password:recovery'
   | 'password:reset'
 
-interface VerificationTokenProps {
+export interface VerificationTokenProps {
   userId: UniqueEntityID
   token: string
   tokenHash: string
