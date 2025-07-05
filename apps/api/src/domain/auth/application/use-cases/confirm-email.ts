@@ -1,9 +1,7 @@
-import { createHash } from 'crypto'
-
 import { type Either, left, right } from '@/core/either'
 
 import type { UsersRepository } from '../repositories/users-repository'
-import type { TokenService } from '../services/token-service'
+import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
 interface ConfirmEmailUseCaseRequest {
   token: string
@@ -14,41 +12,51 @@ type ConfirmEmailUseCaseResponse = Either<Error, unknown>
 export class ConfirmEmailUseCase {
   constructor(
     private usersRepository: UsersRepository,
-    private tokenService: TokenService,
+    private verificationTokensRepository: VerificationTokensRepository,
   ) {}
 
   async execute({
     token,
   }: ConfirmEmailUseCaseRequest): Promise<ConfirmEmailUseCaseResponse> {
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-    const key = `email:verify:${tokenHash}`
+    const verificationToken =
+      (await this.verificationTokensRepository.get(token, 'email:verify')) ??
+      (await this.verificationTokensRepository.get(
+        token,
+        'email:update:verify',
+      ))
 
-    const value = await this.tokenService.get(key)
+    if (!verificationToken) {
+      return left(new Error('Token não encontrado.'))
+    }
 
-    if (!value) {
+    if (!verificationToken.verifyToken(token)) {
+      await this.verificationTokensRepository.delete(verificationToken)
+
       return left(new Error('Token inválido.'))
     }
 
-    const data = JSON.parse(value) as { userId: string; expiresAt: string }
-
-    if (new Date(data.expiresAt) < new Date()) {
-      await this.tokenService.delete(key)
+    if (verificationToken.isExpired()) {
+      await this.verificationTokensRepository.delete(verificationToken)
 
       return left(new Error('Token expirado.'))
     }
 
-    const user = await this.usersRepository.findById(data.userId)
+    const user = await this.usersRepository.findById(
+      verificationToken.userId.toString(),
+    )
 
     if (!user) {
-      await this.tokenService.delete(key)
+      await this.verificationTokensRepository.delete(verificationToken)
 
       return left(new Error('Usuário não encontrado.'))
     }
 
     user.verifyEmail()
 
-    await this.usersRepository.save(user)
-    await this.tokenService.delete(key)
+    await Promise.all([
+      this.usersRepository.save(user),
+      this.verificationTokensRepository.delete(verificationToken),
+    ])
 
     return right({})
   }
