@@ -1,17 +1,26 @@
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
+import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
+import { DomainEvents } from '@/core/events/domain-events'
 
+import { EmailUpdateVerificationRequestedEvent } from '../../enterprise/events/email-update-verification-requested-event'
 import { RefineProfileUseCase } from './refine-profile'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
+let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let sut: RefineProfileUseCase
 
 describe('Refine Profile Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    sut = new RefineProfileUseCase(inMemoryUsersRepository)
+    inMemoryVerificationTokensRepository =
+      new InMemoryVerificationTokensRepository()
+    sut = new RefineProfileUseCase(
+      inMemoryUsersRepository,
+      inMemoryVerificationTokensRepository,
+    )
   })
 
   it('should be able to update a valid user', async () => {
@@ -21,6 +30,12 @@ describe('Refine Profile Use-case', () => {
       password: '123456',
     })
     inMemoryUsersRepository.items.push(user)
+
+    const emailUpdateVerificationRequestedEventSpy = jest.fn()
+    DomainEvents.register(
+      emailUpdateVerificationRequestedEventSpy,
+      EmailUpdateVerificationRequestedEvent.name,
+    )
 
     const response = await sut.execute({
       userId: user.id.toString(),
@@ -39,6 +54,9 @@ describe('Refine Profile Use-case', () => {
     expect(
       await inMemoryUsersRepository.items[0].verifyPassword('654321'),
     ).toBeTruthy()
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(1)
+
+    expect(emailUpdateVerificationRequestedEventSpy).toHaveBeenCalled()
   })
 
   it('should be able to update a user without change the password', async () => {
