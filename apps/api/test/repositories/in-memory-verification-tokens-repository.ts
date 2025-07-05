@@ -45,7 +45,7 @@ export class InMemoryVerificationTokensRepository
 
   async revokeTokensByUserId(userId: string): Promise<void> {
     for (const [key, item] of this.items.entries()) {
-      if (item.value.id.toString() === userId) {
+      if (item.value.userId.toString() === userId) {
         this.items.delete(key)
       }
     }
