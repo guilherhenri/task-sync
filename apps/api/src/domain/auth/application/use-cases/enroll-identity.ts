@@ -1,10 +1,9 @@
-import { createHash, randomUUID } from 'node:crypto'
-
 import { type Either, left, right } from '@/core/either'
 
 import { User } from '../../enterprise/entities/user'
+import { VerificationToken } from '../../enterprise/entities/verification-token'
 import type { UsersRepository } from '../repositories/users-repository'
-import type { TokenService } from '../services/token-service'
+import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
 interface EnrollIdentityUseCaseRequest {
   name: string
@@ -18,7 +17,7 @@ type EnrollIdentityUseCaseResponse = Either<Error, { user: User }>
 export class EnrollIdentityUseCase {
   constructor(
     private usersRepository: UsersRepository,
-    private tokenService: TokenService,
+    private verificationTokensRepository: VerificationTokensRepository,
   ) {}
 
   async execute({
@@ -40,22 +39,15 @@ export class EnrollIdentityUseCase {
       avatarUrl,
     })
 
-    await this.usersRepository.create(user)
-
-    const token = randomUUID()
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-    const key = `email:verify:${tokenHash}`
-
-    const twentyFourHoursInSeconds = 24 * 60 * 60
-
-    const value = JSON.stringify({
-      userId: user.id.toString(),
-      expiresAt: new Date(
-        Date.now() + twentyFourHoursInSeconds * 1000,
-      ).toISOString(),
+    const verificationToken = VerificationToken.create({
+      userId: user.id,
+      type: 'email:verify',
     })
 
-    await this.tokenService.save(key, value, twentyFourHoursInSeconds)
+    await Promise.all([
+      this.usersRepository.create(user),
+      this.verificationTokensRepository.save(verificationToken),
+    ])
 
     return right({ user })
   }
