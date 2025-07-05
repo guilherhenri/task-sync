@@ -1,20 +1,24 @@
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
-import { InMemoryTokenService } from '@test/services/in-memory-token-service'
+import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
+import { DomainEvents } from '@/core/events/domain-events'
+
+import { PasswordRecoveryRequestedEvent } from '../../enterprise/events/password-recovery-requested-event'
 import { InitiatePasswordRecoveryUseCase } from './initiate-password-recovery'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
-let inMemoryTokenService: InMemoryTokenService
+let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let sut: InitiatePasswordRecoveryUseCase
 
 describe('Initiate Password Recovery Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    inMemoryTokenService = new InMemoryTokenService()
+    inMemoryVerificationTokensRepository =
+      new InMemoryVerificationTokensRepository()
     sut = new InitiatePasswordRecoveryUseCase(
       inMemoryUsersRepository,
-      inMemoryTokenService,
+      inMemoryVerificationTokensRepository,
     )
   })
 
@@ -23,10 +27,18 @@ describe('Initiate Password Recovery Use-case', () => {
     user.verifyEmail()
     inMemoryUsersRepository.items.push(user)
 
+    const passwordRecoveryRequestedEventSpy = jest.fn()
+    DomainEvents.register(
+      passwordRecoveryRequestedEventSpy,
+      PasswordRecoveryRequestedEvent.name,
+    )
+
     const response = await sut.execute({ email: 'example@email.com' })
 
     expect(response.isRight()).toBeTruthy()
-    expect(inMemoryTokenService.items.size).toEqual(1)
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(1)
+
+    expect(passwordRecoveryRequestedEventSpy).toHaveBeenCalled()
   })
 
   it('should not be able to initialize password recovery for an unverified email', async () => {
@@ -40,13 +52,13 @@ describe('Initiate Password Recovery Use-case', () => {
       'message',
       'Este endereço de e-mail ainda não foi verificado, por favor cheque seu e-mail.',
     )
-    expect(inMemoryTokenService.items.size).toEqual(0)
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
 
   it('should not be able to initialize password recovery for an invalid email and not return an error', async () => {
     const response = await sut.execute({ email: 'example@email.com' })
 
     expect(response.isRight()).toBeTruthy()
-    expect(inMemoryTokenService.items.size).toEqual(0)
+    expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
 })
