@@ -15,9 +15,14 @@
     "@task-sync/eslint": "workspace:*",
     "@task-sync/tsconfig": "workspace:*",
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.4",
     "jest": "^30.0.3",
     "ts-jest": "^29.4.0",
     "typescript": "5.8.2"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2"
   }
 }
