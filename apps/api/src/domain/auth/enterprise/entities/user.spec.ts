@@ -1,5 +1,6 @@
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 
+import { PasswordResetEvent } from '../events/password-reset-event'
 import { User } from './user'
 
 it('should be able to create a user', async () => {
@@ -25,4 +26,19 @@ it('should be able to create a user', async () => {
 
   expect(user.emailVerified).toBeTruthy()
   expect(user.updatedAt).not.toBeUndefined()
+})
+
+it('should be able to reset a password', async () => {
+  const user = await User.create({
+    name: 'User Test',
+    email: 'example@email.com',
+    password: '123456',
+    avatarUrl: 'https://avatar-placeholder.com',
+  })
+
+  await user.resetPassword('654321')
+
+  expect(await user.verifyPassword('654321')).toBeTruthy()
+  expect(user.domainEvents).toHaveLength(2)
+  expect(user.domainEvents[1]).toBeInstanceOf(PasswordResetEvent)
 })
