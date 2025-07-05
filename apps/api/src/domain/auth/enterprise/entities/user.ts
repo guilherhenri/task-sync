@@ -2,6 +2,7 @@ import { AggregateRoot } from '@/core/entities/aggregate-root'
 import type { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import type { Optional } from '@/core/types/optional'
 
+import { PasswordResetEvent } from '../events/password-reset-event'
 import { UserRegisteredEvent } from '../events/user-registered-event'
 import { PasswordHash } from './value-objects/password-hash'
 
@@ -89,6 +90,20 @@ export class User extends AggregateRoot<UserProps> {
    */
   public async verifyPassword(password: string) {
     return this.passwordHash.verify(password)
+  }
+
+  /**
+   * Resets the user's password by generating a new password hash and emitting a PasswordResetEvent.
+   * @param newPassword - The new plaintext password to be hashed and set.
+   * @returns A Promise that resolves when the password has been successfully reset.
+   */
+  public async resetPassword(newPassword: string) {
+    const newPasswordHash = await PasswordHash.create(newPassword)
+
+    this.props.passwordHash = newPasswordHash
+    this.touch()
+
+    this.addDomainEvent(new PasswordResetEvent(this))
   }
 
   protected touch() {
