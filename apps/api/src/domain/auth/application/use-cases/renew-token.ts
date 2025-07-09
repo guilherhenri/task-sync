@@ -45,7 +45,7 @@ export class RenewTokenUseCase {
       return left(new Error('Token expirado.'))
     }
 
-    if (oldAuthToken.userId !== user.id) {
+    if (!oldAuthToken.userId.equals(user.id)) {
       return left(new Error('Este token não pertence a este usuário.'))
     }
 
