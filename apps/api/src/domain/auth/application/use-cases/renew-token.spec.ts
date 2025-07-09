@@ -143,7 +143,7 @@ describe('Renew Token Use-case', () => {
       user.id.toString(),
     )
 
-    const expiresAt = new Date()
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
 
     const authToken = AuthToken.create({
       userId: new UniqueEntityID('user-2'),
