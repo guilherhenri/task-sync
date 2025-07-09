@@ -57,6 +57,15 @@ importers:
       '@faker-js/faker':
         specifier: ^9.8.0
         version: 9.8.0
+      '@task-sync/api-types':
+        specifier: workspace:*
+        version: link:../../packages/api-types
+      '@task-sync/email-templates':
+        specifier: workspace:*
+        version: link:../../packages/email-templates
+      '@task-sync/env':
+        specifier: workspace:*
+        version: link:../../packages/env
       '@task-sync/eslint':
         specifier: workspace:*
         version: link:../../config/eslint
@@ -141,6 +150,15 @@ importers:
 
   config/tsconfig: {}
 
+  packages/api-types:
+    devDependencies:
+      '@task-sync/tsconfig':
+        specifier: workspace:*
+        version: link:../../config/tsconfig
+      typescript:
+        specifier: 5.8.2
+        version: 5.8.2
+
   packages/email-templates:
     dependencies:
       '@react-email/components':
@@ -165,6 +183,9 @@ importers:
       '@faker-js/faker':
         specifier: ^9.9.0
         version: 9.9.0
+      '@task-sync/api-types':
+        specifier: workspace:*
+        version: link:../api-types
       '@task-sync/env':
         specifier: workspace:*
         version: link:../env
