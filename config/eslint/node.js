@@ -34,6 +34,7 @@ export default tseslint.config(
       'simple-import-sort/exports': 'error',
       'prettier/prettier': 'error',
       'no-useless-constructor': 'off',
+      'no-new': 'off',
     },
   },
 )
