@@ -1,0 +1,5 @@
+{
+  "extends": "@task-sync/tsconfig/react",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", ".react-email"]
+}
