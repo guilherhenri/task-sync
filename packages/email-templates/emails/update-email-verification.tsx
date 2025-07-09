@@ -1,5 +1,5 @@
 import { Button, Link, Text } from '@react-email/components'
-import * as React from 'react'
+import type { EmailTemplateDataMap } from '@task-sync/api-types'
 
 import { Content } from '../components/content'
 import { Footer } from '../components/footer'
@@ -8,10 +8,8 @@ import { Main } from '../components/main'
 import { Title } from '../components/title'
 import { colors } from '../constants'
 
-export interface UpdateEmailVerificationEmailProps {
-  name: string
-  verificationLink: string
-}
+type UpdateEmailVerificationEmailProps =
+  EmailTemplateDataMap['update-email-verify']
 
 export const UpdateEmailVerificationEmail = ({
   name,

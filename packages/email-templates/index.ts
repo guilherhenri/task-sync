@@ -1,25 +1,25 @@
 import { render as reactEmailRender } from '@react-email/components'
+import type {
+  EmailTemplateDataMap,
+  EmailTemplateType,
+} from '@task-sync/api-types'
 import React from 'react'
 
-import {
-  EmailVerificationEmail,
-  type EmailVerificationEmailProps,
-} from './emails/email-verification'
-import {
-  PasswordRecoveryEmail,
-  type PasswordRecoveryEmailProps,
-} from './emails/password-recovery'
-import {
-  PasswordResetConfirmationEmail,
-  type PasswordResetConfirmationEmailProps,
-} from './emails/password-reset-confirmation'
-import {
-  UpdateEmailVerificationEmail,
-  type UpdateEmailVerificationEmailProps,
-} from './emails/update-email-verification'
-import { WelcomeEmail, type WelcomeEmailProps } from './emails/welcome'
+import { EmailVerificationEmail } from './emails/email-verification'
+import { PasswordRecoveryEmail } from './emails/password-recovery'
+import { PasswordResetConfirmationEmail } from './emails/password-reset-confirmation'
+import { UpdateEmailVerificationEmail } from './emails/update-email-verification'
+import { WelcomeEmail } from './emails/welcome'
 
-const templateComponents = {
+type TemplateComponents = {
+  'email-verify': React.FC<EmailTemplateDataMap['email-verify']>
+  'password-recovery': React.FC<EmailTemplateDataMap['password-recovery']>
+  'password-reset': React.FC<EmailTemplateDataMap['password-reset']>
+  'update-email-verify': React.FC<EmailTemplateDataMap['update-email-verify']>
+  welcome: React.FC<EmailTemplateDataMap['welcome']>
+}
+
+const templateComponents: TemplateComponents = {
   'email-verify': EmailVerificationEmail,
   'password-recovery': PasswordRecoveryEmail,
   'password-reset': PasswordResetConfirmationEmail,
@@ -27,21 +27,13 @@ const templateComponents = {
   welcome: WelcomeEmail,
 } as const
 
-export type Template = keyof typeof templateComponents
-
-interface TemplateDataMap {
-  'email-verify': EmailVerificationEmailProps
-  'password-recovery': PasswordRecoveryEmailProps
-  'password-reset': PasswordResetConfirmationEmailProps
-  'update-email-verify': UpdateEmailVerificationEmailProps
-  welcome: WelcomeEmailProps
-}
-
-const render = async <T extends Template>(
+const render = async <T extends EmailTemplateType>(
   template: T,
-  data: TemplateDataMap[T],
+  data: EmailTemplateDataMap[T],
 ): Promise<string> => {
-  const Component = templateComponents[template] as React.FC<TemplateDataMap[T]>
+  const Component = templateComponents[template] as React.FC<
+    EmailTemplateDataMap[T]
+  >
 
   return reactEmailRender(React.createElement(Component, data))
 }

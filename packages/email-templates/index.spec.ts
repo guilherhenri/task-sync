@@ -1,34 +1,27 @@
 import { faker } from '@faker-js/faker'
 import * as ReactEmailComponents from '@react-email/components'
+import type {
+  EmailTemplateDataMap,
+  EmailTemplateType,
+} from '@task-sync/api-types'
 import React from 'react'
 
-import type { Template } from '.'
 import { render } from '.'
-import {
-  EmailVerificationEmail,
-  type EmailVerificationEmailProps,
-} from './emails/email-verification'
-import {
-  PasswordRecoveryEmail,
-  type PasswordRecoveryEmailProps,
-} from './emails/password-recovery'
-import {
-  PasswordResetConfirmationEmail,
-  type PasswordResetConfirmationEmailProps,
-} from './emails/password-reset-confirmation'
-import {
-  UpdateEmailVerificationEmail,
-  type UpdateEmailVerificationEmailProps,
-} from './emails/update-email-verification'
-import { WelcomeEmail, type WelcomeEmailProps } from './emails/welcome'
+import { EmailVerificationEmail } from './emails/email-verification'
+import { PasswordRecoveryEmail } from './emails/password-recovery'
+import { PasswordResetConfirmationEmail } from './emails/password-reset-confirmation'
+import { UpdateEmailVerificationEmail } from './emails/update-email-verification'
+import { WelcomeEmail } from './emails/welcome'
 
 jest.mock('@react-email/components', () => ({
   render: jest.fn(),
 }))
 
 jest.mock('@task-sync/env', () => ({
-  APP_URL: 'http://localhost:3000',
-  LOGO_CDN_URL: faker.image.url(),
+  env: {
+    APP_URL: 'http://localhost:3000',
+    LOGO_CDN_URL: faker.image.url(),
+  },
 }))
 
 describe('Render Function', () => {
@@ -39,8 +32,8 @@ describe('Render Function', () => {
   })
 
   it('should render EmailVerificationEmail with correct props', async () => {
-    const template: Template = 'email-verify'
-    const data: EmailVerificationEmailProps = {
+    const template: EmailTemplateType = 'email-verify'
+    const data: EmailTemplateDataMap['email-verify'] = {
       name: 'John Doe',
       verificationLink: 'https://example.com/verify',
     }
@@ -56,8 +49,8 @@ describe('Render Function', () => {
   })
 
   it('should render PasswordRecoveryEmail with correct props', async () => {
-    const template: Template = 'password-recovery'
-    const data: PasswordRecoveryEmailProps = {
+    const template: EmailTemplateType = 'password-recovery'
+    const data: EmailTemplateDataMap['password-recovery'] = {
       name: 'Jane Doe',
       resetLink: 'https://example.com/reset',
     }
@@ -73,8 +66,8 @@ describe('Render Function', () => {
   })
 
   it('should render PasswordResetConfirmationEmail with correct props', async () => {
-    const template: Template = 'password-reset'
-    const data: PasswordResetConfirmationEmailProps = {
+    const template: EmailTemplateType = 'password-reset'
+    const data: EmailTemplateDataMap['password-reset'] = {
       name: 'John Smith',
     }
 
@@ -91,8 +84,8 @@ describe('Render Function', () => {
   })
 
   it('should render UpdateEmailVerificationEmail with correct props', async () => {
-    const template: Template = 'update-email-verify'
-    const data: UpdateEmailVerificationEmailProps = {
+    const template: EmailTemplateType = 'update-email-verify'
+    const data: EmailTemplateDataMap['update-email-verify'] = {
       name: 'Alice Johnson',
       verificationLink: 'https://example.com/update-verify',
     }
@@ -110,8 +103,8 @@ describe('Render Function', () => {
   })
 
   it('should render WelcomeEmail with correct props', async () => {
-    const template: Template = 'welcome'
-    const data: WelcomeEmailProps = {
+    const template: EmailTemplateType = 'welcome'
+    const data: EmailTemplateDataMap['welcome'] = {
       name: 'Bob Wilson',
     }
 

@@ -1,4 +1,5 @@
 import { Button, Text } from '@react-email/components'
+import type { EmailTemplateDataMap } from '@task-sync/api-types'
 import { env } from '@task-sync/env'
 
 import { Content } from '../components/content'
@@ -8,9 +9,7 @@ import { Main } from '../components/main'
 import { Title } from '../components/title'
 import { colors } from '../constants'
 
-export interface WelcomeEmailProps {
-  name: string
-}
+type WelcomeEmailProps = EmailTemplateDataMap['welcome']
 
 export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
   <Main>
