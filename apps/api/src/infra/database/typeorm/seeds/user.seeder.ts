@@ -7,8 +7,6 @@ export default class UserSeeder implements Seeder {
   track = false
 
   public async run(_: DataSource, factoryManager: SeederFactoryManager) {
-    console.log('UserSeeder Running')
-
     const userFactory = factoryManager.get(User)
 
     await userFactory.saveMany(10)
