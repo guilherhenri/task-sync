@@ -3,18 +3,23 @@ import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
 
 @Injectable()
-export class TypeOrmService implements OnModuleInit, OnModuleDestroy {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+export class TypeOrmService
+  extends DataSource
+  implements OnModuleInit, OnModuleDestroy
+{
+  constructor(@InjectDataSource() private readonly dataSource: DataSource) {
+    super(dataSource.options)
+  }
 
   async onModuleInit() {
-    if (!this.dataSource.isInitialized) {
-      await this.dataSource.initialize()
+    if (!this.isInitialized) {
+      await this.initialize()
     }
   }
 
   async onModuleDestroy() {
-    if (this.dataSource.isInitialized) {
-      await this.dataSource.destroy()
+    if (this.isInitialized) {
+      await this.destroy()
     }
   }
 }
