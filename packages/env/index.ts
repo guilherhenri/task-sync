@@ -1,13 +1,17 @@
 import { createEnv } from '@t3-oss/env-nextjs'
 import { z } from 'zod'
 
-export const env = createEnv({
-  server: {
-    APP_URL: z.string().url(),
-    LOGO_CDN_URL: z.string().url(),
+export const envServerSchema = z.object({
+  APP_URL: z.string().url(),
+  LOGO_CDN_URL: z.string().url(),
 
-    EMAIL_DEFAULT_SENDER: z.string().email(),
-  },
+  EMAIL_DEFAULT_SENDER: z.string().email(),
+})
+
+export type EnvServer = z.infer<typeof envServerSchema>
+
+export const env = createEnv({
+  server: envServerSchema.shape,
   client: {},
   shared: {},
   runtimeEnv: {
