@@ -6,6 +6,11 @@
     "build": "pnpm env:load nest build",
     "start": "pnpm env:load nest start",
     "start:dev": "pnpm env:load nest start --watch",
+    "typeorm": "typeorm-ts-node-commonjs -d ./src/infra/database/typeorm/data-source.ts",
+    "migration:generate": "pnpm env:load ts-node ./scripts/generate-migration.ts",
+    "migration:run": "pnpm env:load pnpm typeorm migration:run",
+    "migration:revert": "pnpm env:load pnpm typeorm migration:revert",
+    "seed:run": "pnpm env:load ts-node --project tsconfig.seed.json ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d ./src/infra/database/typeorm/data-source.ts",
     "env:load": "dotenv -e ../../.env --",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -33,6 +38,7 @@
     "swc-loader": "^0.2.6",
     "terser-webpack-plugin": "^5.3.14",
     "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
     "typescript": "5.8.2"
   },
   "dependencies": {
@@ -47,6 +53,12 @@
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "typeorm": "^0.3.25"
+    "typeorm": "^0.3.25",
+    "typeorm-extension": "^3.7.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "typeorm": "^0.3.25"
+    }
   }
 }
