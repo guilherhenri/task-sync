@@ -12,8 +12,13 @@ export class PasswordHash {
    * @param plaintext {string} The plaintext password to hash.
    * @returns A Promise resolving to a PasswordHash instance.
    */
-  public static async create(plaintext: string) {
-    const hashedPassword = await this.hashPassword(plaintext)
+  public static async create(
+    plaintext: string,
+    alreadyHashed: boolean = false,
+  ) {
+    const hashedPassword = alreadyHashed
+      ? plaintext
+      : await this.hashPassword(plaintext)
 
     return new PasswordHash(hashedPassword)
   }

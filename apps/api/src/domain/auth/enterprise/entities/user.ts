@@ -13,7 +13,7 @@ export interface UserProps {
   avatarUrl: string | null
   emailVerified: boolean
   createdAt: Date
-  updatedAt?: Date
+  updatedAt?: Date | null
 }
 
 export class User extends AggregateRoot<UserProps> {
@@ -112,17 +112,22 @@ export class User extends AggregateRoot<UserProps> {
 
   static async create(
     props: Optional<
-      Omit<UserProps, 'passwordHash' | 'emailVerified'>,
-      'avatarUrl' | 'createdAt'
+      Omit<UserProps, 'emailVerified'>,
+      'passwordHash' | 'avatarUrl' | 'createdAt'
     > & {
-      password: string
+      password?: string
     },
     id?: UniqueEntityID,
   ) {
+    if (!props.password && !props.passwordHash) {
+      throw new Error('Either password or passwordHash must be provided.')
+    }
+
     const user = new User(
       {
         ...props,
-        passwordHash: await PasswordHash.create(props.password),
+        passwordHash:
+          props.passwordHash ?? (await PasswordHash.create(props.password!)),
         avatarUrl: props.avatarUrl ?? null,
         emailVerified: false,
         createdAt: new Date(),

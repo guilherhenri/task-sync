@@ -1,6 +1,6 @@
 {
   "extends": "@task-sync/tsconfig/node",
-  "include": ["src", "test"],
+  "include": ["src", "test", "scripts"],
   "compilerOptions": {
     "isolatedModules": true,
 
