@@ -1,3 +1,4 @@
+import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
@@ -9,6 +10,7 @@ import { EmailUpdateVerificationRequestedEvent } from '../../enterprise/events/e
 import { RefineProfileUseCase } from './refine-profile'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
+let fakeHasher: FakeHasher
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let sut: RefineProfileUseCase
 
@@ -17,17 +19,21 @@ describe('Refine Profile Use-case', () => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     inMemoryVerificationTokensRepository =
       new InMemoryVerificationTokensRepository()
+    fakeHasher = new FakeHasher()
     sut = new RefineProfileUseCase(
       inMemoryUsersRepository,
       inMemoryVerificationTokensRepository,
+      fakeHasher,
     )
   })
 
   it('should be able to update a valid user', async () => {
-    const user = await makeUser({
+    const passwordHash = await fakeHasher.hash('123456')
+
+    const user = makeUser({
       name: 'Test Name',
       email: 'example@email.com',
-      password: '123456',
+      passwordHash,
     })
     inMemoryUsersRepository.items.push(user)
 
@@ -52,7 +58,10 @@ describe('Refine Profile Use-case', () => {
       }),
     )
     expect(
-      await inMemoryUsersRepository.items[0].verifyPassword('654321'),
+      await fakeHasher.compare(
+        '654321',
+        inMemoryUsersRepository.items[0].passwordHash,
+      ),
     ).toBeTruthy()
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(1)
 
@@ -60,10 +69,12 @@ describe('Refine Profile Use-case', () => {
   })
 
   it('should be able to update a user without change the password', async () => {
-    const user = await makeUser({
+    const passwordHash = await fakeHasher.hash('123456')
+
+    const user = makeUser({
       name: 'Test Name',
       email: 'example@email.com',
-      password: '123456',
+      passwordHash,
     })
     inMemoryUsersRepository.items.push(user)
 
@@ -80,9 +91,7 @@ describe('Refine Profile Use-case', () => {
         email: 'updated@email.com',
       }),
     )
-    expect(
-      await inMemoryUsersRepository.items[0].verifyPassword('123456'),
-    ).toBeTruthy()
+    expect(await fakeHasher.compare('123456', user.passwordHash)).toBeTruthy()
   })
 
   it('should not be able to update an invalid user', async () => {
@@ -97,13 +106,13 @@ describe('Refine Profile Use-case', () => {
   })
 
   it('should not be able to update a user with an email that is already in use', async () => {
-    const user1 = await makeUser(
+    const user1 = makeUser(
       {
         email: 'user1@email.com',
       },
       new UniqueEntityID('user-1'),
     )
-    const user2 = await makeUser(
+    const user2 = makeUser(
       {
         email: 'user2@email.com',
       },
