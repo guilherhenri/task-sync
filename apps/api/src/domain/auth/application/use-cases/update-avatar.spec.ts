@@ -13,7 +13,7 @@ describe('Update Avatar Use-case', () => {
   })
 
   it("should be able to update user's avatar with a valid URL", async () => {
-    const user = await makeUser({
+    const user = makeUser({
       avatarUrl: 'https://avatar-placeholder.com',
     })
     inMemoryUsersRepository.items.push(user)
@@ -30,7 +30,7 @@ describe('Update Avatar Use-case', () => {
   })
 
   it("should be able to update user's avatar with a HTTP or HTTPS URL", async () => {
-    const user = await makeUser({
+    const user = makeUser({
       avatarUrl: 'https://avatar-placeholder.com',
     })
     inMemoryUsersRepository.items.push(user)
@@ -57,7 +57,7 @@ describe('Update Avatar Use-case', () => {
   })
 
   it("should not be able to update user's avatar with an invalid URL", async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const response = await sut.execute({
