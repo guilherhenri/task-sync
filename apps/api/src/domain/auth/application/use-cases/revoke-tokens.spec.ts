@@ -20,7 +20,7 @@ describe('Revoke Tokens Use-case', () => {
   })
 
   it('should be able to revoke all tokens from a user', async () => {
-    const user = await makeUser({}, new UniqueEntityID('user-id'))
+    const user = makeUser({}, new UniqueEntityID('user-id'))
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken1 = makeVerificationToken({
