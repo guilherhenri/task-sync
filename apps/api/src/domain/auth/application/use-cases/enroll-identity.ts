@@ -38,7 +38,7 @@ export class EnrollIdentityUseCase {
 
     const passwordHash = await this.hasher.hash(password)
 
-    const user = await User.create({
+    const user = User.create({
       name,
       email,
       passwordHash,
