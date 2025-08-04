@@ -3,9 +3,13 @@ import type {
   VerificationToken,
 } from '../../enterprise/entities/verification-token'
 
-export interface VerificationTokensRepository {
-  save(verificationToken: VerificationToken): Promise<void>
-  get(token: string, type: TokenType): Promise<VerificationToken | null>
-  delete(verificationToken: VerificationToken): Promise<void>
-  revokeTokensByUserId(userId: string): Promise<void>
+export abstract class VerificationTokensRepository {
+  abstract save(verificationToken: VerificationToken): Promise<void>
+  abstract get(
+    token: string,
+    type: TokenType,
+  ): Promise<VerificationToken | null>
+
+  abstract delete(verificationToken: VerificationToken): Promise<void>
+  abstract revokeTokensByUserId(userId: string): Promise<void>
 }
