@@ -1,5 +1,6 @@
 import { type Either, left, right } from '@/core/either'
 
+import type { Hasher } from '../cryptography/hasher'
 import type { UsersRepository } from '../repositories/users-repository'
 import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
@@ -14,6 +15,7 @@ export class ResetPasswordUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
+    private hasher: Hasher,
   ) {}
 
   async execute({
@@ -51,7 +53,9 @@ export class ResetPasswordUseCase {
       return left(new Error('Usuário não encontrado.'))
     }
 
-    await user.resetPassword(newPassword)
+    const newPasswordHash = await this.hasher.hash(newPassword)
+
+    await user.resetPassword(newPasswordHash)
 
     await Promise.all([
       this.usersRepository.save(user),
