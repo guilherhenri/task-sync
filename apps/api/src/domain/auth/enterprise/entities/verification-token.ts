@@ -82,13 +82,14 @@ export class VerificationToken extends AggregateRoot<VerificationTokenProps> {
 
   static create(
     props: Optional<
-      Omit<VerificationTokenProps, 'token' | 'tokenHash'>,
-      'expiresAt'
+      VerificationTokenProps,
+      'token' | 'tokenHash' | 'expiresAt'
     >,
     id?: UniqueEntityID,
   ): VerificationToken {
-    const token = randomUUID()
-    const tokenHash = createHash('sha256').update(token).digest('hex')
+    const token = props.token ?? randomUUID()
+    const tokenHash =
+      props.tokenHash ?? createHash('sha256').update(token).digest('hex')
 
     const defaultExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
 
