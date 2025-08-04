@@ -1,10 +1,13 @@
+import { Injectable } from '@nestjs/common'
+
 import { DomainEvents } from '@/core/events/domain-events'
 import type { EventHandler } from '@/core/events/event-handler'
-import type { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
+import { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
 import { UserRegisteredEvent } from '@/domain/auth/enterprise/events/user-registered-event'
 
-import type { CreateEmailRequestUseCase } from '../use-cases/create-email-request'
+import { CreateEmailRequestUseCase } from '../use-cases/create-email-request'
 
+@Injectable()
 export class OnUserRegistered implements EventHandler {
   constructor(
     private authUserService: AuthUserService,
