@@ -26,7 +26,7 @@ describe('Renew Token Use-case', () => {
   })
 
   it('should be able to renew a token with a valid refresh token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const refreshToken = inMemoryAuthService.generateRefreshToken(
@@ -67,7 +67,7 @@ describe('Renew Token Use-case', () => {
   })
 
   it('should not be able to renew a token for an invalid user', async () => {
-    const user = await makeUser({}, new UniqueEntityID('user-1'))
+    const user = makeUser({}, new UniqueEntityID('user-1'))
     inMemoryUsersRepository.items.push(user)
 
     const refreshToken = inMemoryAuthService.generateRefreshToken(
@@ -95,7 +95,7 @@ describe('Renew Token Use-case', () => {
   })
 
   it('should not be able to renew a token with an invalid refresh token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const response = await sut.execute({
@@ -108,7 +108,7 @@ describe('Renew Token Use-case', () => {
   })
 
   it('should not be able to renew a token with an expired refresh token and delete the expired token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const refreshToken = inMemoryAuthService.generateRefreshToken(
@@ -136,7 +136,7 @@ describe('Renew Token Use-case', () => {
   })
 
   it('should not be able to renew a token from another user', async () => {
-    const user = await makeUser({}, new UniqueEntityID('user-1'))
+    const user = makeUser({}, new UniqueEntityID('user-1'))
     inMemoryUsersRepository.items.push(user)
 
     const refreshToken = inMemoryAuthService.generateRefreshToken(
