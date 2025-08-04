@@ -1,3 +1,4 @@
+import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryAuthTokensRepository } from '@test/repositories/in-memory-auth-tokens-repository'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
@@ -9,23 +10,28 @@ let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryAuthTokensRepository: InMemoryAuthTokensRepository
 let inMemoryAuthService: InMemoryAuthService
 let sut: AuthenticateSessionUseCase
+let fakeHasher: FakeHasher
 
 describe('Authenticate Session Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     inMemoryAuthTokensRepository = new InMemoryAuthTokensRepository()
     inMemoryAuthService = new InMemoryAuthService()
+    fakeHasher = new FakeHasher()
     sut = new AuthenticateSessionUseCase(
       inMemoryUsersRepository,
       inMemoryAuthTokensRepository,
       inMemoryAuthService,
+      fakeHasher,
     )
   })
 
   it('should be able to authenticate with valid credentials and return tokens', async () => {
-    const user = await makeUser({
+    const passwordHash = await fakeHasher.hash('123456')
+
+    const user = makeUser({
       email: 'example@email.com',
-      password: '123456',
+      passwordHash,
     })
     inMemoryUsersRepository.items.push(user)
 
@@ -45,7 +51,7 @@ describe('Authenticate Session Use-case', () => {
   })
 
   it('should not be able to authenticate with invalid email', async () => {
-    const user = await makeUser({
+    const user = makeUser({
       email: 'example@email.com',
     })
     inMemoryUsersRepository.items.push(user)
@@ -64,9 +70,11 @@ describe('Authenticate Session Use-case', () => {
   })
 
   it('should not be able to authenticate with invalid password', async () => {
-    const user = await makeUser({
+    const passwordHash = await fakeHasher.hash('123456')
+
+    const user = makeUser({
       email: 'example@email.com',
-      password: '123456',
+      passwordHash,
     })
     inMemoryUsersRepository.items.push(user)
 
