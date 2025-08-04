@@ -23,7 +23,7 @@ describe('Confirm Email Use-case', () => {
   })
 
   it('should be able to confirm a email with a valid token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken = makeVerificationToken({
@@ -42,7 +42,7 @@ describe('Confirm Email Use-case', () => {
   })
 
   it('should be able to confirm a updated email with a valid token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken = makeVerificationToken({
@@ -70,7 +70,7 @@ describe('Confirm Email Use-case', () => {
   })
 
   it('should not be able to confirm a email with an invalid token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken = makeVerificationToken({
@@ -92,7 +92,7 @@ describe('Confirm Email Use-case', () => {
   })
 
   it('should not be able to confirm a email with a expired token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const oneSecondAgo = new Date(Date.now() - 1000)
