@@ -1,44 +1,58 @@
+import { FakeHasher } from '@test/cryptography/fake-hasher'
+
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 
 import { PasswordResetEvent } from '../events/password-reset-event'
 import { User } from './user'
 
-it('should be able to create a user', async () => {
-  const user = await User.create({
-    name: 'User Test',
-    email: 'example@email.com',
-    password: '123456',
-    avatarUrl: 'https://avatar-placeholder.com',
+let fakeHasher: FakeHasher
+
+describe('User Entity', () => {
+  beforeEach(() => {
+    fakeHasher = new FakeHasher()
   })
 
-  expect(user.id).toBeInstanceOf(UniqueEntityID)
-  expect(user.name).toEqual('User Test')
-  expect(user.email).toEqual('example@email.com')
-  expect(user.passwordHash).not.toEqual('123456')
-  expect(user.verifyPassword('123456')).toBeTruthy()
-  expect(user.avatarUrl).toEqual('https://avatar-placeholder.com')
-  expect(user.emailVerified).toBeFalsy()
-  expect(user.createdAt.getTime()).toBeLessThan(Date.now())
-  expect(user.updatedAt).toBeUndefined()
-  expect(user.domainEvents).toHaveLength(1)
+  it('should be able to create a user', async () => {
+    const passwordHash = await fakeHasher.hash('123456')
 
-  user.verifyEmail()
+    const user = User.create({
+      name: 'User Test',
+      email: 'example@email.com',
+      passwordHash,
+      avatarUrl: 'https://avatar-placeholder.com',
+    })
 
-  expect(user.emailVerified).toBeTruthy()
-  expect(user.updatedAt).not.toBeUndefined()
-})
+    expect(user.id).toBeInstanceOf(UniqueEntityID)
+    expect(user.name).toEqual('User Test')
+    expect(user.email).toEqual('example@email.com')
+    expect(user.passwordHash).not.toEqual('123456')
+    expect(user.avatarUrl).toEqual('https://avatar-placeholder.com')
+    expect(user.emailVerified).toBeFalsy()
+    expect(user.updatedAt).toBeUndefined()
+    expect(user.domainEvents).toHaveLength(1)
 
-it('should be able to reset a password', async () => {
-  const user = await User.create({
-    name: 'User Test',
-    email: 'example@email.com',
-    password: '123456',
-    avatarUrl: 'https://avatar-placeholder.com',
+    user.verifyEmail()
+
+    expect(user.emailVerified).toBeTruthy()
+    expect(user.updatedAt).not.toBeUndefined()
   })
 
-  await user.resetPassword('654321')
+  it('should be able to reset a password', async () => {
+    const passwordHash = await fakeHasher.hash('123456')
 
-  expect(await user.verifyPassword('654321')).toBeTruthy()
-  expect(user.domainEvents).toHaveLength(2)
-  expect(user.domainEvents[1]).toBeInstanceOf(PasswordResetEvent)
+    const user = User.create({
+      name: 'User Test',
+      email: 'example@email.com',
+      passwordHash,
+      avatarUrl: 'https://avatar-placeholder.com',
+    })
+
+    const newPasswordHash = await fakeHasher.hash('654321')
+
+    await user.resetPassword(newPasswordHash)
+
+    expect(user.passwordHash).not.toEqual(passwordHash)
+    expect(user.domainEvents).toHaveLength(2)
+    expect(user.domainEvents[1]).toBeInstanceOf(PasswordResetEvent)
+  })
 })
