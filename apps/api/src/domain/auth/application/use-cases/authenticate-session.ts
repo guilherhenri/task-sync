@@ -1,6 +1,7 @@
 import { type Either, left, right } from '@/core/either'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
+import type { Hasher } from '../cryptography/hasher'
 import type { AuthTokensRepository } from '../repositories/auth-tokens-repository'
 import type { UsersRepository } from '../repositories/users-repository'
 import type { AuthService } from '../services/auth-service'
@@ -20,6 +21,7 @@ export class AuthenticateSessionUseCase {
     private usersRepository: UsersRepository,
     private authTokensRepository: AuthTokensRepository,
     private authService: AuthService,
+    private hasher: Hasher,
   ) {}
 
   async execute({
@@ -32,7 +34,10 @@ export class AuthenticateSessionUseCase {
       return left(new Error('E-mail ou senha inválidos.'))
     }
 
-    const isPasswordMatch = await user.verifyPassword(password)
+    const isPasswordMatch = await this.hasher.compare(
+      password,
+      user.passwordHash,
+    )
 
     if (!isPasswordMatch) {
       return left(new Error('E-mail ou senha inválidos.'))
