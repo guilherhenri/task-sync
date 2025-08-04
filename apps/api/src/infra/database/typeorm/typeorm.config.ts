@@ -4,6 +4,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm'
 import type { SeederOptions } from 'typeorm-extension'
 
 import type { EnvService } from '../../env/env.service'
+import { User } from './entities/user.entity'
 
 export const migrationsDir = path.resolve(__dirname, 'migrations')
 
@@ -16,7 +17,8 @@ export const typeOrmConfig = (
   username: config.get('POSTGRES_USER'),
   password: config.get('POSTGRES_PASSWORD'),
   database: config.get('POSTGRES_DB'),
-  entities: [path.resolve(__dirname, 'entities', '*.entity{.ts,.js}')],
+  schema: config.get('POSTGRES_SCHEMA'),
+  entities: [User],
   migrations: [`${migrationsDir}/*{.ts,.js}`],
   seeds: [path.resolve(__dirname, 'seeds', '*.seeder{.ts,.js}')],
   seedTracking: false,
