@@ -4,12 +4,11 @@ import type { Optional } from '@/core/types/optional'
 
 import { PasswordResetEvent } from '../events/password-reset-event'
 import { UserRegisteredEvent } from '../events/user-registered-event'
-import { PasswordHash } from './value-objects/password-hash'
 
 export interface UserProps {
   name: string
   email: string
-  passwordHash: PasswordHash
+  passwordHash: string
   avatarUrl: string | null
   emailVerified: boolean
   createdAt: Date
@@ -35,19 +34,11 @@ export class User extends AggregateRoot<UserProps> {
     this.touch()
   }
 
-  /**
-   * Gets the user's password hash.
-   * @returns The PasswordHash instance.
-   */
   get passwordHash() {
     return this.props.passwordHash
   }
 
-  /**
-   * Updates the user's password hash.
-   * @param passwordHash - The new PasswordHash instance.
-   */
-  set passwordHash(passwordHash: PasswordHash) {
+  set passwordHash(passwordHash: string) {
     this.props.passwordHash = passwordHash
     this.touch()
   }
@@ -84,22 +75,11 @@ export class User extends AggregateRoot<UserProps> {
   }
 
   /**
-   * Verifies if a plaintext password matches the stored hash.
-   * @param password {string} - The plaintext password to verify.
-   * @returns A Promise resolving to true if the password matches, false otherwise.
-   */
-  public async verifyPassword(password: string) {
-    return this.passwordHash.verify(password)
-  }
-
-  /**
-   * Resets the user's password by generating a new password hash and emitting a PasswordResetEvent.
-   * @param newPassword - The new plaintext password to be hashed and set.
+   * Resets the user's passwordHash and emitting a PasswordResetEvent.
+   * @param newPasswordHash - The new passwordHash to be set.
    * @returns A Promise that resolves when the password has been successfully reset.
    */
-  public async resetPassword(newPassword: string) {
-    const newPasswordHash = await PasswordHash.create(newPassword)
-
+  public async resetPassword(newPasswordHash: string) {
     this.props.passwordHash = newPasswordHash
     this.touch()
 
@@ -110,24 +90,17 @@ export class User extends AggregateRoot<UserProps> {
     this.props.updatedAt = new Date()
   }
 
-  static async create(
+  static create(
     props: Optional<
       Omit<UserProps, 'emailVerified'>,
-      'passwordHash' | 'avatarUrl' | 'createdAt'
-    > & {
-      password?: string
-    },
+      'avatarUrl' | 'createdAt'
+    >,
     id?: UniqueEntityID,
   ) {
-    if (!props.password && !props.passwordHash) {
-      throw new Error('Either password or passwordHash must be provided.')
-    }
-
     const user = new User(
       {
         ...props,
-        passwordHash:
-          props.passwordHash ?? (await PasswordHash.create(props.password!)),
+        passwordHash: props.passwordHash,
         avatarUrl: props.avatarUrl ?? null,
         emailVerified: false,
         createdAt: new Date(),
