@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { env, EnvServer } from '@task-sync/env'
+import { env, type EnvServer } from '@task-sync/env'
 
 @Injectable()
 export class EnvService {
