@@ -1,7 +1,7 @@
 import { type Either, left, right } from '@/core/either'
 
-import { PasswordHash } from '../../enterprise/entities/value-objects/password-hash'
 import { VerificationToken } from '../../enterprise/entities/verification-token'
+import type { Hasher } from '../cryptography/hasher'
 import type { UsersRepository } from '../repositories/users-repository'
 import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
@@ -18,6 +18,7 @@ export class RefineProfileUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
+    private hasher: Hasher,
   ) {}
 
   async execute({
@@ -48,7 +49,7 @@ export class RefineProfileUseCase {
     }
 
     if (newPassword) {
-      const newPasswordHash = await PasswordHash.create(newPassword)
+      const newPasswordHash = await this.hasher.hash(newPassword)
       user.passwordHash = newPasswordHash
     }
 
