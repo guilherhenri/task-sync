@@ -15,7 +15,7 @@ describe('Retrieve Profile Use-case', () => {
   })
 
   it('should be able to retrieve a profile for a valid user id', async () => {
-    const user = await makeUser(
+    const user = makeUser(
       { name: 'User Test', email: 'example@email.com' },
       new UniqueEntityID('user-id'),
     )
