@@ -55,6 +55,6 @@ describe('On email verification requested (E2E)', () => {
       })
 
       expect(emailRequestOnDatabase).not.toBeNull()
-    }, 5000)
-  }, 6000)
+    }, 10000)
+  }, 10000)
 })

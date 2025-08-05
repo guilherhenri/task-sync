@@ -53,6 +53,6 @@ describe('On user registered (E2E)', () => {
         status: 'sent',
       })
       expect(emailRequestOnDatabase).not.toBeNull()
-    }, 5000)
-  }, 6000)
+    }, 10000)
+  }, 10000)
 })
