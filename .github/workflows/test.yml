@@ -59,6 +59,34 @@ jobs:
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
       - name: Start Docker Compose
+        env:
+          NODE_ENV: test
+          PORT: 3333
+          APP_URL: http://localhost:3000
+          LOGO_CDN_URL: ${{ secrets.LOGO_CDN_URL }}
+
+          SMTP_HOST: sandbox.smtp.mailtrap.io
+          SMTP_PORT: 2525
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_DEFAULT_SENDER: "suporte@tasksync.com"
+
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: tasksync
+          POSTGRES_PASSWORD: tasksync123
+          POSTGRES_DB: tasksync_dev
+
+          MONGO_URI: mongodb://localhost:27017/?authSource=admin
+          MONGO_DB: tasksync_logs
+          MONGO_USERNAME: tasksync
+          MONGO_PASSWORD: tasksync123
+
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_DB: 0
+
+          JWT_SECRET: your_jwt_secret
         run: |
           docker-compose up -d
       - name: Wait for services
