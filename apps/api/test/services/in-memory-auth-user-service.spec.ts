@@ -17,7 +17,7 @@ describe('In Memory Auth User Service', () => {
   })
 
   it('should be able to get a user from id', async () => {
-    const user = await makeUser(
+    const user = makeUser(
       {
         name: 'User Test',
         email: 'example@email.com',
