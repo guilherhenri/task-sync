@@ -34,6 +34,10 @@ jobs:
   backend:
     needs: setup
     runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,5 +53,64 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Install Docker Compose
+        run: |
+          apt-get update
+          apt-get install -y docker-compose
+      - name: Start Docker Compose
+        run: |
+          docker-compose up -d
+      - name: Wait for services
+        run: |
+          echo "Waiting for services to be healthy..."
+          for service in postgres mongodb redis backend; do
+            while [ "$(docker inspect --format='{{.State.Health.Status}}' $service)" != "healthy" ]; do
+              echo "Waiting for $service to be healthy..."
+              sleep 2
+              if [ "$(docker inspect --format='{{.State.Status}}' $service)" != "running" ]; then
+                echo "Service $service is not running. Showing logs..."
+                docker-compose -f docker-compose.yml logs $service
+                exit 1
+              fi
+            done
+            echo "$service is healthy!"
+          done
       - name: Unit tests
         run: pnpm test --filter=@task-sync/api
+      - name: E2E tests
+        env:
+          NODE_ENV: test
+          PORT: 3333
+          APP_URL: http://localhost:3000
+          LOGO_CDN_URL: ${{ secrets.LOGO_CDN_URL }}
+
+          SMTP_HOST: sandbox.smtp.mailtrap.io
+          SMTP_PORT: 2525
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_DEFAULT_SENDER: "suporte@tasksync.com"
+
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: tasksync
+          POSTGRES_PASSWORD: tasksync123
+          POSTGRES_DB: tasksync_dev
+
+          MONGO_URI: mongodb://localhost:27017/?authSource=admin
+          MONGO_DB: tasksync_logs
+          MONGO_USERNAME: tasksync
+          MONGO_PASSWORD: tasksync123
+
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_DB: 0
+
+          JWT_SECRET: your_jwt_secret
+        run: pnpm test:e2e --filter=@task-sync/api
+      - name: Show Docker Compose logs on failure
+        if: failure()
+        run: docker-compose -f docker-compose.yml logs
+      - name: Stop Docker Compose
+        if: always()
+        run: |
+          docker-compose -f docker-compose.yml down
