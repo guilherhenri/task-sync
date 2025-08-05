@@ -89,37 +89,34 @@ jobs:
             fi
             echo "$service is healthy!"
           done
+      - name: Create .env file
+        run: |
+          echo "NODE_ENV=test" >> .env
+          echo "PORT=3333" >> .env
+          echo "APP_URL=http://localhost:3000" >> .env
+          echo "LOGO_CDN_URL=${{ secrets.LOGO_CDN_URL }}" >> .env
+          echo "SMTP_HOST=sandbox.smtp.mailtrap.io" >> .env
+          echo "SMTP_PORT=2525" >> .env
+          echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+          echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+          echo "EMAIL_DEFAULT_SENDER=suporte@tasksync.com" >> .env
+          echo "POSTGRES_HOST=127.0.0.1" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "POSTGRES_USER=tasksync" >> .env
+          echo "POSTGRES_PASSWORD=tasksync123" >> .env
+          echo "POSTGRES_DB=tasksync_dev" >> .env
+          echo "MONGO_URI=mongodb://localhost:27017/?authSource=admin" >> .env
+          echo "MONGO_DB=tasksync_logs" >> .env
+          echo "MONGO_USERNAME=tasksync" >> .env
+          echo "MONGO_PASSWORD=tasksync123" >> .env
+          echo "REDIS_HOST=127.0.0.1" >> .env
+          echo "REDIS_PORT=6379" >> .env
+          echo "REDIS_DB=0" >> .env
+          echo "JWT_SECRET=your_jwt_secret" >> .env
+        working-directory: .
       - name: Unit tests
         run: pnpm test --filter=@task-sync/api
       - name: E2E tests
-        env:
-          NODE_ENV: test
-          PORT: 3333
-          APP_URL: http://localhost:3000
-          LOGO_CDN_URL: ${{ secrets.LOGO_CDN_URL }}
-
-          SMTP_HOST: sandbox.smtp.mailtrap.io
-          SMTP_PORT: 2525
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          EMAIL_DEFAULT_SENDER: "suporte@tasksync.com"
-
-          POSTGRES_HOST: 127.0.0.1
-          POSTGRES_PORT: 5432
-          POSTGRES_USER: tasksync
-          POSTGRES_PASSWORD: tasksync123
-          POSTGRES_DB: tasksync_dev
-
-          MONGO_URI: mongodb://localhost:27017/?authSource=admin
-          MONGO_DB: tasksync_logs
-          MONGO_USERNAME: tasksync
-          MONGO_PASSWORD: tasksync123
-
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
-          REDIS_DB: 0
-
-          JWT_SECRET: your_jwt_secret
         run: pnpm test:e2e --filter=@task-sync/api
       - name: Show Docker Compose logs on failure
         if: failure()
