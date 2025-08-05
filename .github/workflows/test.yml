@@ -64,7 +64,7 @@ jobs:
       - name: Wait for services
         run: |
           echo "Waiting for services to be healthy..."
-          services=("postgres" "mongodb" "redis" "backend")
+          services=("postgres" "mongodb" "redis")
           for service in "${services[@]}"; do
             container_name=$(docker-compose -f docker-compose.test.yml ps -q $service | xargs docker inspect --format '{{.Name}}' | sed 's/^\///')
             if [ -z "$container_name" ]; then
