@@ -64,16 +64,29 @@ jobs:
       - name: Wait for services
         run: |
           echo "Waiting for services to be healthy..."
-          for service in postgres mongodb redis backend; do
-            while [ "$(docker inspect --format='{{.State.Health.Status}}' $service)" != "healthy" ]; do
-              echo "Waiting for $service to be healthy..."
+          services=("postgres" "mongodb" "redis" "backend")
+          for service in "${services[@]}"; do
+            container_name=$(docker-compose -f docker-compose.test.yml ps -q $service | xargs docker inspect --format '{{.Name}}' | sed 's/^\///')
+            if [ -z "$container_name" ]; then
+              echo "Container for $service not found. Showing logs..."
+              docker-compose -f docker-compose.test.yml logs $service
+              exit 1
+            fi
+            echo "Checking health for $container_name ($service)..."
+            timeout 60s bash -c "while [ \"\$(docker inspect --format='{{.State.Health.Status}}' $container_name)\" != \"healthy\" ]; do
+              echo \"Waiting for $service to be healthy...\"
               sleep 2
-              if [ "$(docker inspect --format='{{.State.Status}}' $service)" != "running" ]; then
-                echo "Service $service is not running. Showing logs..."
+              if [ \"\$(docker inspect --format='{{.State.Status}}' $container_name)\" != \"running\" ]; then
+                echo \"Service $service is not running. Showing logs...\"
                 docker-compose -f docker-compose.test.yml logs $service
                 exit 1
               fi
-            done
+            done"
+            if [ $? -ne 0 ]; then
+              echo "Timeout waiting for $service to be healthy. Showing logs..."
+              docker-compose -f docker-compose.test.yml logs $service
+              exit 1
+            fi
             echo "$service is healthy!"
           done
       - name: Unit tests
