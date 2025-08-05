@@ -6,7 +6,7 @@ import { AppModule } from '@/infra/app.module'
 import { User } from '@/infra/database/typeorm/entities/user.entity'
 import { TypeOrmService } from '@/infra/database/typeorm/typeorm.service'
 
-describe('teste', () => {
+describe('Register (E2E)', () => {
   let app: INestApplication
   let typeorm: TypeOrmService
 
