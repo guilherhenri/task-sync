@@ -42,6 +42,8 @@ afterAll(async () => {
     `DROP SCHEMA IF EXISTS "${env.POSTGRES_SCHEMA}" CASCADE`,
   )
   await dataSource.destroy()
+
+  await redis.flushdb()
   await redis.quit()
 
   const mongo = await mongoose.connect(env.MONGO_URI, {
