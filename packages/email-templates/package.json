@@ -8,7 +8,7 @@
     "build": "pnpm env:load pnpm build:clean && pnpm build:tsc && pnpm build:esbuild && pnpm build:cleanup",
     "build:clean": "tsc --build --clean",
     "build:tsc": "tsc",
-    "build:esbuild": "esbuild src/index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js --minify --external:react --external:react-dom --external:prettier",
+    "build:esbuild": "node esbuild.config.mjs",
     "build:cleanup": "find dist -mindepth 1 -not -path 'dist/index.js' -not -path 'dist/index.d.ts' -delete",
     "dev": "pnpm env:load email dev",
     "export": "pnpm env:load email export",
