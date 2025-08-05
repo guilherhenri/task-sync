@@ -133,3 +133,328 @@ Learn more about the power of Turborepo:
 - [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
 - [Configuration Options](https://turborepo.com/docs/reference/configuration)
 - [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+
+```
+task-sync
+├─ .github
+│  ├─ workflows
+│  │  ├─ commitlint.yml
+│  │  ├─ release.yml
+│  │  ├─ test.yml
+├─ .dockerignore
+├─ .husky
+│  ├─ _
+│  │  ├─ applypatch-msg
+│  │  ├─ commit-msg
+│  │  ├─ h
+│  │  ├─ husky.sh
+│  │  ├─ post-applypatch
+│  │  ├─ post-checkout
+│  │  ├─ post-commit
+│  │  ├─ post-merge
+│  │  ├─ post-rewrite
+│  │  ├─ pre-applypatch
+│  │  ├─ pre-auto-gc
+│  │  ├─ pre-commit
+│  │  ├─ pre-merge-commit
+│  │  ├─ pre-push
+│  │  ├─ pre-rebase
+│  │  └─ prepare-commit-msg
+│  ├─ commit-msg
+│  └─ pre-commit
+├─ .npmrc
+├─ .releaserc.json
+├─ README.md
+├─ TaskSync Fase 1 Tarefas Atômicas Revisadas.markdown
+├─ apps
+│  └─ api
+│     ├─ Dockerfile
+│     ├─ eslint.config.mjs
+│     ├─ jest.config.ts
+│     ├─ jest.e2e.config.ts
+│     ├─ nest-cli.json
+│     ├─ package.json
+│     ├─ scripts
+│     │  └─ generate-migration.ts
+│     ├─ src
+│     │  ├─ core
+│     │  │  ├─ either.spec.ts
+│     │  │  ├─ either.ts
+│     │  │  ├─ entities
+│     │  │  │  ├─ aggregate-root.ts
+│     │  │  │  ├─ entity.ts
+│     │  │  │  └─ unique-entity-id.ts
+│     │  │  ├─ errors
+│     │  │  │  └─ use-case-error.ts
+│     │  │  ├─ events
+│     │  │  │  ├─ domain-event.ts
+│     │  │  │  ├─ domain-events.spec.ts
+│     │  │  │  ├─ domain-events.ts
+│     │  │  │  └─ event-handler.ts
+│     │  │  └─ types
+│     │  │     └─ optional.ts
+│     │  ├─ domain
+│     │  │  ├─ auth
+│     │  │  │  ├─ application
+│     │  │  │  │  ├─ repositories
+│     │  │  │  │  │  ├─ auth-tokens-repository.ts
+│     │  │  │  │  │  ├─ users-repository.ts
+│     │  │  │  │  │  └─ verification-tokens-repository.ts
+│     │  │  │  │  ├─ services
+│     │  │  │  │  │  ├─ auth-service.ts
+│     │  │  │  │  │  └─ auth-user-service.ts
+│     │  │  │  │  └─ use-cases
+│     │  │  │  │     ├─ authenticate-session.spec.ts
+│     │  │  │  │     ├─ authenticate-session.ts
+│     │  │  │  │     ├─ confirm-email.spec.ts
+│     │  │  │  │     ├─ confirm-email.ts
+│     │  │  │  │     ├─ enroll-identity.spec.ts
+│     │  │  │  │     ├─ enroll-identity.ts
+│     │  │  │  │     ├─ errors
+│     │  │  │  │     │  └─ email-already-in-use.ts
+│     │  │  │  │     ├─ initiate-password-recovery.spec.ts
+│     │  │  │  │     ├─ initiate-password-recovery.ts
+│     │  │  │  │     ├─ refine-profile.spec.ts
+│     │  │  │  │     ├─ refine-profile.ts
+│     │  │  │  │     ├─ renew-token.spec.ts
+│     │  │  │  │     ├─ renew-token.ts
+│     │  │  │  │     ├─ reset-password.spec.ts
+│     │  │  │  │     ├─ reset-password.ts
+│     │  │  │  │     ├─ retrieve-profile.spec.ts
+│     │  │  │  │     ├─ retrieve-profile.ts
+│     │  │  │  │     ├─ revoke-tokens.spec.ts
+│     │  │  │  │     ├─ revoke-tokens.ts
+│     │  │  │  │     ├─ terminate-session.spec.ts
+│     │  │  │  │     ├─ terminate-session.ts
+│     │  │  │  │     ├─ update-avatar.spec.ts
+│     │  │  │  │     └─ update-avatar.ts
+│     │  │  │  └─ enterprise
+│     │  │  │     ├─ entities
+│     │  │  │     │  ├─ auth-token.ts
+│     │  │  │     │  ├─ user.spec.ts
+│     │  │  │     │  ├─ user.ts
+│     │  │  │     │  ├─ value-objects
+│     │  │  │     │  │  ├─ password-hash.spec.ts
+│     │  │  │     │  │  └─ password-hash.ts
+│     │  │  │     │  ├─ verification-token.spec.ts
+│     │  │  │     │  └─ verification-token.ts
+│     │  │  │     └─ events
+│     │  │  │        ├─ email-update-verification-requested-event.ts
+│     │  │  │        ├─ email-verification-requested-event.ts
+│     │  │  │        ├─ password-recovery-requested-event.ts
+│     │  │  │        ├─ password-reset-event.ts
+│     │  │  │        └─ user-registered-event.ts
+│     │  │  ├─ email
+│     │  │  │  ├─ application
+│     │  │  │  │  ├─ repositories
+│     │  │  │  │  │  └─ email-requests-repository.ts
+│     │  │  │  │  ├─ services
+│     │  │  │  │  │  ├─ email-queue-service.ts
+│     │  │  │  │  │  └─ email-sender-service.ts
+│     │  │  │  │  ├─ subscribers
+│     │  │  │  │  │  ├─ on-email-updated.spec.ts
+│     │  │  │  │  │  ├─ on-email-updated.ts
+│     │  │  │  │  │  ├─ on-email-verification-requested.spec.ts
+│     │  │  │  │  │  ├─ on-email-verification-requested.ts
+│     │  │  │  │  │  ├─ on-password-recovery-requested.spec.ts
+│     │  │  │  │  │  ├─ on-password-recovery-requested.ts
+│     │  │  │  │  │  ├─ on-password-reset.spec.ts
+│     │  │  │  │  │  ├─ on-password-reset.ts
+│     │  │  │  │  │  ├─ on-user-registered.spec.ts
+│     │  │  │  │  │  └─ on-user-registered.ts
+│     │  │  │  │  └─ use-cases
+│     │  │  │  │     ├─ create-email-request.spec.ts
+│     │  │  │  │     ├─ create-email-request.ts
+│     │  │  │  │     ├─ get-email-request-by-id.ts
+│     │  │  │  │     ├─ update-email-request-status.spec.ts
+│     │  │  │  │     └─ update-email-request-status.ts
+│     │  │  │  └─ enterprise
+│     │  │  │     └─ entities
+│     │  │  │        ├─ email-request.spec.ts
+│     │  │  │        ├─ email-request.ts
+│     │  │  │        └─ value-objects
+│     │  │  │           ├─ email-status.spec.ts
+│     │  │  │           └─ email-status.ts
+│     │  │  └─ task-management
+│     │  │     ├─ application
+│     │  │     │  ├─ repositories
+│     │  │     │  │  └─ tasks-repository.ts
+│     │  │     │  └─ use-cases
+│     │  │     │     ├─ create-task.spec.ts
+│     │  │     │     └─ create-task.ts
+│     │  │     └─ enterprise
+│     │  │        └─ entities
+│     │  │           ├─ attachment.ts
+│     │  │           ├─ task-attachment.ts
+│     │  │           ├─ task.ts
+│     │  │           └─ value-objects
+│     │  │              ├─ slug.spec.ts
+│     │  │              ├─ slug.ts
+│     │  │              ├─ task-status.spec.ts
+│     │  │              └─ task-status.ts
+│     │  ├─ infra
+│     │  │  ├─ app.module.ts
+│     │  │  ├─ database
+│     │  │  │  ├─ database.module.ts
+│     │  │  │  ├─ mongoose
+│     │  │  │  │  ├─ mappers
+│     │  │  │  │  │  └─ mongoose-email-request-mapper.ts
+│     │  │  │  │  ├─ mongoose.config.ts
+│     │  │  │  │  ├─ mongoose.service.ts
+│     │  │  │  │  ├─ repositories
+│     │  │  │  │  │  └─ mongoose-email-requests-repository.ts
+│     │  │  │  │  └─ schemas
+│     │  │  │  │     └─ email-request.schema.ts
+│     │  │  │  └─ typeorm
+│     │  │  │     ├─ data-source.ts
+│     │  │  │     ├─ entities
+│     │  │  │     │  └─ user.entity.ts
+│     │  │  │     ├─ factories
+│     │  │  │     │  └─ user.factory.ts
+│     │  │  │     ├─ load-entities.ts
+│     │  │  │     ├─ mappers
+│     │  │  │     │  └─ typeorm-user-mapper.ts
+│     │  │  │     ├─ migrations
+│     │  │  │     │  └─ 1753384781835-create-users-table.ts
+│     │  │  │     ├─ repositories
+│     │  │  │     │  └─ typeorm-users-repository.ts
+│     │  │  │     ├─ seeds
+│     │  │  │     │  └─ user.seeder.ts
+│     │  │  │     ├─ typeorm.config.ts
+│     │  │  │     └─ typeorm.service.ts
+│     │  │  ├─ email
+│     │  │  │  ├─ contracts
+│     │  │  │  │  └─ email-service.ts
+│     │  │  │  ├─ email.module.ts
+│     │  │  │  └─ nodemailer
+│     │  │  │     └─ nodemailer-email.service.ts
+│     │  │  ├─ env
+│     │  │  │  ├─ env.module.ts
+│     │  │  │  └─ env.service.ts
+│     │  │  ├─ events
+│     │  │  │  └─ events.module.ts
+│     │  │  ├─ http
+│     │  │  │  ├─ controllers
+│     │  │  │  │  ├─ register.controller.e2e-spec.ts
+│     │  │  │  │  └─ register.controller.ts
+│     │  │  │  ├─ decorators
+│     │  │  │  │  └─ zod-openapi.ts
+│     │  │  │  ├─ http.module.ts
+│     │  │  │  ├─ pipes
+│     │  │  │  │  └─ zod-validation-pipe.ts
+│     │  │  │  └─ responses
+│     │  │  │     ├─ conflict.ts
+│     │  │  │     └─ validation-failed.ts
+│     │  │  ├─ key-value
+│     │  │  │  ├─ key-value.module.ts
+│     │  │  │  ├─ key-values-repository.ts
+│     │  │  │  └─ redis
+│     │  │  │     ├─ mappers
+│     │  │  │     │  ├─ redis-auth-token-mapper.ts
+│     │  │  │     │  └─ redis-verification-token-mapper.ts
+│     │  │  │     ├─ redis.service.ts
+│     │  │  │     └─ repositories
+│     │  │  │        ├─ redis-auth-tokens-repository.ts
+│     │  │  │        ├─ redis-key-values-repository.ts
+│     │  │  │        └─ redis-verification-tokens-repository.ts
+│     │  │  ├─ main.ts
+│     │  │  ├─ services
+│     │  │  │  ├─ data
+│     │  │  │  │  └─ infra-auth-user.service.ts
+│     │  │  │  ├─ queue
+│     │  │  │  │  └─ redis-email-queue.service.ts
+│     │  │  │  └─ services.module.ts
+│     │  │  └─ workers
+│     │  │     ├─ queue
+│     │  │     │  ├─ bull
+│     │  │     │  │  ├─ services
+│     │  │     │  │  │  └─ bull-queue.service.ts
+│     │  │     │  │  └─ workers
+│     │  │     │  │     └─ bull-email-queue.worker.ts
+│     │  │     │  └─ contracts
+│     │  │     │     ├─ email-queue-worker.ts
+│     │  │     │     └─ queue-service.ts
+│     │  │     └─ workers.module.ts
+│     │  └─ utils
+│     │     └─ zod-to-openapi.ts
+│     ├─ test
+│     │  ├─ factories
+│     │  │  ├─ make-email-request.ts
+│     │  │  ├─ make-task.ts
+│     │  │  ├─ make-user.ts
+│     │  │  └─ make-verification-token.ts
+│     │  ├─ repositories
+│     │  │  ├─ in-memory-auth-tokens-repository.ts
+│     │  │  ├─ in-memory-email-requests-repository.ts
+│     │  │  ├─ in-memory-tasks-repository.ts
+│     │  │  ├─ in-memory-users-repository.ts
+│     │  │  └─ in-memory-verification-tokens-repository.ts
+│     │  ├─ services
+│     │  │  ├─ in-memory-auth-service.spec.ts
+│     │  │  ├─ in-memory-auth-service.ts
+│     │  │  ├─ in-memory-auth-user-service.spec.ts
+│     │  │  ├─ in-memory-auth-user-service.ts
+│     │  │  ├─ in-memory-email-queue-service.spec.ts
+│     │  │  └─ in-memory-email-queue-service.ts
+│     │  ├─ setup-e2e.ts
+│     │  └─ utils
+│     │     ├─ wait-for.spec.ts
+│     │     └─ wait-for.ts
+│     ├─ tsconfig.json
+│     ├─ tsconfig.seed.json
+│     └─ webpack.config.js
+├─ commitlint.config.ts
+├─ config
+│  ├─ eslint
+│  │  ├─ base.js
+│  │  ├─ node.js
+│  │  ├─ package.json
+│  │  └─ react.js
+│  └─ tsconfig
+│     ├─ base.json
+│     ├─ node.json
+│     ├─ package.json
+│     └─ react.json
+├─ docker-compose.yml
+├─ eslint.config.mjs
+├─ package.json
+├─ packages
+│  ├─ api-types
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ email-types.ts
+│  │  │  └─ index.ts
+│  │  └─ tsconfig.json
+│  ├─ email-templates
+│  │  ├─ .babelrc
+│  │  ├─ eslint.config.mjs
+│  │  ├─ jest.config.js
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ components
+│  │  │  │  ├─ content.tsx
+│  │  │  │  ├─ footer.tsx
+│  │  │  │  ├─ header.tsx
+│  │  │  │  ├─ main.tsx
+│  │  │  │  └─ title.tsx
+│  │  │  ├─ constants
+│  │  │  │  └─ index.ts
+│  │  │  ├─ emails
+│  │  │  │  ├─ email-verification.tsx
+│  │  │  │  ├─ password-recovery.tsx
+│  │  │  │  ├─ password-reset-confirmation.tsx
+│  │  │  │  ├─ update-email-verification.tsx
+│  │  │  │  └─ welcome.tsx
+│  │  │  ├─ index.spec.ts
+│  │  │  └─ index.ts
+│  │  └─ tsconfig.json
+│  └─ env
+│     ├─ create-env.ts
+│     ├─ index.ts
+│     ├─ package.json
+│     └─ tsconfig.json
+├─ pnpm-lock.yaml
+├─ pnpm-workspace.yaml
+└─ turbo.json
+
+```
