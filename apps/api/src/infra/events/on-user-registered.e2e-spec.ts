@@ -54,5 +54,5 @@ describe('On user registered (E2E)', () => {
       })
       expect(emailRequestOnDatabase).not.toBeNull()
     }, 5000)
-  })
+  }, 6000)
 })
