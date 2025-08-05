@@ -4,6 +4,9 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
+  ApiGoneResponse,
+  ApiNotFoundResponse,
+  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 import type { ZodObject, ZodType } from 'zod/v4'
@@ -17,6 +20,9 @@ import {
   validationFailedResponseSchema,
 } from '@/infra/http/responses/validation-failed'
 import { zodToOpenAPI } from '@/utils/zod-to-openapi'
+
+import { generateGoneResponseExample } from '../responses/gone'
+import { generateNotFoundResponseExample } from '../responses/not-found'
 
 /**
  * Decorator factory to automate Swagger documentation
@@ -48,6 +54,46 @@ export function ApiZodBody({
     }
 
     const decorator = ApiBody({ schema: openApiSchema })
+
+    return decorator(target, propertyKey, descriptor)
+  }
+}
+
+/**
+ * Decorator factory to automate Swagger documentation
+ */
+export function ApiZodQuery({
+  name,
+  schema,
+  examples,
+  description,
+}: {
+  name: string
+  schema: ZodObject<any>
+  examples?: Record<string, any>
+  description?: Record<string, string>
+}) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    const openApiSchema = zodToOpenAPI(schema, !examples)
+
+    if (examples) openApiSchema.example = examples
+
+    if (description && openApiSchema.properties) {
+      for (const [key, value] of Object.entries(description)) {
+        if (openApiSchema.properties[key]) {
+          openApiSchema.properties[key].description = value
+        }
+      }
+    }
+
+    const decorator = ApiQuery({
+      name,
+      schema: openApiSchema,
+    })
 
     return decorator(target, propertyKey, descriptor)
   }
@@ -107,6 +153,64 @@ export function ApiZodConflictResponse({
     openApiSchema.example = generateConflictResponseExample(message)
 
     const decorator = ApiConflictResponse({
+      description,
+      schema: openApiSchema,
+    })
+
+    return decorator(target, propertyKey, descriptor)
+  }
+}
+
+/**
+ * Decorator factory for not found response schemas
+ */
+export function ApiZodNotFoundResponse({
+  description,
+  custom: { message },
+}: {
+  description?: string
+  custom: {
+    message: string
+  }
+}) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    const openApiSchema = zodToOpenAPI(conflictResponseSchema, false)
+    openApiSchema.example = generateNotFoundResponseExample(message)
+
+    const decorator = ApiNotFoundResponse({
+      description,
+      schema: openApiSchema,
+    })
+
+    return decorator(target, propertyKey, descriptor)
+  }
+}
+
+/**
+ * Decorator factory for gone response schemas
+ */
+export function ApiZodGoneResponse({
+  description,
+  custom: { message },
+}: {
+  description?: string
+  custom: {
+    message: string
+  }
+}) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    const openApiSchema = zodToOpenAPI(conflictResponseSchema, false)
+    openApiSchema.example = generateGoneResponseExample(message)
+
+    const decorator = ApiGoneResponse({
       description,
       schema: openApiSchema,
     })
