@@ -1,14 +1,23 @@
+import { Injectable } from '@nestjs/common'
+
 import { type Either, left, right } from '@/core/either'
 
-import type { UsersRepository } from '../repositories/users-repository'
-import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { UsersRepository } from '../repositories/users-repository'
+import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { ResourceGoneUseError } from './errors/resource-gone'
+import { ResourceInvalidUseError } from './errors/resource-invalid'
+import { ResourceNotFoundUseError } from './errors/resource-not-found'
 
 interface ConfirmEmailUseCaseRequest {
   token: string
 }
 
-type ConfirmEmailUseCaseResponse = Either<Error, unknown>
+type ConfirmEmailUseCaseResponse = Either<
+  ResourceNotFoundUseError | ResourceInvalidUseError | ResourceGoneUseError,
+  unknown
+>
 
+@Injectable()
 export class ConfirmEmailUseCase {
   constructor(
     private usersRepository: UsersRepository,
@@ -26,19 +35,19 @@ export class ConfirmEmailUseCase {
       ))
 
     if (!verificationToken) {
-      return left(new Error('Token não encontrado.'))
+      return left(new ResourceNotFoundUseError('Token não encontrado.'))
     }
 
     if (!verificationToken.verifyToken(token)) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new Error('Token inválido.'))
+      return left(new ResourceInvalidUseError('Token inválido.'))
     }
 
     if (verificationToken.isExpired()) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new Error('Token expirado.'))
+      return left(new ResourceGoneUseError('Token expirado.'))
     }
 
     const user = await this.usersRepository.findById(
@@ -48,7 +57,7 @@ export class ConfirmEmailUseCase {
     if (!user) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new Error('Usuário não encontrado.'))
+      return left(new ResourceNotFoundUseError('Usuário não encontrado.'))
     }
 
     user.verifyEmail()
