@@ -32,9 +32,13 @@ export class RedisVerificationTokensRepository
   }
 
   async get(token: string, type: TokenType): Promise<VerificationToken | null> {
-    const key = `*:${type}:${token}`
+    const pattern = `*:${type}:${token}`
 
-    const value = await this.redis.get(key)
+    const keys = await this.redis.keys(pattern)
+
+    if (keys.length === 0) return null
+
+    const value = await this.redis.get(keys[0])
 
     if (!value) return null
 
