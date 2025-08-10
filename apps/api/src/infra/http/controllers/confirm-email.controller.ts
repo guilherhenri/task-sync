@@ -11,8 +11,9 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
 import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm-email'
-import { ResourceGoneUseError } from '@/domain/auth/application/use-cases/errors/resource-gone'
-import { ResourceNotFoundUseError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
+import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
+import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
+import { Public } from '@/infra/auth/decorators/public'
 
 import {
   ApiZodBadResponse,
@@ -24,10 +25,7 @@ import {
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 
 const confirmEmailQuerySchema = z.object({
-  token: z
-    .string('O token é obrigatório.')
-    .min(1, 'O token é obrigatório.')
-    .describe('teste'),
+  token: z.string('O token é obrigatório.').min(1, 'O token é obrigatório.'),
 })
 
 const confirmEmailResponseSchema = z.object({
@@ -48,6 +46,7 @@ const confirmEmailQueryDescription: Record<
 
 @ApiTags('auth')
 @Controller('/confirm-email')
+@Public()
 export class ConfirmEmailController {
   constructor(private readonly confirmEmail: ConfirmEmailUseCase) {}
 
@@ -92,9 +91,9 @@ export class ConfirmEmailController {
       const error = result.value
 
       switch (error.constructor) {
-        case ResourceNotFoundUseError:
+        case ResourceNotFoundError:
           throw new NotFoundException(error.message)
-        case ResourceGoneUseError:
+        case ResourceGoneError:
           throw new GoneException(error.message)
         default:
           throw new BadRequestException(error.message)
