@@ -202,7 +202,7 @@ export function zodToOpenAPI(
   }
 
   if (schema instanceof z.ZodEnum) {
-    const values = (schema as any)._def.values
+    const values = (schema as any)._def.entries
     const result: OpenAPISchema = {
       type: 'string',
       enum: values,
