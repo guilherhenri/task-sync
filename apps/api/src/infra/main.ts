@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import cookieParser from 'cookie-parser'
 
 import { AppModule } from './app.module'
 import { EnvService } from './env/env.service'
@@ -20,6 +21,9 @@ async function bootstrap() {
 
   const configService = app.get(EnvService)
   const port = configService.get('PORT')
+  const cookieSecret = configService.get('COOKIE_SECRET')
+
+  app.use(cookieParser(cookieSecret))
 
   await app.listen(port)
 }
