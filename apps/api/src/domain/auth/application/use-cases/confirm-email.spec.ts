@@ -6,6 +6,9 @@ import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memo
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 
 import { ConfirmEmailUseCase } from './confirm-email'
+import { ResourceGoneError } from './errors/resource-gone'
+import { ResourceInvalidError } from './errors/resource-invalid'
+import { ResourceNotFoundError } from './errors/resource-not-found'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
@@ -66,7 +69,7 @@ describe('Confirm Email Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
-    expect(response.value).toHaveProperty('message', 'Token não encontrado.')
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
   })
 
   it('should not be able to confirm a email with an invalid token', async () => {
@@ -87,7 +90,7 @@ describe('Confirm Email Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
-    expect(response.value).toHaveProperty('message', 'Token inválido.')
+    expect(response.value).toBeInstanceOf(ResourceInvalidError)
     expect(inMemoryUsersRepository.items[0].emailVerified).toBeFalsy()
   })
 
@@ -113,7 +116,7 @@ describe('Confirm Email Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
-    expect(response.value).toHaveProperty('message', 'Token expirado.')
+    expect(response.value).toBeInstanceOf(ResourceGoneError)
     expect(inMemoryUsersRepository.items[0].emailVerified).toBeFalsy()
   })
 
@@ -128,6 +131,6 @@ describe('Confirm Email Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
-    expect(response.value).toHaveProperty('message', 'Usuário não encontrado.')
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
   })
 })
