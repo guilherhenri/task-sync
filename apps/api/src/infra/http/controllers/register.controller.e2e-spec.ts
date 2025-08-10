@@ -1,8 +1,8 @@
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { TestAppModule } from '@test/modules/test-app.module'
 import request from 'supertest'
 
-import { AppModule } from '@/infra/app.module'
 import { User } from '@/infra/database/typeorm/entities/user.entity'
 import { TypeOrmService } from '@/infra/database/typeorm/typeorm.service'
 
@@ -12,7 +12,7 @@ describe('Register (E2E)', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [TestAppModule],
     }).compile()
 
     app = moduleRef.createNestApplication()
