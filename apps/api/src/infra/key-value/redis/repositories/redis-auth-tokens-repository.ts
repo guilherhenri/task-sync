@@ -12,12 +12,12 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
 
   constructor(private readonly redis: RedisService) {}
 
-  private buildKey(refreshToken: string): string {
-    return `refreshToken:${refreshToken}`
+  private buildKey(userId: string): string {
+    return `refresh:${userId}:userId`
   }
 
-  async findByRefreshToken(refreshToken: string): Promise<AuthToken | null> {
-    const key = this.buildKey(refreshToken)
+  async findByUserId(userId: string): Promise<AuthToken | null> {
+    const key = this.buildKey(userId)
 
     const value = await this.redis.get(key)
 
@@ -27,14 +27,14 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
   }
 
   async create(authToken: AuthToken): Promise<void> {
-    const key = this.buildKey(authToken.refreshToken)
+    const key = this.buildKey(authToken.userId.toString())
     const value = RedisAuthTokenMapper.toRedis(authToken)
 
     await this.redis.set(key, value, 'EX', this.expiresIn)
   }
 
-  async delete({ refreshToken }: AuthToken): Promise<void> {
-    const key = this.buildKey(refreshToken)
+  async delete({ userId }: AuthToken): Promise<void> {
+    const key = this.buildKey(userId.toString())
 
     await this.redis.del(key)
   }
