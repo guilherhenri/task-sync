@@ -165,7 +165,6 @@ task-sync
 ├─ .npmrc
 ├─ .releaserc.json
 ├─ README.md
-├─ TaskSync Fase 1 Tarefas Atômicas Revisadas.markdown
 ├─ apps
 │  └─ api
 │     ├─ Dockerfile
@@ -196,6 +195,9 @@ task-sync
 │     │  ├─ domain
 │     │  │  ├─ auth
 │     │  │  │  ├─ application
+│     │  │  │  │  ├─ cryptography
+│     │  │  │  │  │  ├─ encryptor.ts
+│     │  │  │  │  │  └─ hasher.ts
 │     │  │  │  │  ├─ repositories
 │     │  │  │  │  │  ├─ auth-tokens-repository.ts
 │     │  │  │  │  │  ├─ users-repository.ts
@@ -211,7 +213,13 @@ task-sync
 │     │  │  │  │     ├─ enroll-identity.spec.ts
 │     │  │  │  │     ├─ enroll-identity.ts
 │     │  │  │  │     ├─ errors
-│     │  │  │  │     │  └─ email-already-in-use.ts
+│     │  │  │  │     │  ├─ email-already-in-use.ts
+│     │  │  │  │     │  ├─ forbidden-action.ts
+│     │  │  │  │     │  ├─ invalid-credentials.ts
+│     │  │  │  │     │  ├─ refresh-token-expired.ts
+│     │  │  │  │     │  ├─ resource-gone.ts
+│     │  │  │  │     │  ├─ resource-invalid.ts
+│     │  │  │  │     │  └─ resource-not-found.ts
 │     │  │  │  │     ├─ initiate-password-recovery.spec.ts
 │     │  │  │  │     ├─ initiate-password-recovery.ts
 │     │  │  │  │     ├─ refine-profile.spec.ts
@@ -233,9 +241,6 @@ task-sync
 │     │  │  │     │  ├─ auth-token.ts
 │     │  │  │     │  ├─ user.spec.ts
 │     │  │  │     │  ├─ user.ts
-│     │  │  │     │  ├─ value-objects
-│     │  │  │     │  │  ├─ password-hash.spec.ts
-│     │  │  │     │  │  └─ password-hash.ts
 │     │  │  │     │  ├─ verification-token.spec.ts
 │     │  │  │     │  └─ verification-token.ts
 │     │  │  │     └─ events
@@ -294,6 +299,21 @@ task-sync
 │     │  │              └─ task-status.ts
 │     │  ├─ infra
 │     │  │  ├─ app.module.ts
+│     │  │  ├─ auth
+│     │  │  │  ├─ auth.module.ts
+│     │  │  │  ├─ current-user.ts
+│     │  │  │  ├─ jwt-auth-exception.ts
+│     │  │  │  ├─ jwt-auth.guard.ts
+│     │  │  │  ├─ jwt-payload.ts
+│     │  │  │  ├─ jwt-refresh-auth.guard.ts
+│     │  │  │  ├─ jwt-refresh.strategy.ts
+│     │  │  │  ├─ jwt-unauthorized.ts
+│     │  │  │  ├─ jwt.strategy.ts
+│     │  │  │  └─ public.ts
+│     │  │  ├─ cryptography
+│     │  │  │  ├─ bcrypt-hasher.ts
+│     │  │  │  ├─ cryptography.module.ts
+│     │  │  │  └─ jwt-encryptor.ts
 │     │  │  ├─ database
 │     │  │  │  ├─ database.module.ts
 │     │  │  │  ├─ mongoose
@@ -311,7 +331,6 @@ task-sync
 │     │  │  │     │  └─ user.entity.ts
 │     │  │  │     ├─ factories
 │     │  │  │     │  └─ user.factory.ts
-│     │  │  │     ├─ load-entities.ts
 │     │  │  │     ├─ mappers
 │     │  │  │     │  └─ typeorm-user-mapper.ts
 │     │  │  │     ├─ migrations
@@ -332,9 +351,17 @@ task-sync
 │     │  │  │  ├─ env.module.ts
 │     │  │  │  └─ env.service.ts
 │     │  │  ├─ events
-│     │  │  │  └─ events.module.ts
+│     │  │  │  ├─ events.module.ts
+│     │  │  │  ├─ on-email-verification-requested.e2e-spec.ts
+│     │  │  │  └─ on-user-registered.e2e-spec.ts
 │     │  │  ├─ http
 │     │  │  │  ├─ controllers
+│     │  │  │  │  ├─ authenticate.controller.e2e-spec.ts
+│     │  │  │  │  ├─ authenticate.controller.ts
+│     │  │  │  │  ├─ confirm-email.controller.e2e-spec.ts
+│     │  │  │  │  ├─ confirm-email.controller.ts
+│     │  │  │  │  ├─ refresh-token.controller.e2e-spec.ts
+│     │  │  │  │  ├─ refresh-token.controller.ts
 │     │  │  │  │  ├─ register.controller.e2e-spec.ts
 │     │  │  │  │  └─ register.controller.ts
 │     │  │  │  ├─ decorators
@@ -344,6 +371,9 @@ task-sync
 │     │  │  │  │  └─ zod-validation-pipe.ts
 │     │  │  │  └─ responses
 │     │  │  │     ├─ conflict.ts
+│     │  │  │     ├─ gone.ts
+│     │  │  │     ├─ not-found.ts
+│     │  │  │     ├─ unauthorized.ts
 │     │  │  │     └─ validation-failed.ts
 │     │  │  ├─ key-value
 │     │  │  │  ├─ key-value.module.ts
@@ -370,6 +400,7 @@ task-sync
 │     │  │     │  │  ├─ services
 │     │  │     │  │  │  └─ bull-queue.service.ts
 │     │  │     │  │  └─ workers
+│     │  │     │  │     ├─ bull-email-queue.worker.spec.ts
 │     │  │     │  │     └─ bull-email-queue.worker.ts
 │     │  │     │  └─ contracts
 │     │  │     │     ├─ email-queue-worker.ts
@@ -378,11 +409,17 @@ task-sync
 │     │  └─ utils
 │     │     └─ zod-to-openapi.ts
 │     ├─ test
+│     │  ├─ cryptography
+│     │  │  ├─ fake-encryptor.ts
+│     │  │  └─ fake-hasher.ts
 │     │  ├─ factories
 │     │  │  ├─ make-email-request.ts
 │     │  │  ├─ make-task.ts
 │     │  │  ├─ make-user.ts
 │     │  │  └─ make-verification-token.ts
+│     │  ├─ mocks
+│     │  │  └─ @task-sync
+│     │  │     └─ email-templates.ts
 │     │  ├─ repositories
 │     │  │  ├─ in-memory-auth-tokens-repository.ts
 │     │  │  ├─ in-memory-email-requests-repository.ts
@@ -415,6 +452,7 @@ task-sync
 │     ├─ node.json
 │     ├─ package.json
 │     └─ react.json
+├─ docker-compose.test.yml
 ├─ docker-compose.yml
 ├─ eslint.config.mjs
 ├─ package.json
