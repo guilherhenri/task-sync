@@ -7,6 +7,7 @@ type DomainEventCallback = (event: unknown) => void
 export class DomainEvents {
   private static handlersMap: Record<string, DomainEventCallback[]> = {}
   private static markedAggregates: AggregateRoot<unknown>[] = []
+  private static allowedEvents: string | string[] = '*'
 
   public static shouldRun = true
 
@@ -59,6 +60,10 @@ export class DomainEvents {
     this.handlersMap[eventClassName].push(callback)
   }
 
+  public static restrictToEvents(events: string[]) {
+    this.allowedEvents = events
+  }
+
   public static clearHandlers() {
     this.handlersMap = {}
   }
@@ -77,6 +82,13 @@ export class DomainEvents {
     }
 
     if (isEventRegistered) {
+      if (
+        this.allowedEvents !== '*' &&
+        !this.allowedEvents.includes(eventClassName)
+      ) {
+        return
+      }
+
       const handlers = this.handlersMap[eventClassName]
 
       for (const handler of handlers) {
