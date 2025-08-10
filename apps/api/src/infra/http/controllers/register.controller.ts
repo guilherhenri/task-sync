@@ -11,6 +11,7 @@ import { z } from 'zod/v4'
 
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/errors/email-already-in-use'
+import { Public } from '@/infra/auth/decorators/public'
 
 import {
   ApiZodBadResponse,
@@ -62,6 +63,7 @@ const registerBodyDescription: Record<
 
 @ApiTags('auth')
 @Controller('/sign-up')
+@Public()
 export class RegisterController {
   constructor(private readonly enrollIdentity: EnrollIdentityUseCase) {}
 
