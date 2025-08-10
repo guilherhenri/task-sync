@@ -8,6 +8,11 @@ export const envServerSchema = z.object({
     .default('development'),
   PORT: z.coerce.number().optional().default(3333),
 
+  JWT_PRIVATE_KEY: z.string(),
+  JWT_PUBLIC_KEY: z.string(),
+
+  COOKIE_SECRET: z.string(),
+
   APP_URL: z.url(),
   LOGO_CDN_URL: z.url(),
 
@@ -44,6 +49,11 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
+
+    JWT_PRIVATE_KEY: process.env.JWT_PRIVATE_KEY,
+    JWT_PUBLIC_KEY: process.env.JWT_PUBLIC_KEY,
+
+    COOKIE_SECRET: process.env.COOKIE_SECRET,
 
     APP_URL: process.env.APP_URL,
     LOGO_CDN_URL: process.env.LOGO_CDN_URL,
