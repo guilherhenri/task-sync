@@ -93,6 +93,9 @@ jobs:
         run: |
           echo "NODE_ENV=test" >> .env
           echo "PORT=3333" >> .env
+          echo "JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}" >> .env
+          echo "JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}" >> .env
+          echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" >> .env
           echo "APP_URL=http://localhost:3000" >> .env
           echo "LOGO_CDN_URL=${{ secrets.LOGO_CDN_URL }}" >> .env
           echo "SMTP_HOST=sandbox.smtp.mailtrap.io" >> .env
@@ -112,7 +115,6 @@ jobs:
           echo "REDIS_HOST=127.0.0.1" >> .env
           echo "REDIS_PORT=6379" >> .env
           echo "REDIS_DB=0" >> .env
-          echo "JWT_SECRET=your_jwt_secret" >> .env
         working-directory: .
       - name: Unit tests
         run: pnpm test --filter=@task-sync/api
