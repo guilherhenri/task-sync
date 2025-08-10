@@ -8,6 +8,7 @@ import {
   ApiNotFoundResponse,
   ApiQuery,
   ApiResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
 import type { ZodObject, ZodType } from 'zod/v4'
 
@@ -23,6 +24,7 @@ import { zodToOpenAPI } from '@/utils/zod-to-openapi'
 
 import { generateGoneResponseExample } from '../responses/gone'
 import { generateNotFoundResponseExample } from '../responses/not-found'
+import { generateUnauthorizedResponseExample } from '../responses/unauthorized'
 
 /**
  * Decorator factory to automate Swagger documentation
@@ -211,6 +213,35 @@ export function ApiZodGoneResponse({
     openApiSchema.example = generateGoneResponseExample(message)
 
     const decorator = ApiGoneResponse({
+      description,
+      schema: openApiSchema,
+    })
+
+    return decorator(target, propertyKey, descriptor)
+  }
+}
+
+/**
+ * Decorator factory for unauthorized response schemas
+ */
+export function ApiZodUnauthorizedResponse({
+  description,
+  custom: { message },
+}: {
+  description?: string
+  custom: {
+    message: string
+  }
+}) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    const openApiSchema = zodToOpenAPI(conflictResponseSchema, false)
+    openApiSchema.example = generateUnauthorizedResponseExample(message)
+
+    const decorator = ApiUnauthorizedResponse({
       description,
       schema: openApiSchema,
     })
