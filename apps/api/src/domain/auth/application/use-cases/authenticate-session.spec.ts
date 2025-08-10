@@ -1,27 +1,28 @@
+import { FakeEncryptor } from '@test/cryptography/fake-encryptor'
 import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
 import { InMemoryAuthTokensRepository } from '@test/repositories/in-memory-auth-tokens-repository'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
-import { InMemoryAuthService } from '@test/services/in-memory-auth-service'
 
 import { AuthenticateSessionUseCase } from './authenticate-session'
+import { InvalidCredentialsError } from './errors/invalid-credentials'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryAuthTokensRepository: InMemoryAuthTokensRepository
-let inMemoryAuthService: InMemoryAuthService
-let sut: AuthenticateSessionUseCase
+let fakeEncryptor: FakeEncryptor
 let fakeHasher: FakeHasher
+let sut: AuthenticateSessionUseCase
 
 describe('Authenticate Session Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     inMemoryAuthTokensRepository = new InMemoryAuthTokensRepository()
-    inMemoryAuthService = new InMemoryAuthService()
+    fakeEncryptor = new FakeEncryptor()
     fakeHasher = new FakeHasher()
     sut = new AuthenticateSessionUseCase(
       inMemoryUsersRepository,
       inMemoryAuthTokensRepository,
-      inMemoryAuthService,
+      fakeEncryptor,
       fakeHasher,
     )
   })
@@ -43,8 +44,9 @@ describe('Authenticate Session Use-case', () => {
     expect(response.isRight()).toBeTruthy()
 
     if (response.isRight()) {
-      expect(response.value).toHaveProperty('accessToken')
-      expect(response.value).toHaveProperty('refreshToken')
+      expect(response.value).toEqual(
+        expect.objectContaining({ accessToken: expect.any(String) }),
+      )
       expect(inMemoryAuthTokensRepository.items).toHaveLength(1)
       expect(inMemoryAuthTokensRepository.items[0].userId).toBe(user.id)
     }
@@ -62,7 +64,7 @@ describe('Authenticate Session Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
-    expect(response.value).toBeInstanceOf(Error)
+    expect(response.value).toBeInstanceOf(InvalidCredentialsError)
     expect(response.value).toHaveProperty(
       'message',
       'E-mail ou senha inválidos.',
@@ -84,7 +86,7 @@ describe('Authenticate Session Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
-    expect(response.value).toBeInstanceOf(Error)
+    expect(response.value).toBeInstanceOf(InvalidCredentialsError)
     expect(response.value).toHaveProperty(
       'message',
       'E-mail ou senha inválidos.',
