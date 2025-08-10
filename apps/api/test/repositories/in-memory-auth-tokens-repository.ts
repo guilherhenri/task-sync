@@ -4,8 +4,8 @@ import type { AuthToken } from '@/domain/auth/enterprise/entities/auth-token'
 export class InMemoryAuthTokensRepository implements AuthTokensRepository {
   public items: Array<AuthToken> = []
 
-  async findByRefreshToken(refreshToken: string): Promise<AuthToken | null> {
-    return this.items.find((item) => item.refreshToken === refreshToken) ?? null
+  async findByUserId(userId: string): Promise<AuthToken | null> {
+    return this.items.find((item) => item.userId.toString() === userId) ?? null
   }
 
   async create(authToken: AuthToken): Promise<void> {
