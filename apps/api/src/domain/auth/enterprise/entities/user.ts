@@ -91,10 +91,7 @@ export class User extends AggregateRoot<UserProps> {
   }
 
   static create(
-    props: Optional<
-      Omit<UserProps, 'emailVerified'>,
-      'avatarUrl' | 'createdAt'
-    >,
+    props: Optional<UserProps, 'emailVerified' | 'avatarUrl' | 'createdAt'>,
     id?: UniqueEntityID,
   ) {
     const user = new User(
@@ -102,7 +99,7 @@ export class User extends AggregateRoot<UserProps> {
         ...props,
         passwordHash: props.passwordHash,
         avatarUrl: props.avatarUrl ?? null,
-        emailVerified: false,
+        emailVerified: props.emailVerified ?? false,
         createdAt: new Date(),
       },
       id,
