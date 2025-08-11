@@ -11,6 +11,7 @@ export class TypeOrmUserMapper {
         email: raw.email,
         avatarUrl: raw.avatarUrl,
         passwordHash: raw.passwordHash,
+        emailVerified: raw.emailVerified,
       },
       new UniqueEntityID(raw.id),
     )
