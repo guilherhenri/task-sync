@@ -50,11 +50,14 @@ describe('On user registered (E2E)', () => {
   })
 
   it('should send a email when user is registered', async () => {
-    await request(app.getHttpServer()).post('/sign-up').send({
-      name: 'John Doe',
-      email: 'johndoe@email.com',
-      password: '12345Ab@',
-    })
+    await request(app.getHttpServer())
+      .post('/sign-up')
+      .send({
+        name: 'John Doe',
+        email: 'johndoe@email.com',
+        password: '12345Ab@',
+      })
+      .expect(201)
 
     await waitFor(async () => {
       const emailRequestOnDatabase = await emailRequestModel.findOne({
