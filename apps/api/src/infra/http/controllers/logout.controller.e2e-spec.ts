@@ -29,10 +29,9 @@ describe('Logout (E2E)', () => {
     const { signedCookie } =
       await authenticateUserFactory.makeAuthenticatedUser()
 
-    const response = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .delete('/sessions')
       .set('Cookie', signedCookie)
-
-    expect(response.statusCode).toBe(200)
+      .expect(200)
   })
 })
