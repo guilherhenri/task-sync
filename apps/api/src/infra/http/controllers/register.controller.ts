@@ -14,10 +14,10 @@ import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/erro
 import { Public } from '@/infra/auth/decorators/public'
 
 import {
-  ApiZodBadResponse,
   ApiZodBody,
   ApiZodConflictResponse,
   ApiZodResponse,
+  ApiZodValidationFailedResponse,
 } from '../decorators/zod-openapi'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 
@@ -89,7 +89,7 @@ export class RegisterController {
     description: 'Email already in use',
     custom: { message: 'O e-mail "email@example.com" já está em uso.' },
   })
-  @ApiZodBadResponse({
+  @ApiZodValidationFailedResponse({
     description: 'Validation Failed',
     custom: { field: 'email', message: 'O e-mail deve ser válido.' },
   })
