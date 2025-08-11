@@ -48,10 +48,9 @@ describe('Refresh Token (E2E)', () => {
     const cookies = authenticateResponse.get('Set-Cookie')
     const signedCookie = cookies ? cookies[0] : ''
 
-    const response = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .get('/auth/refresh')
       .set('Cookie', signedCookie)
-
-    expect(response.statusCode).toBe(200)
+      .expect(200)
   })
 })
