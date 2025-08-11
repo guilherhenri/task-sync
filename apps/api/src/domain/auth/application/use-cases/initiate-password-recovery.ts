@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common'
+
 import { type Either, left, right } from '@/core/either'
 
 import { VerificationToken } from '../../enterprise/entities/verification-token'
-import type { UsersRepository } from '../repositories/users-repository'
-import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { UsersRepository } from '../repositories/users-repository'
+import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
 
 interface InitiatePasswordRecoveryUseCaseRequest {
   email: string
@@ -10,6 +12,7 @@ interface InitiatePasswordRecoveryUseCaseRequest {
 
 type InitiatePasswordRecoveryUseCaseResponse = Either<Error, unknown>
 
+@Injectable()
 export class InitiatePasswordRecoveryUseCase {
   constructor(
     private usersRepository: UsersRepository,
