@@ -17,9 +17,9 @@ import { Public } from '@/infra/auth/decorators/public'
 import { EnvService } from '@/infra/env/env.service'
 
 import {
-  ApiZodBadResponse,
   ApiZodBody,
   ApiZodUnauthorizedResponse,
+  ApiZodValidationFailedResponse,
 } from '../decorators/zod-openapi'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 
@@ -86,7 +86,7 @@ export class AuthenticateController {
     description: 'Invalid credentials',
     custom: { message: 'E-mail ou senha inválidos.' },
   })
-  @ApiZodBadResponse({
+  @ApiZodValidationFailedResponse({
     description: 'Validation Failed',
     custom: { field: 'email', message: 'O e-mail deve ser válido.' },
   })
