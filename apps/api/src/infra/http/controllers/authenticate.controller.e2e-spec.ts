@@ -37,11 +37,12 @@ describe('Authenticate (E2E)', () => {
       passwordHash,
     })
 
-    const response = await request(app.getHttpServer()).post('/sessions').send({
-      email: 'johndoe@email.com',
-      password: '12345Ab@',
-    })
-
-    expect(response.statusCode).toBe(200)
+    await request(app.getHttpServer())
+      .post('/sessions')
+      .send({
+        email: 'johndoe@email.com',
+        password: '12345Ab@',
+      })
+      .expect(200)
   })
 })
