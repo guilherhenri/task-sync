@@ -16,11 +16,11 @@ import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/error
 import { Public } from '@/infra/auth/decorators/public'
 
 import {
-  ApiZodBadResponse,
   ApiZodGoneResponse,
   ApiZodNotFoundResponse,
   ApiZodQuery,
   ApiZodResponse,
+  ApiZodValidationFailedResponse,
 } from '../decorators/zod-openapi'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 
@@ -76,7 +76,7 @@ export class ConfirmEmailController {
     description: 'Token expired',
     custom: { message: 'Token expirado.' },
   })
-  @ApiZodBadResponse({
+  @ApiZodValidationFailedResponse({
     description: 'Validation Failed',
     custom: { field: 'token', message: 'O token é obrigatório.' },
   })
