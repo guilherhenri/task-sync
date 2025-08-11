@@ -30,12 +30,15 @@ describe('Confirm Email (E2E)', () => {
     await app.close()
   })
 
-  it('[GET] /confirm-email', async () => {
-    await request(app.getHttpServer()).post('/sign-up').send({
-      name: 'John Doe',
-      email: 'johndoe@email.com',
-      password: '12345Ab@',
-    })
+  it('[POST] /confirm-email', async () => {
+    await request(app.getHttpServer())
+      .post('/sign-up')
+      .send({
+        name: 'John Doe',
+        email: 'johndoe@email.com',
+        password: '12345Ab@',
+      })
+      .expect(201)
 
     const user = await typeorm.getRepository(User).findOne({
       where: {
@@ -51,11 +54,10 @@ describe('Confirm Email (E2E)', () => {
 
     const { token } = RedisVerificationTokenMapper.toDomain(value)
 
-    const response = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .get('/confirm-email')
       .query({ token })
-
-    expect(response.statusCode).toBe(200)
+      .expect(200)
 
     const userUpdated = await typeorm.getRepository(User).findOne({
       where: {
