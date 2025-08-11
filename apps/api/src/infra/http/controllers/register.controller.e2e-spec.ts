@@ -27,13 +27,14 @@ describe('Register (E2E)', () => {
   })
 
   it('[POST] /sign-up', async () => {
-    const response = await request(app.getHttpServer()).post('/sign-up').send({
-      name: 'John Doe',
-      email: 'johndoe@email.com',
-      password: '12345Ab@',
-    })
-
-    expect(response.statusCode).toBe(201)
+    await request(app.getHttpServer())
+      .post('/sign-up')
+      .send({
+        name: 'John Doe',
+        email: 'johndoe@email.com',
+        password: '12345Ab@',
+      })
+      .expect(201)
 
     const userOnDatabase = await typeorm.getRepository(User).findOne({
       where: {
