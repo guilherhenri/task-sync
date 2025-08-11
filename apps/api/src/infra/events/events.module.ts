@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { OnEmailVerificationRequested } from '@/domain/email/application/subscribers/on-email-verification-requested'
+import { OnPasswordRecoveryRequested } from '@/domain/email/application/subscribers/on-password-recovery-requested'
 import { OnUserRegistered } from '@/domain/email/application/subscribers/on-user-registered'
 import { CreateEmailRequestUseCase } from '@/domain/email/application/use-cases/create-email-request'
 
@@ -12,6 +13,7 @@ import { ServicesModule } from '../services/services.module'
   providers: [
     OnUserRegistered,
     OnEmailVerificationRequested,
+    OnPasswordRecoveryRequested,
     CreateEmailRequestUseCase,
   ],
 })
