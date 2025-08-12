@@ -1,27 +1,30 @@
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { UserFactory } from '@test/factories/make-user'
-import { TestAppModule } from '@test/modules/test-app.module'
+import { AuthTokenFactory } from '@test/factories/make-auth-token'
+import { AuthenticateUserFactory } from '@test/factories/make-user'
+import { AuthTestModule } from '@test/modules/auth-test.module'
 import request from 'supertest'
 
-import { Hasher } from '@/domain/auth/application/cryptography/hasher'
-import { DatabaseModule } from '@/infra/database/database.module'
+import { Encryptor } from '@/domain/auth/application/cryptography/encryptor'
+import { KeyValueModule } from '@/infra/key-value/key-value.module'
 
 describe('Refresh Token (E2E)', () => {
   let app: INestApplication
-  let userFactory: UserFactory
-  let hasher: Hasher
+  let encryptor: Encryptor
+  let authenticateUserFactory: AuthenticateUserFactory
+  let authTokenFactory: AuthTokenFactory
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [TestAppModule, DatabaseModule],
-      providers: [UserFactory],
+      imports: [AuthTestModule, KeyValueModule],
+      providers: [AuthenticateUserFactory, AuthTokenFactory],
     }).compile()
 
     app = moduleRef.createNestApplication()
 
-    hasher = moduleRef.get(Hasher)
-    userFactory = moduleRef.get(UserFactory)
+    encryptor = moduleRef.get(Encryptor)
+    authenticateUserFactory = moduleRef.get(AuthenticateUserFactory)
+    authTokenFactory = moduleRef.get(AuthTokenFactory)
 
     await app.init()
   })
@@ -31,22 +34,13 @@ describe('Refresh Token (E2E)', () => {
   })
 
   it('[GET] /auth/refresh', async () => {
-    const passwordHash = await hasher.hash('12345Ab@')
-    await userFactory.makeTypeOrmUser({
-      email: 'johndoe@email.com',
-      passwordHash,
+    const { user, signedCookie } =
+      await authenticateUserFactory.makeAuthenticatedUser()
+    const refreshToken = await encryptor.encrypt({ sub: user.id.toString() })
+    await authTokenFactory.makeRedisAuthToken({
+      userId: user.id,
+      refreshToken,
     })
-
-    const authenticateResponse = await request(app.getHttpServer())
-      .post('/sessions')
-      .send({
-        email: 'johndoe@email.com',
-        password: '12345Ab@',
-      })
-      .expect(200)
-
-    const cookies = authenticateResponse.get('Set-Cookie')
-    const signedCookie = cookies ? cookies[0] : ''
 
     await request(app.getHttpServer())
       .get('/auth/refresh')
