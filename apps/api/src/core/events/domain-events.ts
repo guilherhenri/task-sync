@@ -12,9 +12,27 @@ export class DomainEvents {
   public static shouldRun = true
 
   public static markAggregateForDispatch(aggregate: AggregateRoot<unknown>) {
-    const aggregateFound = !!this.findMarkedAggregateByID(aggregate.id)
+    const existingAggregateIndex = this.findMarkedAggregateIndexByID(
+      aggregate.id,
+    )
 
-    if (!aggregateFound) {
+    if (existingAggregateIndex !== -1) {
+      const existing = this.markedAggregates[existingAggregateIndex]
+
+      const mergedEvents = [
+        ...existing.domainEvents,
+        ...aggregate.domainEvents.filter(
+          (newEvent) =>
+            !existing.domainEvents.some(
+              (existingEvent) =>
+                existingEvent.constructor.name === newEvent.constructor.name,
+            ),
+        ),
+      ]
+
+      aggregate._mergeEvents(mergedEvents)
+      this.markedAggregates[existingAggregateIndex] = aggregate
+    } else {
       this.markedAggregates.push(aggregate)
     }
   }
@@ -35,6 +53,10 @@ export class DomainEvents {
     id: UniqueEntityID,
   ): AggregateRoot<unknown> | undefined {
     return this.markedAggregates.find((aggregate) => aggregate.id.equals(id))
+  }
+
+  private static findMarkedAggregateIndexByID(id: UniqueEntityID): number {
+    return this.markedAggregates.findIndex((a) => a.id.equals(id))
   }
 
   public static dispatchEventsForAggregate(id: UniqueEntityID) {
