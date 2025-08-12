@@ -28,6 +28,7 @@ import { RedisVerificationTokensRepository } from './redis/repositories/redis-ve
     },
   ],
   exports: [
+    RedisService,
     AuthTokensRepository,
     VerificationTokensRepository,
     KeyValuesRepository,
