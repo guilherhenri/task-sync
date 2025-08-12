@@ -1,10 +1,13 @@
+import { Injectable } from '@nestjs/common'
+
 import { DomainEvents } from '@/core/events/domain-events'
 import type { EventHandler } from '@/core/events/event-handler'
-import type { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
+import { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
 import { PasswordResetEvent } from '@/domain/auth/enterprise/events/password-reset-event'
 
-import type { CreateEmailRequestUseCase } from '../use-cases/create-email-request'
+import { CreateEmailRequestUseCase } from '../use-cases/create-email-request'
 
+@Injectable()
 export class OnPasswordRest implements EventHandler {
   constructor(
     private authUserService: AuthUserService,
@@ -15,12 +18,12 @@ export class OnPasswordRest implements EventHandler {
 
   setupSubscriptions(): void {
     DomainEvents.register(
-      this.sendEmailVerification.bind(this),
+      this.sendWarnEmail.bind(this),
       PasswordResetEvent.name,
     )
   }
 
-  private async sendEmailVerification({ user }: PasswordResetEvent) {
+  private async sendWarnEmail({ user }: PasswordResetEvent) {
     const recipient = await this.authUserService.getUserForEmailDelivery(
       user.id.toString(),
     )
