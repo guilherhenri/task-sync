@@ -8,6 +8,9 @@ import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import { DomainEvents } from '@/core/events/domain-events'
 
 import { PasswordResetEvent } from '../../enterprise/events/password-reset-event'
+import { ResourceGoneError } from './errors/resource-gone'
+import { ResourceInvalidError } from './errors/resource-invalid'
+import { ResourceNotFoundError } from './errors/resource-not-found'
 import { ResetPasswordUseCase } from './reset-password'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
@@ -65,6 +68,7 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
     expect(response.value).toHaveProperty('message', 'Token não encontrado.')
   })
 
@@ -88,6 +92,7 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceInvalidError)
     expect(response.value).toHaveProperty('message', 'Token inválido.')
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
@@ -115,6 +120,7 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceGoneError)
     expect(response.value).toHaveProperty('message', 'Token expirado.')
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
@@ -132,6 +138,7 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
     expect(response.value).toHaveProperty('message', 'Usuário não encontrado.')
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
