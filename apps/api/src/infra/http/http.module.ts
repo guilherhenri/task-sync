@@ -5,6 +5,7 @@ import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
 import { RenewTokenUseCase } from '@/domain/auth/application/use-cases/renew-token'
+import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-password'
 import { TerminateSessionUseCase } from '@/domain/auth/application/use-cases/terminate-session'
 
 import { CryptographyModule } from '../cryptography/cryptography.module'
@@ -17,6 +18,7 @@ import { ForgotPasswordController } from './controllers/forgot-password.controll
 import { LogoutController } from './controllers/logout.controller'
 import { RefreshTokenController } from './controllers/refresh-token.controller'
 import { RegisterController } from './controllers/register.controller'
+import { ResetPasswordController } from './controllers/reset-password.controller'
 
 @Module({
   imports: [DatabaseModule, KeyValueModule, CryptographyModule, EnvModule],
@@ -27,6 +29,7 @@ import { RegisterController } from './controllers/register.controller'
     RefreshTokenController,
     LogoutController,
     ForgotPasswordController,
+    ResetPasswordController,
   ],
   providers: [
     EnrollIdentityUseCase,
@@ -35,6 +38,7 @@ import { RegisterController } from './controllers/register.controller'
     RenewTokenUseCase,
     TerminateSessionUseCase,
     InitiatePasswordRecoveryUseCase,
+    ResetPasswordUseCase,
   ],
 })
 export class HttpModule {}
