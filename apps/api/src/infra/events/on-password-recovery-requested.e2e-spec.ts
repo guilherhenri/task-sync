@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { UserFactory } from '@test/factories/make-user'
 import { TestAppModule } from '@test/modules/test-app.module'
+import { createIsolatedWorkersTestSetup } from '@test/utils/create-isolated-workers-test-setup'
 import { waitFor } from '@test/utils/wait-for'
 import type { Model } from 'mongoose'
 import request from 'supertest'
@@ -15,7 +16,6 @@ import {
   type EmailRequest as MongooseEmailRequest,
   EmailRequestSchema,
 } from '../database/mongoose/schemas/email-request.schema'
-import { EmailQueueWorker } from '../workers/queue/contracts/email-queue-worker'
 import { QueueService } from '../workers/queue/contracts/queue-service'
 
 describe('On password recovery requested (E2E)', () => {
@@ -26,13 +26,14 @@ describe('On password recovery requested (E2E)', () => {
   let userFactory: UserFactory
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [TestAppModule, DatabaseModule],
-      providers: [UserFactory],
-    })
-      .overrideProvider(EmailQueueWorker)
-      .useFactory({ factory: () => {} })
-      .compile()
+    const { setupTestModule } = createIsolatedWorkersTestSetup()
+
+    const moduleRef = await setupTestModule(
+      Test.createTestingModule({
+        imports: [TestAppModule, DatabaseModule],
+        providers: [UserFactory],
+      }),
+    ).compile()
 
     app = moduleRef.createNestApplication()
     mongoose = moduleRef.get(MongooseService)
@@ -76,7 +77,9 @@ describe('On password recovery requested (E2E)', () => {
       expect(emailRequestOnDatabase).not.toBeNull()
     })
 
-    const jobs = await queue.getEmailQueue().getJobs(['active', 'waiting'])
+    const jobs = await queue
+      .getEmailQueue()
+      .getJobs(['waiting', 'active', 'completed'])
 
     expect(jobs).not.toHaveLength(0)
     expect(jobs[0].data).toEqual(
