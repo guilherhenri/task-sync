@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bull'
-import { type DynamicModule, Module } from '@nestjs/common'
+import { type DynamicModule, Module, type ModuleMetadata } from '@nestjs/common'
 
 import { GetEmailRequestByIdUseCase } from '@/domain/email/application/use-cases/get-email-request-by-id'
 import { UpdateEmailRequestStatusUseCase } from '@/domain/email/application/use-cases/update-email-request-status'
@@ -14,11 +14,13 @@ import { BullEmailQueueWorker } from './queue/bull/workers/bull-email-queue.work
 import { EmailQueueWorker } from './queue/contracts/email-queue-worker'
 import { QueueService } from './queue/contracts/queue-service'
 
-const queues: Array<DynamicModule> = [
-  BullModule.registerQueue({ name: 'email-queue' }),
-]
+function createQueues(queueName = 'email-queue'): Array<DynamicModule> {
+  return [BullModule.registerQueue({ name: queueName })]
+}
 
-@Module({
+const defaultQueues = createQueues()
+
+const workersModuleMetadata: ModuleMetadata = {
   imports: [
     BullModule.forRootAsync({
       imports: [EnvModule],
@@ -31,7 +33,7 @@ const queues: Array<DynamicModule> = [
       }),
       inject: [EnvService],
     }),
-    ...queues,
+    ...defaultQueues,
     DatabaseModule,
     KeyValueModule,
     EmailModule,
@@ -48,6 +50,31 @@ const queues: Array<DynamicModule> = [
     UpdateEmailRequestStatusUseCase,
     GetEmailRequestByIdUseCase,
   ],
-  exports: [QueueService, EmailQueueWorker, ...queues],
-})
-export class WorkersModule {}
+  exports: [QueueService, EmailQueueWorker, ...defaultQueues],
+}
+@Module(workersModuleMetadata)
+export class WorkersModule {
+  static register(options?: { queueName?: string }): DynamicModule {
+    const queueName = options?.queueName ?? 'email-queue'
+    const customQueues = createQueues(queueName)
+
+    const {
+      imports: workersModuleImports = [],
+      exports: workersModuleExports = [],
+    } = workersModuleMetadata
+
+    const filteredImports = workersModuleImports.filter(
+      (imp) => !defaultQueues.includes(imp as DynamicModule),
+    )
+    const filteredExports = workersModuleExports.filter(
+      (exp) => !defaultQueues.includes(exp as DynamicModule),
+    )
+
+    return {
+      module: WorkersModule,
+      ...workersModuleMetadata,
+      imports: [...filteredImports, ...customQueues],
+      exports: [...filteredExports, ...customQueues],
+    }
+  }
+}
