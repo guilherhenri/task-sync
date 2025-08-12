@@ -1,16 +1,25 @@
+import { Injectable } from '@nestjs/common'
+
 import { type Either, left, right } from '@/core/either'
 
-import type { Hasher } from '../cryptography/hasher'
-import type { UsersRepository } from '../repositories/users-repository'
-import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { Hasher } from '../cryptography/hasher'
+import { UsersRepository } from '../repositories/users-repository'
+import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { ResourceGoneError } from './errors/resource-gone'
+import { ResourceInvalidError } from './errors/resource-invalid'
+import { ResourceNotFoundError } from './errors/resource-not-found'
 
 interface ResetPasswordUseCaseRequest {
   token: string
   newPassword: string
 }
 
-type ResetPasswordUseCaseResponse = Either<Error, unknown>
+type ResetPasswordUseCaseResponse = Either<
+  ResourceNotFoundError | ResourceInvalidError | ResourceGoneError,
+  unknown
+>
 
+@Injectable()
 export class ResetPasswordUseCase {
   constructor(
     private usersRepository: UsersRepository,
@@ -28,19 +37,19 @@ export class ResetPasswordUseCase {
     )
 
     if (!verificationToken) {
-      return left(new Error('Token não encontrado.'))
+      return left(new ResourceNotFoundError('Token não encontrado.'))
     }
 
     if (!verificationToken.verifyToken(token)) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new Error('Token inválido.'))
+      return left(new ResourceInvalidError('Token inválido.'))
     }
 
     if (verificationToken.isExpired()) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new Error('Token expirado.'))
+      return left(new ResourceGoneError('Token expirado.'))
     }
 
     const user = await this.usersRepository.findById(
@@ -50,7 +59,7 @@ export class ResetPasswordUseCase {
     if (!user) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new Error('Usuário não encontrado.'))
+      return left(new ResourceNotFoundError('Usuário não encontrado.'))
     }
 
     const newPasswordHash = await this.hasher.hash(newPassword)
