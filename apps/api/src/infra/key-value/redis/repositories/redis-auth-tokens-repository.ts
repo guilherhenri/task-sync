@@ -38,4 +38,26 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
 
     await this.redis.del(key)
   }
+
+  async revokeTokensByUserId(userId: string): Promise<void> {
+    const pattern = `refresh:${userId}:*`
+    const userKeys = []
+    let cursor = '0'
+
+    do {
+      const [nextCursor, keys] = await this.redis.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      )
+      cursor = nextCursor
+      userKeys.push(...keys)
+    } while (cursor !== '0')
+
+    if (userKeys.length > 0) {
+      await this.redis.del(userKeys)
+    }
+  }
 }
