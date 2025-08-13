@@ -1,9 +1,13 @@
+import { Injectable } from '@nestjs/common'
+
 import { type Either, left, right } from '@/core/either'
 
 import { VerificationToken } from '../../enterprise/entities/verification-token'
-import type { Hasher } from '../cryptography/hasher'
-import type { UsersRepository } from '../repositories/users-repository'
-import type { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { Hasher } from '../cryptography/hasher'
+import { UsersRepository } from '../repositories/users-repository'
+import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
+import { EmailAlreadyInUseError } from './errors/email-already-in-use'
+import { ResourceNotFoundError } from './errors/resource-not-found'
 
 interface RefineProfileUseCaseRequest {
   userId: string
@@ -12,8 +16,12 @@ interface RefineProfileUseCaseRequest {
   newPassword?: string
 }
 
-type RefineProfileUseCaseResponse = Either<Error, unknown>
+type RefineProfileUseCaseResponse = Either<
+  ResourceNotFoundError | EmailAlreadyInUseError,
+  unknown
+>
 
+@Injectable()
 export class RefineProfileUseCase {
   constructor(
     private usersRepository: UsersRepository,
@@ -30,7 +38,7 @@ export class RefineProfileUseCase {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
-      return left(new Error('Usuário não encontrado.'))
+      return left(new ResourceNotFoundError('Usuário não encontrado.'))
     }
 
     let verificationToken: VerificationToken | null = null
@@ -39,13 +47,15 @@ export class RefineProfileUseCase {
       const emailAlreadyInUse = await this.usersRepository.findByEmail(email)
 
       if (emailAlreadyInUse) {
-        return left(new Error('Este e-mail já está em uso.'))
+        return left(new EmailAlreadyInUseError(email))
       }
 
       verificationToken = VerificationToken.create({
         userId: user.id,
         type: 'email:update:verify',
       })
+
+      user.resetEmailVerification()
     }
 
     if (newPassword) {
