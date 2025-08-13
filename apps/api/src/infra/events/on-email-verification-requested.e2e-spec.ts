@@ -50,7 +50,7 @@ describe('On email verification requested (E2E)', () => {
     await app.close()
   })
 
-  it('should send a email for verification when user is registered', async () => {
+  it('should create a verification email request and add a job to the queue when user is registered', async () => {
     await request(app.getHttpServer())
       .post('/sign-up')
       .send({

@@ -50,7 +50,7 @@ describe('On user registered (E2E)', () => {
     await app.close()
   })
 
-  it('should send a email when user is registered', async () => {
+  it('should create a welcome email request and add a job to the queue when user is registered', async () => {
     await request(app.getHttpServer())
       .post('/sign-up')
       .send({

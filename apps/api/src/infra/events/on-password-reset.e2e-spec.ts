@@ -59,7 +59,7 @@ describe('On password reset (E2E)', () => {
     await app.close()
   })
 
-  it("should send a email for warning when a user's password is reset", async () => {
+  it("should create a warning email request and add a job to the queue when a user's password is reset", async () => {
     const user = await userFactory.makeTypeOrmUser({
       email: 'johndoe@email.com',
     })

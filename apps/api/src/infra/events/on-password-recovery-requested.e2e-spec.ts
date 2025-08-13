@@ -55,7 +55,7 @@ describe('On password recovery requested (E2E)', () => {
     await app.close()
   })
 
-  it('should send a email when user initiate password recovery', async () => {
+  it('should create an email request and add a job to the queue when user initiate password recovery', async () => {
     await userFactory.makeTypeOrmUser({
       email: 'johndoe@email.com',
       emailVerified: true,
