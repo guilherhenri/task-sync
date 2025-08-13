@@ -203,7 +203,6 @@ task-sync
 │     │  │  │  │  │  ├─ users-repository.ts
 │     │  │  │  │  │  └─ verification-tokens-repository.ts
 │     │  │  │  │  ├─ services
-│     │  │  │  │  │  ├─ auth-service.ts
 │     │  │  │  │  │  └─ auth-user-service.ts
 │     │  │  │  │  └─ use-cases
 │     │  │  │  │     ├─ authenticate-session.spec.ts
@@ -301,15 +300,17 @@ task-sync
 │     │  │  ├─ app.module.ts
 │     │  │  ├─ auth
 │     │  │  │  ├─ auth.module.ts
-│     │  │  │  ├─ current-user.ts
-│     │  │  │  ├─ jwt-auth-exception.ts
-│     │  │  │  ├─ jwt-auth.guard.ts
-│     │  │  │  ├─ jwt-payload.ts
-│     │  │  │  ├─ jwt-refresh-auth.guard.ts
-│     │  │  │  ├─ jwt-refresh.strategy.ts
-│     │  │  │  ├─ jwt-unauthorized.ts
-│     │  │  │  ├─ jwt.strategy.ts
-│     │  │  │  └─ public.ts
+│     │  │  │  ├─ decorators
+│     │  │  │  │  ├─ current-user.ts
+│     │  │  │  │  └─ public.ts
+│     │  │  │  ├─ guards
+│     │  │  │  │  ├─ jwt-auth.guard.ts
+│     │  │  │  │  └─ jwt-refresh-auth.guard.ts
+│     │  │  │  ├─ strategies
+│     │  │  │  │  ├─ jwt-refresh.strategy.ts
+│     │  │  │  │  └─ jwt.strategy.ts
+│     │  │  │  └─ types
+│     │  │  │     └─ jwt-payload.ts
 │     │  │  ├─ cryptography
 │     │  │  │  ├─ bcrypt-hasher.ts
 │     │  │  │  ├─ cryptography.module.ts
@@ -346,6 +347,7 @@ task-sync
 │     │  │  │  │  └─ email-service.ts
 │     │  │  │  ├─ email.module.ts
 │     │  │  │  └─ nodemailer
+│     │  │  │     ├─ nodemailer-email.service.spec.ts
 │     │  │  │     └─ nodemailer-email.service.ts
 │     │  │  ├─ env
 │     │  │  │  ├─ env.module.ts
@@ -353,6 +355,8 @@ task-sync
 │     │  │  ├─ events
 │     │  │  │  ├─ events.module.ts
 │     │  │  │  ├─ on-email-verification-requested.e2e-spec.ts
+│     │  │  │  ├─ on-password-recovery-requested.e2e-spec.ts
+│     │  │  │  ├─ on-password-reset.e2e-spec.ts
 │     │  │  │  └─ on-user-registered.e2e-spec.ts
 │     │  │  ├─ http
 │     │  │  │  ├─ controllers
@@ -360,18 +364,40 @@ task-sync
 │     │  │  │  │  ├─ authenticate.controller.ts
 │     │  │  │  │  ├─ confirm-email.controller.e2e-spec.ts
 │     │  │  │  │  ├─ confirm-email.controller.ts
+│     │  │  │  │  ├─ forgot-password.controller.e2e-spec.ts
+│     │  │  │  │  ├─ forgot-password.controller.ts
+│     │  │  │  │  ├─ logout.controller.e2e-spec.ts
+│     │  │  │  │  ├─ logout.controller.ts
 │     │  │  │  │  ├─ refresh-token.controller.e2e-spec.ts
 │     │  │  │  │  ├─ refresh-token.controller.ts
 │     │  │  │  │  ├─ register.controller.e2e-spec.ts
-│     │  │  │  │  └─ register.controller.ts
+│     │  │  │  │  ├─ register.controller.ts
+│     │  │  │  │  ├─ reset-password.controller.e2e-spec.ts
+│     │  │  │  │  └─ reset-password.controller.ts
 │     │  │  │  ├─ decorators
-│     │  │  │  │  └─ zod-openapi.ts
+│     │  │  │  │  ├─ api-union-response.ts
+│     │  │  │  │  ├─ types.ts
+│     │  │  │  │  └─ zod-openapi
+│     │  │  │  │     ├─ api-zod-bad-response.ts
+│     │  │  │  │     ├─ api-zod-body.ts
+│     │  │  │  │     ├─ api-zod-conflict-response.ts
+│     │  │  │  │     ├─ api-zod-gone-response.ts
+│     │  │  │  │     ├─ api-zod-not-found-response.ts
+│     │  │  │  │     ├─ api-zod-query.ts
+│     │  │  │  │     ├─ api-zod-response.ts
+│     │  │  │  │     ├─ api-zod-unauthorized-response.ts
+│     │  │  │  │     ├─ api-zod-validation-failed-response.ts
+│     │  │  │  │     └─ index.ts
+│     │  │  │  ├─ exceptions
+│     │  │  │  │  └─ jwt-auth.ts
 │     │  │  │  ├─ http.module.ts
 │     │  │  │  ├─ pipes
 │     │  │  │  │  └─ zod-validation-pipe.ts
 │     │  │  │  └─ responses
+│     │  │  │     ├─ bad-response.ts
 │     │  │  │     ├─ conflict.ts
 │     │  │  │     ├─ gone.ts
+│     │  │  │     ├─ jwt-unauthorized.ts
 │     │  │  │     ├─ not-found.ts
 │     │  │  │     ├─ unauthorized.ts
 │     │  │  │     └─ validation-failed.ts
@@ -392,12 +418,14 @@ task-sync
 │     │  │  │  ├─ data
 │     │  │  │  │  └─ infra-auth-user.service.ts
 │     │  │  │  ├─ queue
+│     │  │  │  │  ├─ redis-email-queue.service.e2e-spec.ts
 │     │  │  │  │  └─ redis-email-queue.service.ts
 │     │  │  │  └─ services.module.ts
 │     │  │  └─ workers
 │     │  │     ├─ queue
 │     │  │     │  ├─ bull
 │     │  │     │  │  ├─ services
+│     │  │     │  │  │  ├─ bull-queue.service.spec.ts
 │     │  │     │  │  │  └─ bull-queue.service.ts
 │     │  │     │  │  └─ workers
 │     │  │     │  │     ├─ bull-email-queue.worker.spec.ts
@@ -413,6 +441,7 @@ task-sync
 │     │  │  ├─ fake-encryptor.ts
 │     │  │  └─ fake-hasher.ts
 │     │  ├─ factories
+│     │  │  ├─ make-auth-token.ts
 │     │  │  ├─ make-email-request.ts
 │     │  │  ├─ make-task.ts
 │     │  │  ├─ make-user.ts
@@ -420,6 +449,9 @@ task-sync
 │     │  ├─ mocks
 │     │  │  └─ @task-sync
 │     │  │     └─ email-templates.ts
+│     │  ├─ modules
+│     │  │  ├─ auth-test.module.ts
+│     │  │  └─ test-app.module.ts
 │     │  ├─ repositories
 │     │  │  ├─ in-memory-auth-tokens-repository.ts
 │     │  │  ├─ in-memory-email-requests-repository.ts
@@ -427,14 +459,13 @@ task-sync
 │     │  │  ├─ in-memory-users-repository.ts
 │     │  │  └─ in-memory-verification-tokens-repository.ts
 │     │  ├─ services
-│     │  │  ├─ in-memory-auth-service.spec.ts
-│     │  │  ├─ in-memory-auth-service.ts
 │     │  │  ├─ in-memory-auth-user-service.spec.ts
 │     │  │  ├─ in-memory-auth-user-service.ts
 │     │  │  ├─ in-memory-email-queue-service.spec.ts
 │     │  │  └─ in-memory-email-queue-service.ts
 │     │  ├─ setup-e2e.ts
 │     │  └─ utils
+│     │     ├─ create-isolated-workers-test-setup.ts
 │     │     ├─ wait-for.spec.ts
 │     │     └─ wait-for.ts
 │     ├─ tsconfig.json
