@@ -35,6 +35,9 @@ describe('User Entity', () => {
 
     expect(user.emailVerified).toBeTruthy()
     expect(user.updatedAt).not.toBeUndefined()
+
+    user.resetEmailVerification()
+    expect(user.emailVerified).toBeFalsy()
   })
 
   it('should be able to reset a password', async () => {
