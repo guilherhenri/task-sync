@@ -68,6 +68,8 @@ export class RedisVerificationTokensRepository
       userKeys.push(...keys)
     } while (cursor !== '0')
 
-    await this.redis.del(userKeys)
+    if (userKeys.length > 0) {
+      await this.redis.del(userKeys)
+    }
   }
 }
