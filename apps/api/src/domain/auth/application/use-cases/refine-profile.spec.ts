@@ -7,6 +7,8 @@ import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import { DomainEvents } from '@/core/events/domain-events'
 
 import { EmailUpdateVerificationRequestedEvent } from '../../enterprise/events/email-update-verification-requested-event'
+import { EmailAlreadyInUseError } from './errors/email-already-in-use'
+import { ResourceNotFoundError } from './errors/resource-not-found'
 import { RefineProfileUseCase } from './refine-profile'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
@@ -102,6 +104,7 @@ describe('Refine Profile Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
     expect(response.value).toHaveProperty('message', 'Usuário não encontrado.')
   })
 
@@ -128,9 +131,10 @@ describe('Refine Profile Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(EmailAlreadyInUseError)
     expect(response.value).toHaveProperty(
       'message',
-      'Este e-mail já está em uso.',
+      `O e-mail "user2@email.com" já está em uso.`,
     )
     expect(inMemoryUsersRepository.items[0].email).toEqual('user1@email.com')
   })
