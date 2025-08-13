@@ -4,6 +4,7 @@ import { AuthenticateSessionUseCase } from '@/domain/auth/application/use-cases/
 import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm-email'
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
+import { RefineProfileUseCase } from '@/domain/auth/application/use-cases/refine-profile'
 import { RenewTokenUseCase } from '@/domain/auth/application/use-cases/renew-token'
 import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-password'
 import { RetrieveProfileUseCase } from '@/domain/auth/application/use-cases/retrieve-profile'
@@ -23,6 +24,7 @@ import { RefreshTokenController } from './controllers/refresh-token.controller'
 import { RegisterController } from './controllers/register.controller'
 import { ResetPasswordController } from './controllers/reset-password.controller'
 import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.controller'
+import { UpdateProfileController } from './controllers/update-profile.controller'
 
 @Module({
   imports: [DatabaseModule, KeyValueModule, CryptographyModule, EnvModule],
@@ -36,6 +38,7 @@ import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.c
     ResetPasswordController,
     GetProfileController,
     RevokeAllSessionsController,
+    UpdateProfileController,
   ],
   providers: [
     EnrollIdentityUseCase,
@@ -47,6 +50,7 @@ import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.c
     ResetPasswordUseCase,
     RetrieveProfileUseCase,
     RevokeTokensUseCase,
+    RefineProfileUseCase,
   ],
 })
 export class HttpModule {}
