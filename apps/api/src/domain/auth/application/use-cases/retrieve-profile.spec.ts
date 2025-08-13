@@ -3,6 +3,7 @@ import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repo
 
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 
+import { ResourceNotFoundError } from './errors/resource-not-found'
 import { RetrieveProfileUseCase } from './retrieve-profile'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
@@ -40,6 +41,7 @@ describe('Retrieve Profile Use-case', () => {
     const response = await sut.execute({ userId: 'user-id' })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
     expect(response.value).toHaveProperty('message', 'Usuário não encontrado.')
   })
 })
