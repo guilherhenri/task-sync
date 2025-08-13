@@ -75,6 +75,16 @@ export class User extends AggregateRoot<UserProps> {
   }
 
   /**
+   * Resets the email verification status when the email is changed.
+   */
+  public resetEmailVerification() {
+    if (this.props.emailVerified) {
+      this.props.emailVerified = false
+      this.touch()
+    }
+  }
+
+  /**
    * Resets the user's passwordHash and emitting a PasswordResetEvent.
    * @param newPasswordHash - The new passwordHash to be set.
    * @returns A Promise that resolves when the password has been successfully reset.
