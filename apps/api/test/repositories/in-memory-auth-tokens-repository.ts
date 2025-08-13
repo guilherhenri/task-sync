@@ -19,4 +19,10 @@ export class InMemoryAuthTokensRepository implements AuthTokensRepository {
 
     this.items.splice(authTokenIndex, 1)
   }
+
+  async revokeTokensByUserId(userId: string): Promise<void> {
+    this.items = this.items.filter(
+      (token) => token.userId.toString() !== userId,
+    )
+  }
 }
