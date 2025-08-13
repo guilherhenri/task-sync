@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { OnEmailUpdated } from '@/domain/email/application/subscribers/on-email-updated'
 import { OnEmailVerificationRequested } from '@/domain/email/application/subscribers/on-email-verification-requested'
 import { OnPasswordRecoveryRequested } from '@/domain/email/application/subscribers/on-password-recovery-requested'
 import { OnPasswordRest } from '@/domain/email/application/subscribers/on-password-reset'
@@ -16,6 +17,7 @@ import { ServicesModule } from '../services/services.module'
     OnEmailVerificationRequested,
     OnPasswordRecoveryRequested,
     OnPasswordRest,
+    OnEmailUpdated,
     CreateEmailRequestUseCase,
   ],
 })
