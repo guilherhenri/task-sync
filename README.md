@@ -204,6 +204,8 @@ task-sync
 │     │  │  │  │  │  └─ verification-tokens-repository.ts
 │     │  │  │  │  ├─ services
 │     │  │  │  │  │  └─ auth-user-service.ts
+│     │  │  │  │  ├─ storage
+│     │  │  │  │  │  └─ uploader.ts
 │     │  │  │  │  └─ use-cases
 │     │  │  │  │     ├─ authenticate-session.spec.ts
 │     │  │  │  │     ├─ authenticate-session.ts
@@ -214,6 +216,7 @@ task-sync
 │     │  │  │  │     ├─ errors
 │     │  │  │  │     │  ├─ email-already-in-use.ts
 │     │  │  │  │     │  ├─ forbidden-action.ts
+│     │  │  │  │     │  ├─ invalid-avatar-type.ts
 │     │  │  │  │     │  ├─ invalid-credentials.ts
 │     │  │  │  │     │  ├─ refresh-token-expired.ts
 │     │  │  │  │     │  ├─ resource-gone.ts
@@ -233,8 +236,8 @@ task-sync
 │     │  │  │  │     ├─ revoke-tokens.ts
 │     │  │  │  │     ├─ terminate-session.spec.ts
 │     │  │  │  │     ├─ terminate-session.ts
-│     │  │  │  │     ├─ update-avatar.spec.ts
-│     │  │  │  │     └─ update-avatar.ts
+│     │  │  │  │     ├─ upload-and-update-avatar.spec.ts
+│     │  │  │  │     └─ upload-and-update-avatar.ts
 │     │  │  │  └─ enterprise
 │     │  │  │     ├─ entities
 │     │  │  │     │  ├─ auth-token.ts
@@ -354,6 +357,7 @@ task-sync
 │     │  │  │  └─ env.service.ts
 │     │  │  ├─ events
 │     │  │  │  ├─ events.module.ts
+│     │  │  │  ├─ on-email-updated.e2e-spec.ts
 │     │  │  │  ├─ on-email-verification-requested.e2e-spec.ts
 │     │  │  │  ├─ on-password-recovery-requested.e2e-spec.ts
 │     │  │  │  ├─ on-password-reset.e2e-spec.ts
@@ -366,6 +370,8 @@ task-sync
 │     │  │  │  │  ├─ confirm-email.controller.ts
 │     │  │  │  │  ├─ forgot-password.controller.e2e-spec.ts
 │     │  │  │  │  ├─ forgot-password.controller.ts
+│     │  │  │  │  ├─ get-profile.controller.e2e-spec.ts
+│     │  │  │  │  ├─ get-profile.controller.ts
 │     │  │  │  │  ├─ logout.controller.e2e-spec.ts
 │     │  │  │  │  ├─ logout.controller.ts
 │     │  │  │  │  ├─ refresh-token.controller.e2e-spec.ts
@@ -373,7 +379,12 @@ task-sync
 │     │  │  │  │  ├─ register.controller.e2e-spec.ts
 │     │  │  │  │  ├─ register.controller.ts
 │     │  │  │  │  ├─ reset-password.controller.e2e-spec.ts
-│     │  │  │  │  └─ reset-password.controller.ts
+│     │  │  │  │  ├─ reset-password.controller.ts
+│     │  │  │  │  ├─ revoke-all-sessions.controller.e2e-spec.ts
+│     │  │  │  │  ├─ revoke-all-sessions.controller.ts
+│     │  │  │  │  ├─ update-profile.controller.e2e-spec.ts
+│     │  │  │  │  ├─ update-profile.controller.ts
+│     │  │  │  │  └─ upload-avatar.controller.ts
 │     │  │  │  ├─ decorators
 │     │  │  │  │  ├─ api-union-response.ts
 │     │  │  │  │  ├─ types.ts
@@ -393,14 +404,18 @@ task-sync
 │     │  │  │  ├─ http.module.ts
 │     │  │  │  ├─ pipes
 │     │  │  │  │  └─ zod-validation-pipe.ts
-│     │  │  │  └─ responses
-│     │  │  │     ├─ bad-response.ts
-│     │  │  │     ├─ conflict.ts
-│     │  │  │     ├─ gone.ts
-│     │  │  │     ├─ jwt-unauthorized.ts
-│     │  │  │     ├─ not-found.ts
-│     │  │  │     ├─ unauthorized.ts
-│     │  │  │     └─ validation-failed.ts
+│     │  │  │  ├─ presenters
+│     │  │  │  │  └─ user-presenter.ts
+│     │  │  │  ├─ responses
+│     │  │  │  │  ├─ bad-response.ts
+│     │  │  │  │  ├─ conflict.ts
+│     │  │  │  │  ├─ gone.ts
+│     │  │  │  │  ├─ jwt-unauthorized.ts
+│     │  │  │  │  ├─ not-found.ts
+│     │  │  │  │  ├─ unauthorized.ts
+│     │  │  │  │  └─ validation-failed.ts
+│     │  │  │  └─ validators
+│     │  │  │     └─ file-upload-validators.ts
 │     │  │  ├─ key-value
 │     │  │  │  ├─ key-value.module.ts
 │     │  │  │  ├─ key-values-repository.ts
@@ -435,6 +450,7 @@ task-sync
 │     │  │     │     └─ queue-service.ts
 │     │  │     └─ workers.module.ts
 │     │  └─ utils
+│     │     ├─ bytes-to-readable.ts
 │     │     └─ zod-to-openapi.ts
 │     ├─ test
 │     │  ├─ cryptography
@@ -464,6 +480,8 @@ task-sync
 │     │  │  ├─ in-memory-email-queue-service.spec.ts
 │     │  │  └─ in-memory-email-queue-service.ts
 │     │  ├─ setup-e2e.ts
+│     │  ├─ storage
+│     │  │  └─ fake-uploader.ts
 │     │  └─ utils
 │     │     ├─ create-isolated-workers-test-setup.ts
 │     │     ├─ wait-for.spec.ts
