@@ -239,6 +239,37 @@ export function zodToOpenAPI(
     return { ...innerSchema, nullable: true }
   }
 
+  if (schema instanceof z.ZodCustom) {
+    const def = (schema as any)._def
+
+    const mainFnStr = def.fn?.toString() || ''
+    const isFileFromMain =
+      mainFnStr.includes('File') || mainFnStr.includes('instanceof')
+
+    const isFileFromChecks = def.checks?.some((check: any) => {
+      const checkStr = check.fn?.toString() || check.toString() || ''
+      return checkStr.includes('file.type') || checkStr.includes('validTypes')
+    })
+
+    const isFileSchema = isFileFromMain || isFileFromChecks
+
+    if (isFileSchema) {
+      const result: OpenAPISchema = {
+        type: 'string',
+        format: 'binary',
+      }
+
+      if (description) result.description = description
+
+      return result
+    }
+
+    const result: OpenAPISchema = { type: 'string' }
+    if (description) result.description = description
+    if (includeExamples) result.example = 'custom'
+    return result
+  }
+
   const result: OpenAPISchema = { type: 'string' }
   if (description) result.description = description
   if (includeExamples) result.example = 'string'
