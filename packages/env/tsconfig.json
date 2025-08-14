@@ -1,14 +1,10 @@
 {
   "extends": "@task-sync/tsconfig/base",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    
     "declaration": true,
-    "noEmitOnError": true,
 
     "outDir": "dist",
     "types": ["node"]
   },
-  "include": ["index.ts"]
+  "include": ["index.ts", "create-env.ts"]
 }

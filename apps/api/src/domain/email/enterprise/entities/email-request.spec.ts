@@ -69,6 +69,24 @@ describe('Email Request Entity', () => {
     expect(emailRequest.updatedAt).toBeInstanceOf(Date)
   })
 
+  it('should be able to mark an email request as sent', async () => {
+    const emailRequest = EmailRequest.create({
+      eventType: 'email_verification',
+      recipientId: new UniqueEntityID('recipient-id'),
+      recipientEmail: 'example@email.com',
+      templateName: 'email-verify',
+      data: {
+        name: 'User Test',
+        verificationLink: 'https://tasksync.com?token=token',
+      },
+    })
+
+    emailRequest.markAsSent()
+
+    expect(emailRequest.status.value).toEqual('sent')
+    expect(emailRequest.updatedAt).toBeInstanceOf(Date)
+  })
+
   it('should be able to mark an email request as failed', async () => {
     const emailRequest = EmailRequest.create({
       eventType: 'email_verification',

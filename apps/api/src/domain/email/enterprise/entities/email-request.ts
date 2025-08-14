@@ -94,6 +94,15 @@ export class EmailRequest<T extends EmailTemplateType> extends Entity<
   }
 
   /**
+   * Marks the email request as sent, setting its status to 'sent'.
+   * Updates the `updatedAt` timestamp to reflect the change.
+   */
+  markAsSent() {
+    this.props.status = new EmailStatus('sent')
+    this.touch()
+  }
+
+  /**
    * Marks the email request as failed, setting its status to 'failed'.
    * Updates the `updatedAt` timestamp to reflect the change.
    */
@@ -108,8 +117,8 @@ export class EmailRequest<T extends EmailTemplateType> extends Entity<
 
   static create<T extends EmailTemplateType>(
     props: Optional<
-      Omit<EmailRequestProps<T>, 'status'>,
-      'subject' | 'priority' | 'createdAt'
+      EmailRequestProps<T>,
+      'subject' | 'status' | 'priority' | 'createdAt'
     >,
     id?: UniqueEntityID,
   ) {
@@ -117,7 +126,7 @@ export class EmailRequest<T extends EmailTemplateType> extends Entity<
       {
         ...props,
         subject: props.subject ?? EmailSubjectMap[props.eventType],
-        status: new EmailStatus(),
+        status: props.status ?? new EmailStatus(),
         priority: props.priority ?? 'medium',
         createdAt: new Date(),
       },

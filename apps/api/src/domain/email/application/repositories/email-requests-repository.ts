@@ -6,19 +6,20 @@ import type {
 } from '../../enterprise/entities/email-request'
 import type { EmailStatus } from '../../enterprise/entities/value-objects/email-status'
 
-export interface EmailRequestsRepository {
-  findById(id: string): Promise<EmailRequest<EmailTemplateType> | null>
-  findPending(
+export abstract class EmailRequestsRepository {
+  abstract findById(id: string): Promise<EmailRequest<EmailTemplateType> | null>
+  abstract findPending(
     limit: number,
     offset?: number,
   ): Promise<Array<EmailRequest<EmailTemplateType>>>
-  findByStatusAndPriority(
+
+  abstract findByStatusAndPriority(
     status: EmailStatus,
     priority: EmailPriority,
     limit: number,
     offset?: number,
   ): Promise<Array<EmailRequest<EmailTemplateType>>>
 
-  create(emailRequest: EmailRequest<EmailTemplateType>): Promise<void>
-  save(emailRequest: EmailRequest<EmailTemplateType>): Promise<void>
+  abstract create(emailRequest: EmailRequest<EmailTemplateType>): Promise<void>
+  abstract save(emailRequest: EmailRequest<EmailTemplateType>): Promise<void>
 }

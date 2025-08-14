@@ -23,7 +23,7 @@ describe('Initiate Password Recovery Use-case', () => {
   })
 
   it('should be able to initialize password recovery for a valid email', async () => {
-    const user = await makeUser({ email: 'example@email.com' })
+    const user = makeUser({ email: 'example@email.com' })
     user.verifyEmail()
     inMemoryUsersRepository.items.push(user)
 
@@ -42,7 +42,7 @@ describe('Initiate Password Recovery Use-case', () => {
   })
 
   it('should not be able to initialize password recovery for an unverified email', async () => {
-    const user = await makeUser({ email: 'example@email.com' })
+    const user = makeUser({ email: 'example@email.com' })
     inMemoryUsersRepository.items.push(user)
 
     const response = await sut.execute({ email: 'example@email.com' })

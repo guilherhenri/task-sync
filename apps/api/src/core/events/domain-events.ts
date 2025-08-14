@@ -7,11 +7,32 @@ type DomainEventCallback = (event: unknown) => void
 export class DomainEvents {
   private static handlersMap: Record<string, DomainEventCallback[]> = {}
   private static markedAggregates: AggregateRoot<unknown>[] = []
+  private static allowedEvents: string | string[] = '*'
+
+  public static shouldRun = true
 
   public static markAggregateForDispatch(aggregate: AggregateRoot<unknown>) {
-    const aggregateFound = !!this.findMarkedAggregateByID(aggregate.id)
+    const existingAggregateIndex = this.findMarkedAggregateIndexByID(
+      aggregate.id,
+    )
 
-    if (!aggregateFound) {
+    if (existingAggregateIndex !== -1) {
+      const existing = this.markedAggregates[existingAggregateIndex]
+
+      const mergedEvents = [
+        ...existing.domainEvents,
+        ...aggregate.domainEvents.filter(
+          (newEvent) =>
+            !existing.domainEvents.some(
+              (existingEvent) =>
+                existingEvent.constructor.name === newEvent.constructor.name,
+            ),
+        ),
+      ]
+
+      aggregate._mergeEvents(mergedEvents)
+      this.markedAggregates[existingAggregateIndex] = aggregate
+    } else {
       this.markedAggregates.push(aggregate)
     }
   }
@@ -32,6 +53,10 @@ export class DomainEvents {
     id: UniqueEntityID,
   ): AggregateRoot<unknown> | undefined {
     return this.markedAggregates.find((aggregate) => aggregate.id.equals(id))
+  }
+
+  private static findMarkedAggregateIndexByID(id: UniqueEntityID): number {
+    return this.markedAggregates.findIndex((a) => a.id.equals(id))
   }
 
   public static dispatchEventsForAggregate(id: UniqueEntityID) {
@@ -57,6 +82,10 @@ export class DomainEvents {
     this.handlersMap[eventClassName].push(callback)
   }
 
+  public static restrictToEvents(events: string[]) {
+    this.allowedEvents = events
+  }
+
   public static clearHandlers() {
     this.handlersMap = {}
   }
@@ -70,7 +99,18 @@ export class DomainEvents {
 
     const isEventRegistered = eventClassName in this.handlersMap
 
+    if (!this.shouldRun) {
+      return
+    }
+
     if (isEventRegistered) {
+      if (
+        this.allowedEvents !== '*' &&
+        !this.allowedEvents.includes(eventClassName)
+      ) {
+        return
+      }
+
       const handlers = this.handlersMap[eventClassName]
 
       for (const handler of handlers) {

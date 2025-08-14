@@ -54,7 +54,7 @@ describe('On Email Verification Requested', () => {
   })
 
   it('should add an email request to the queue when a verify token is registered', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken = makeVerificationToken({

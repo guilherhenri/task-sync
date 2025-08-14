@@ -6,6 +6,6 @@ export interface AuthUser {
   email: string
 }
 
-export interface AuthUserService {
-  getUserForEmailDelivery(id: string): Promise<AuthUser | null>
+export abstract class AuthUserService {
+  abstract getUserForEmailDelivery(id: string): Promise<AuthUser | null>
 }

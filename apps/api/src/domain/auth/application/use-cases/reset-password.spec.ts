@@ -1,3 +1,4 @@
+import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
 import { makeVerificationToken } from '@test/factories/make-verification-token'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
@@ -7,10 +8,14 @@ import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import { DomainEvents } from '@/core/events/domain-events'
 
 import { PasswordResetEvent } from '../../enterprise/events/password-reset-event'
+import { ResourceGoneError } from './errors/resource-gone'
+import { ResourceInvalidError } from './errors/resource-invalid'
+import { ResourceNotFoundError } from './errors/resource-not-found'
 import { ResetPasswordUseCase } from './reset-password'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
+let fakeHasher: FakeHasher
 let sut: ResetPasswordUseCase
 
 describe('Reset Password Use-case', () => {
@@ -18,14 +23,17 @@ describe('Reset Password Use-case', () => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     inMemoryVerificationTokensRepository =
       new InMemoryVerificationTokensRepository()
+    fakeHasher = new FakeHasher()
     sut = new ResetPasswordUseCase(
       inMemoryUsersRepository,
       inMemoryVerificationTokensRepository,
+      fakeHasher,
     )
   })
 
   it('should be able to reset password from a valid token', async () => {
-    const user = await makeUser({ password: '123456' })
+    const passwordHash = await fakeHasher.hash('123456')
+    const user = makeUser({ passwordHash })
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken = makeVerificationToken({
@@ -44,7 +52,10 @@ describe('Reset Password Use-case', () => {
 
     expect(response.isRight()).toBeTruthy()
     expect(
-      await inMemoryUsersRepository.items[0].verifyPassword('654321'),
+      await fakeHasher.compare(
+        '654321',
+        inMemoryUsersRepository.items[0].passwordHash,
+      ),
     ).toBeTruthy()
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
     expect(passwordResetEventSpy).toHaveBeenCalled()
@@ -57,11 +68,12 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
     expect(response.value).toHaveProperty('message', 'Token não encontrado.')
   })
 
   it('should not be able to confirm a email with an invalid token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const verificationToken = makeVerificationToken({
@@ -80,12 +92,13 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceInvalidError)
     expect(response.value).toHaveProperty('message', 'Token inválido.')
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
 
   it('should be able to reset password from a expired token', async () => {
-    const user = await makeUser()
+    const user = makeUser()
     inMemoryUsersRepository.items.push(user)
 
     const oneSecondAgo = new Date(Date.now() - 1000)
@@ -107,6 +120,7 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceGoneError)
     expect(response.value).toHaveProperty('message', 'Token expirado.')
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })
@@ -124,6 +138,7 @@ describe('Reset Password Use-case', () => {
     })
 
     expect(response.isLeft()).toBeTruthy()
+    expect(response.value).toBeInstanceOf(ResourceNotFoundError)
     expect(response.value).toHaveProperty('message', 'Usuário não encontrado.')
     expect(inMemoryVerificationTokensRepository.items.size).toEqual(0)
   })

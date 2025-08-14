@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common'
 import type {
   EmailTemplateDataMap,
   EmailTemplateType,
@@ -11,8 +12,8 @@ import {
   EmailRequest,
   type EventType,
 } from '../../enterprise/entities/email-request'
-import type { EmailRequestsRepository } from '../repositories/email-requests-repository'
-import type { EmailQueueService } from '../services/email-queue-service'
+import { EmailRequestsRepository } from '../repositories/email-requests-repository'
+import { EmailQueueService } from '../services/email-queue-service'
 
 export interface CreateEmailRequestUseCaseRequest<T extends EmailTemplateType> {
   eventType: EventType
@@ -26,6 +27,7 @@ export interface CreateEmailRequestUseCaseRequest<T extends EmailTemplateType> {
 
 export type CreateEmailRequestUseCaseResponse = Either<unknown, unknown>
 
+@Injectable()
 export class CreateEmailRequestUseCase {
   constructor(
     private emailRequestsRepository: EmailRequestsRepository,

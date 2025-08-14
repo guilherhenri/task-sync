@@ -17,4 +17,8 @@ export abstract class AggregateRoot<Props> extends Entity<Props> {
   public clearEvents() {
     this._domainEvents = []
   }
+
+  public _mergeEvents(events: DomainEvent[]) {
+    this._domainEvents = events
+  }
 }

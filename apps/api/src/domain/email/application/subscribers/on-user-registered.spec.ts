@@ -43,7 +43,7 @@ describe('On User Registered', () => {
   })
 
   it('should add an email request to the queue when a user is registered', async () => {
-    const user = await makeUser()
+    const user = makeUser()
 
     await inMemoryUsersRepository.create(user)
 

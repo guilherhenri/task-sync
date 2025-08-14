@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import type { Repository } from 'typeorm'
 
+import { DomainEvents } from '@/core/events/domain-events'
 import { UsersRepository } from '@/domain/auth/application/repositories/users-repository'
 import { User } from '@/domain/auth/enterprise/entities/user'
 
@@ -40,11 +41,15 @@ export class TypeOrmUsersRepository implements UsersRepository {
     const typeOrmUser = TypeOrmUserMapper.toTypeOrm(user)
 
     await this.usersRepository.save(typeOrmUser)
+
+    DomainEvents.dispatchEventsForAggregate(user.id)
   }
 
   async save(user: User): Promise<void> {
     const typeOrmUser = TypeOrmUserMapper.toTypeOrm(user)
 
     await this.usersRepository.save(typeOrmUser)
+
+    DomainEvents.dispatchEventsForAggregate(user.id)
   }
 }

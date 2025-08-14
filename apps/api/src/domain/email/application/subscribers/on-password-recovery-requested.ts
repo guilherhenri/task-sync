@@ -1,12 +1,14 @@
+import { Injectable } from '@nestjs/common'
 import { env } from '@task-sync/env'
 
 import { DomainEvents } from '@/core/events/domain-events'
 import type { EventHandler } from '@/core/events/event-handler'
-import type { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
+import { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
 import { PasswordRecoveryRequestedEvent } from '@/domain/auth/enterprise/events/password-recovery-requested-event'
 
-import type { CreateEmailRequestUseCase } from '../use-cases/create-email-request'
+import { CreateEmailRequestUseCase } from '../use-cases/create-email-request'
 
+@Injectable()
 export class OnPasswordRecoveryRequested implements EventHandler {
   constructor(
     private authUserService: AuthUserService,

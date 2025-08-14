@@ -1,9 +1,13 @@
+import { Injectable } from '@nestjs/common'
+
 import { type Either, left, right } from '@/core/either'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
-import type { AuthTokensRepository } from '../repositories/auth-tokens-repository'
-import type { UsersRepository } from '../repositories/users-repository'
-import type { AuthService } from '../services/auth-service'
+import { Encryptor } from '../cryptography/encryptor'
+import { Hasher } from '../cryptography/hasher'
+import { AuthTokensRepository } from '../repositories/auth-tokens-repository'
+import { UsersRepository } from '../repositories/users-repository'
+import { InvalidCredentialsError } from './errors/invalid-credentials'
 
 interface AuthenticateSessionUseCaseRequest {
   email: string
@@ -11,15 +15,17 @@ interface AuthenticateSessionUseCaseRequest {
 }
 
 type AuthenticateSessionUseCaseResponse = Either<
-  Error,
-  { accessToken: string; refreshToken: string }
+  InvalidCredentialsError,
+  { accessToken: string }
 >
 
+@Injectable()
 export class AuthenticateSessionUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private authTokensRepository: AuthTokensRepository,
-    private authService: AuthService,
+    private encryptor: Encryptor,
+    private hasher: Hasher,
   ) {}
 
   async execute({
@@ -29,19 +35,24 @@ export class AuthenticateSessionUseCase {
     const user = await this.usersRepository.findByEmail(email)
 
     if (!user) {
-      return left(new Error('E-mail ou senha inválidos.'))
+      return left(new InvalidCredentialsError('E-mail ou senha inválidos.'))
     }
 
-    const isPasswordMatch = await user.verifyPassword(password)
+    const isPasswordMatch = await this.hasher.compare(
+      password,
+      user.passwordHash,
+    )
 
     if (!isPasswordMatch) {
-      return left(new Error('E-mail ou senha inválidos.'))
+      return left(new InvalidCredentialsError('E-mail ou senha inválidos.'))
     }
 
-    const accessToken = this.authService.generateAccessToken(user.id.toString())
-    const refreshToken = this.authService.generateRefreshToken(
-      user.id.toString(),
-    )
+    const accessToken = await this.encryptor.encrypt({
+      sub: user.id.toString(),
+    })
+    const refreshToken = await this.encryptor.encrypt({
+      sub: user.id.toString(),
+    })
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
 
@@ -53,6 +64,6 @@ export class AuthenticateSessionUseCase {
 
     await this.authTokensRepository.create(authToken)
 
-    return right({ accessToken, refreshToken })
+    return right({ accessToken })
   }
 }

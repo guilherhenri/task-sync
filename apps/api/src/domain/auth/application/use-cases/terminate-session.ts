@@ -1,33 +1,27 @@
-import { type Either, left, right } from '@/core/either'
+import { Injectable } from '@nestjs/common'
 
-import type { AuthTokensRepository } from '../repositories/auth-tokens-repository'
+import { type Either, right } from '@/core/either'
+
+import { AuthTokensRepository } from '../repositories/auth-tokens-repository'
 
 interface TerminateSessionUseCaseRequest {
   userId: string
-  refreshToken: string
 }
 
-type TerminateSessionUseCaseResponse = Either<Error, unknown>
+type TerminateSessionUseCaseResponse = Either<void, unknown>
 
+@Injectable()
 export class TerminateSessionUseCase {
   constructor(private authTokensRepository: AuthTokensRepository) {}
 
   async execute({
     userId,
-    refreshToken,
   }: TerminateSessionUseCaseRequest): Promise<TerminateSessionUseCaseResponse> {
-    const authToken =
-      await this.authTokensRepository.findByRefreshToken(refreshToken)
+    const authToken = await this.authTokensRepository.findByUserId(userId)
 
-    if (!authToken) {
-      return left(new Error('Token não encontrado.'))
+    if (authToken) {
+      await this.authTokensRepository.delete(authToken)
     }
-
-    if (authToken.userId.toString() !== userId) {
-      return left(new Error('Este token não pertence a este usuário.'))
-    }
-
-    await this.authTokensRepository.delete(authToken)
 
     return right({})
   }
