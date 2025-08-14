@@ -38,6 +38,10 @@ export const envServerSchema = z.object({
   REDIS_HOST: z.string().optional().default('127.0.0.1'),
   REDIS_PORT: z.coerce.number().optional().default(6379),
   REDIS_DB: z.coerce.number().optional().default(0),
+
+  SUPABASE_URL: z.url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string(),
+  SUPABASE_STORAGE_BUCKET: z.string(),
 })
 
 export type EnvServer = z.infer<typeof envServerSchema>
@@ -80,6 +84,10 @@ export const env = createEnv({
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT,
     REDIS_DB: process.env.REDIS_DB,
+
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_STORAGE_BUCKET: process.env.SUPABASE_STORAGE_BUCKET,
   },
   emptyStringAsUndefined: true,
 })
