@@ -10,14 +10,17 @@ import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-
 import { RetrieveProfileUseCase } from '@/domain/auth/application/use-cases/retrieve-profile'
 import { RevokeTokensUseCase } from '@/domain/auth/application/use-cases/revoke-tokens'
 import { TerminateSessionUseCase } from '@/domain/auth/application/use-cases/terminate-session'
+import { UploadAndUpdateAvatarUseCase } from '@/domain/auth/application/use-cases/upload-and-update-avatar'
 
 import { CryptographyModule } from '../cryptography/cryptography.module'
 import { DatabaseModule } from '../database/database.module'
 import { EnvModule } from '../env/env.module'
 import { KeyValueModule } from '../key-value/key-value.module'
+import { StorageModule } from '../storage/storage.module'
 import { AuthenticateController } from './controllers/authenticate.controller'
 import { ConfirmEmailController } from './controllers/confirm-email.controller'
 import { ForgotPasswordController } from './controllers/forgot-password.controller'
+import { GetAvatarUrlController } from './controllers/get-avatar-url.controller'
 import { GetProfileController } from './controllers/get-profile.controller'
 import { LogoutController } from './controllers/logout.controller'
 import { RefreshTokenController } from './controllers/refresh-token.controller'
@@ -25,9 +28,16 @@ import { RegisterController } from './controllers/register.controller'
 import { ResetPasswordController } from './controllers/reset-password.controller'
 import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.controller'
 import { UpdateProfileController } from './controllers/update-profile.controller'
+import { UploadAvatarController } from './controllers/upload-avatar.controller'
 
 @Module({
-  imports: [DatabaseModule, KeyValueModule, CryptographyModule, EnvModule],
+  imports: [
+    DatabaseModule,
+    KeyValueModule,
+    CryptographyModule,
+    EnvModule,
+    StorageModule,
+  ],
   controllers: [
     RegisterController,
     ConfirmEmailController,
@@ -39,6 +49,8 @@ import { UpdateProfileController } from './controllers/update-profile.controller
     GetProfileController,
     RevokeAllSessionsController,
     UpdateProfileController,
+    UploadAvatarController,
+    GetAvatarUrlController,
   ],
   providers: [
     EnrollIdentityUseCase,
@@ -51,6 +63,7 @@ import { UpdateProfileController } from './controllers/update-profile.controller
     RetrieveProfileUseCase,
     RevokeTokensUseCase,
     RefineProfileUseCase,
+    UploadAndUpdateAvatarUseCase,
   ],
 })
 export class HttpModule {}
