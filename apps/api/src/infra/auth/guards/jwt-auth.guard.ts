@@ -50,7 +50,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         case JsonWebTokenError:
           throw new JwtAuthException('token.invalid', 'Token inválido.')
         default:
-          throw new UnauthorizedException()
+          throw new UnauthorizedException({
+            message: 'O token de acesso não foi informado.',
+            error: 'Unauthorized',
+            statusCode: 401,
+          })
       }
     }
 
