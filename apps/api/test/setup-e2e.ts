@@ -14,6 +14,7 @@ jest.mock('@task-sync/env', () => ({
     REDIS_DB: 1,
     MONGO_DB: randomUUID(),
     POSTGRES_SCHEMA: randomUUID(),
+    SUPABASE_STORAGE_BUCKET: 'user-avatars-test',
   },
 }))
 
