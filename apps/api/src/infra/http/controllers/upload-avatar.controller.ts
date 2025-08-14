@@ -24,9 +24,9 @@ import {
   ApiZodBody,
   ApiZodNotFoundResponse,
   ApiZodResponse,
+  ApiZodUnsupportedMediaTypeResponse,
   ApiZodValidationFailedResponse,
 } from '../decorators/zod-openapi'
-import { ApiZodUnsupportedMediaTypeResponse } from '../decorators/zod-openapi/api-zod-unsupported-media-type-response'
 import { JwtUnauthorizedResponse } from '../responses/jwt-unauthorized'
 import {
   FormattedFileTypeValidator,

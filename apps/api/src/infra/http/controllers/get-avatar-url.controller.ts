@@ -5,10 +5,10 @@ import { z } from 'zod/v4'
 import { FileAccessController } from '@/domain/auth/application/storage/file-access-controller'
 
 import {
+  ApiZodParam,
   ApiZodResponse,
   ApiZodValidationFailedResponse,
 } from '../decorators/zod-openapi'
-import { ApiZodParam } from '../decorators/zod-openapi/api-zod-param'
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 import { JwtUnauthorizedResponse } from '../responses/jwt-unauthorized'
 
