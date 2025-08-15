@@ -30,11 +30,17 @@ describe('User Entity', () => {
     expect(user.emailVerified).toBeFalsy()
     expect(user.updatedAt).toBeUndefined()
     expect(user.domainEvents).toHaveLength(1)
+    expect(user.createdAt).toBeInstanceOf(Date)
 
     user.verifyEmail()
 
     expect(user.emailVerified).toBeTruthy()
     expect(user.updatedAt).not.toBeUndefined()
+
+    const previousUpdateDate = user.updatedAt
+
+    user.verifyEmail()
+    expect(previousUpdateDate).toEqual(user.updatedAt)
 
     user.resetEmailVerification()
     expect(user.emailVerified).toBeFalsy()
