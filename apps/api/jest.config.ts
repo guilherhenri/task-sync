@@ -11,6 +11,15 @@ export default async (): Promise<Config> => ({
     '^@task-sync/email-templates$':
       '<rootDir>/test/mocks/@task-sync/email-templates.ts',
   },
+  coveragePathIgnorePatterns: [
+    'redis.service.ts',
+    'redis-auth-token-mapper.ts',
+    'redis-auth-token-mapper.ts',
+    'redis-verification-token-mapper.ts',
+    'typeorm.service.ts',
+    'typeorm-user-mapper.ts',
+    'user.entity.ts',
+  ],
   transform: {
     ...tsJestTransformCfg,
   },
