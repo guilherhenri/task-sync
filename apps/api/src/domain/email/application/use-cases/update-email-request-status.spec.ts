@@ -32,6 +32,24 @@ describe('Update Email Request Status Use-case', () => {
     )
   })
 
+  it('should be able to mark the email request as sent', async () => {
+    const emailRequest = makeEmailRequest(
+      {},
+      new UniqueEntityID('email-request-id'),
+    )
+    inMemoryEmailRequestsRepository.items.push(emailRequest)
+
+    const response = await sut.execute({
+      emailRequestId: 'email-request-id',
+      statusTransition: 'setSent',
+    })
+
+    expect(response.isRight()).toBeTruthy()
+    expect(inMemoryEmailRequestsRepository.items[0].status.value).toEqual(
+      'sent',
+    )
+  })
+
   it('should be able to mark the email request as failed', async () => {
     const emailRequest = makeEmailRequest(
       {},
