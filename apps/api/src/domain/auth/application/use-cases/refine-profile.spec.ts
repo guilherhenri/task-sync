@@ -96,6 +96,27 @@ describe('Refine Profile Use-case', () => {
     expect(await fakeHasher.compare('123456', user.passwordHash)).toBeTruthy()
   })
 
+  it('should not be able to reset email verification when the email is same', async () => {
+    const passwordHash = await fakeHasher.hash('123456')
+
+    const user = makeUser({
+      name: 'Test Name',
+      email: 'example@email.com',
+      passwordHash,
+      emailVerified: true,
+    })
+    inMemoryUsersRepository.items.push(user)
+
+    const response = await sut.execute({
+      userId: user.id.toString(),
+      name: 'Updated Name',
+      email: 'example@email.com',
+    })
+
+    expect(response.isRight()).toBeTruthy()
+    expect(inMemoryUsersRepository.items[0].emailVerified).toBeTruthy()
+  })
+
   it('should not be able to update an invalid user', async () => {
     const response = await sut.execute({
       userId: 'user-1',
