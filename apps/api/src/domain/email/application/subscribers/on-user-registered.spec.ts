@@ -6,6 +6,10 @@ import { InMemoryAuthUserService } from '@test/services/in-memory-auth-user-serv
 import { InMemoryEmailQueueService } from '@test/services/in-memory-email-queue-service'
 import { waitFor } from '@test/utils/wait-for'
 
+import { UniqueEntityID } from '@/core/entities/unique-entity-id'
+import { DomainEvents } from '@/core/events/domain-events'
+import { UserRegisteredEvent } from '@/domain/auth/enterprise/events/user-registered-event'
+
 import {
   CreateEmailRequestUseCase,
   type CreateEmailRequestUseCaseRequest,
@@ -48,5 +52,19 @@ describe('On User Registered', () => {
     await inMemoryUsersRepository.create(user)
 
     await waitFor(() => expect(createEmailRequestExecuteSpy).toHaveBeenCalled())
+  })
+
+  it('should throw an error when user is not found', async () => {
+    const event = new UserRegisteredEvent(
+      makeUser({}, new UniqueEntityID('non-existent-user')),
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handlers = (DomainEvents as any).handlersMap[UserRegisteredEvent.name]
+    const handler = handlers[0]
+
+    expect(handler(event)).rejects.toThrow('Usuário não encontrado.')
+
+    DomainEvents.clearHandlers()
   })
 })

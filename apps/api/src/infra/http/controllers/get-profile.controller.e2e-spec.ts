@@ -4,8 +4,12 @@ import { AuthenticateUserFactory } from '@test/factories/make-user'
 import { AuthTestModule } from '@test/modules/auth-test.module'
 import request from 'supertest'
 
+import { User } from '@/infra/database/typeorm/entities/user.entity'
+import { TypeOrmService } from '@/infra/database/typeorm/typeorm.service'
+
 describe('Get profile (E2E)', () => {
   let app: INestApplication
+  let typeorm: TypeOrmService
   let authenticateUserFactory: AuthenticateUserFactory
 
   beforeAll(async () => {
@@ -15,6 +19,7 @@ describe('Get profile (E2E)', () => {
     }).compile()
 
     app = moduleRef.createNestApplication()
+    typeorm = moduleRef.get(TypeOrmService)
     authenticateUserFactory = moduleRef.get(AuthenticateUserFactory)
 
     await app.init()
@@ -47,5 +52,23 @@ describe('Get profile (E2E)', () => {
         },
       }),
     )
+  })
+
+  it('[GET] /me | not found user', async () => {
+    const { user, signedCookie } =
+      await authenticateUserFactory.makeAuthenticatedUser()
+
+    await typeorm.getRepository(User).delete(user.id.toString())
+
+    const response = await request(app.getHttpServer())
+      .get('/me')
+      .set('Cookie', signedCookie)
+      .expect(404)
+
+    expect(response.body).toMatchObject({
+      message: 'Usuário não encontrado.',
+      error: 'Not Found',
+      statusCode: 404,
+    })
   })
 })

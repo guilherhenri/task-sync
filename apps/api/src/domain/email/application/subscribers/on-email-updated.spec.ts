@@ -8,6 +8,10 @@ import { InMemoryAuthUserService } from '@test/services/in-memory-auth-user-serv
 import { InMemoryEmailQueueService } from '@test/services/in-memory-email-queue-service'
 import { waitFor } from '@test/utils/wait-for'
 
+import { UniqueEntityID } from '@/core/entities/unique-entity-id'
+import { DomainEvents } from '@/core/events/domain-events'
+import { EmailUpdateVerificationRequestedEvent } from '@/domain/auth/enterprise/events/email-update-verification-requested-event'
+
 import {
   CreateEmailRequestUseCase,
   type CreateEmailRequestUseCaseRequest,
@@ -65,5 +69,23 @@ describe('On Email Updated', () => {
     inMemoryVerificationTokensRepository.save(verificationToken)
 
     await waitFor(() => expect(createEmailRequestExecuteSpy).toHaveBeenCalled())
+  })
+
+  it('should throw an error when user is not found', async () => {
+    const event = new EmailUpdateVerificationRequestedEvent(
+      makeVerificationToken({
+        type: 'email:update:verify',
+        userId: new UniqueEntityID('non-existent-user'),
+      }),
+    )
+
+    const handlers = (DomainEvents as any).handlersMap[ // eslint-disable-line @typescript-eslint/no-explicit-any
+      EmailUpdateVerificationRequestedEvent.name
+    ]
+    const handler = handlers[0]
+
+    expect(handler(event)).rejects.toThrow('Usuário não encontrado.')
+
+    DomainEvents.clearHandlers()
   })
 })

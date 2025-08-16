@@ -99,7 +99,7 @@ export class UploadAvatarController {
     const parsePipe = new ParseFilePipe({
       validators: [
         new ReadableMaxFileSizeValidator({
-          maxSize: 10024 * 1024 * 2, // 2MB
+          maxSize: 1024 * 1024 * 2, // 2MB
         }),
         new FormattedFileTypeValidator({
           fileType: '.(png|jpg|jpeg|webp)',

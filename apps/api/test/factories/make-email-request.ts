@@ -22,10 +22,13 @@ const events: Array<EventType> = [
 ]
 
 export function makeEmailRequest<T extends EmailTemplateType>(
-  override: Partial<Omit<EmailRequestProps<T>, 'status'>> = {},
+  override: Partial<EmailRequestProps<T>> = {},
   id?: UniqueEntityID,
 ) {
-  const { templateName, data } = emailTemplateFactory(override.templateName)
+  const { templateName, data } = emailTemplateFactory(
+    override.templateName,
+    override.data,
+  )
 
   const emailRequest = EmailRequest.create(
     {
@@ -55,16 +58,13 @@ const emailTemplateFactory = <T extends EmailTemplateType>(
     'welcome',
   ]
 
-  // Função para inferir o templateName com base no data fornecido
   const inferTemplateNameFromData = (
     data: EmailTemplateDataMap[EmailTemplateType],
   ): EmailTemplateType => {
     if ('verificationLink' in data && 'name' in data) {
-      if (data.verificationLink) {
-        return data.verificationLink.includes('verify')
-          ? 'email-verify'
-          : 'update-email-verify'
-      }
+      return data.verificationLink.includes('verify')
+        ? 'email-verify'
+        : 'update-email-verify'
     }
 
     if ('resetLink' in data && 'name' in data) {
@@ -73,10 +73,6 @@ const emailTemplateFactory = <T extends EmailTemplateType>(
 
     if ('name' in data && Object.keys(data).length === 1) {
       return 'password-reset'
-    }
-
-    if ('name' in data && Object.keys(data).length === 1) {
-      return 'welcome'
     }
 
     return faker.helpers.arrayElement(templateTypes)
@@ -91,69 +87,37 @@ const emailTemplateFactory = <T extends EmailTemplateType>(
   const generateData = (
     type: EmailTemplateType,
   ): EmailTemplateDataMap[EmailTemplateType] => {
-    if (providedData) {
-      switch (selectedType) {
+    if (!providedData) {
+      const name = faker.person.fullName()
+
+      switch (type) {
         case 'email-verify':
-          if ('verificationLink' in providedData && 'name' in providedData) {
-            return providedData
+          return {
+            name,
+            verificationLink: faker.internet.url(),
           }
-          break
         case 'password-recovery':
-          if ('resetLink' in providedData && 'name' in providedData) {
-            return providedData
+          return {
+            name,
+            resetLink: faker.internet.url(),
           }
-          break
         case 'password-reset':
-          if (
-            'name' in providedData &&
-            Object.keys(providedData).length === 1
-          ) {
-            return providedData
+          return {
+            name,
           }
-          break
         case 'update-email-verify':
-          if ('verificationLink' in providedData && 'name' in providedData) {
-            return providedData
+          return {
+            name,
+            verificationLink: faker.internet.url(),
           }
-          break
         case 'welcome':
-          if (
-            'name' in providedData &&
-            Object.keys(providedData).length === 1
-          ) {
-            return providedData
+          return {
+            name,
           }
-          break
       }
     }
 
-    const name = faker.person.fullName()
-
-    switch (type) {
-      case 'email-verify':
-        return {
-          name,
-          verificationLink: faker.internet.url(),
-        }
-      case 'password-recovery':
-        return {
-          name,
-          resetLink: faker.internet.url(),
-        }
-      case 'password-reset':
-        return {
-          name,
-        }
-      case 'update-email-verify':
-        return {
-          name,
-          verificationLink: faker.internet.url(),
-        }
-      case 'welcome':
-        return {
-          name,
-        }
-    }
+    return providedData
   }
 
   return {

@@ -68,4 +68,17 @@ describe('Reset Password (E2E)', () => {
       await hasher.compare('12345Ab@', userUpdated?.passwordHash ?? ''),
     ).toBeTruthy()
   })
+
+  it('[POST] /reset-password | verification token not found', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/reset-password')
+      .send({ token: 'token', newPassword: '12345Ab@' })
+      .expect(404)
+
+    expect(response.body).toMatchObject({
+      message: 'Token não encontrado.',
+      error: 'Not Found',
+      statusCode: 404,
+    })
+  })
 })

@@ -45,4 +45,53 @@ describe('Authenticate (E2E)', () => {
       })
       .expect(200)
   })
+
+  it('[POST] /sessions | invalid input data', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/sessions')
+      .send({
+        email: 'johndoe',
+      })
+      .expect(400)
+
+    expect(response.body).toMatchObject({
+      message: 'Validation failed',
+      statusCode: 400,
+      errors: {
+        type: 'validation',
+        details: [
+          {
+            field: 'email',
+            message: 'O e-mail deve ser válido.',
+          },
+          {
+            field: 'password',
+            message: 'A senha é obrigatória.',
+          },
+        ],
+      },
+    })
+  })
+
+  it('[POST] /sessions | unauthorized credentials', async () => {
+    const passwordHash = await hasher.hash('12345Ab@')
+    await userFactory.makeTypeOrmUser({
+      email: 'johndoe1@email.com',
+      passwordHash,
+    })
+
+    const response = await request(app.getHttpServer())
+      .post('/sessions')
+      .send({
+        email: 'johndoe2@email.com',
+        password: '12345Ab@',
+      })
+      .expect(401)
+
+    expect(response.body).toMatchObject({
+      message: 'E-mail ou senha inválidos.',
+      error: 'Unauthorized',
+      statusCode: 401,
+    })
+  })
 })

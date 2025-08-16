@@ -181,6 +181,7 @@ task-sync
 │     │  │  ├─ either.ts
 │     │  │  ├─ entities
 │     │  │  │  ├─ aggregate-root.ts
+│     │  │  │  ├─ entity.spec.ts
 │     │  │  │  ├─ entity.ts
 │     │  │  │  └─ unique-entity-id.ts
 │     │  │  ├─ errors
@@ -205,7 +206,8 @@ task-sync
 │     │  │  │  │  ├─ services
 │     │  │  │  │  │  └─ auth-user-service.ts
 │     │  │  │  │  ├─ storage
-│     │  │  │  │  │  └─ uploader.ts
+│     │  │  │  │  │  ├─ file-access-controller.ts
+│     │  │  │  │  │  └─ file-storage.ts
 │     │  │  │  │  └─ use-cases
 │     │  │  │  │     ├─ authenticate-session.spec.ts
 │     │  │  │  │     ├─ authenticate-session.ts
@@ -240,6 +242,7 @@ task-sync
 │     │  │  │  │     └─ upload-and-update-avatar.ts
 │     │  │  │  └─ enterprise
 │     │  │  │     ├─ entities
+│     │  │  │     │  ├─ auth-token.spec.ts
 │     │  │  │     │  ├─ auth-token.ts
 │     │  │  │     │  ├─ user.spec.ts
 │     │  │  │     │  ├─ user.ts
@@ -248,57 +251,42 @@ task-sync
 │     │  │  │     └─ events
 │     │  │  │        ├─ email-update-verification-requested-event.ts
 │     │  │  │        ├─ email-verification-requested-event.ts
+│     │  │  │        ├─ event-classes.spec.ts
 │     │  │  │        ├─ password-recovery-requested-event.ts
 │     │  │  │        ├─ password-reset-event.ts
 │     │  │  │        └─ user-registered-event.ts
-│     │  │  ├─ email
-│     │  │  │  ├─ application
-│     │  │  │  │  ├─ repositories
-│     │  │  │  │  │  └─ email-requests-repository.ts
-│     │  │  │  │  ├─ services
-│     │  │  │  │  │  ├─ email-queue-service.ts
-│     │  │  │  │  │  └─ email-sender-service.ts
-│     │  │  │  │  ├─ subscribers
-│     │  │  │  │  │  ├─ on-email-updated.spec.ts
-│     │  │  │  │  │  ├─ on-email-updated.ts
-│     │  │  │  │  │  ├─ on-email-verification-requested.spec.ts
-│     │  │  │  │  │  ├─ on-email-verification-requested.ts
-│     │  │  │  │  │  ├─ on-password-recovery-requested.spec.ts
-│     │  │  │  │  │  ├─ on-password-recovery-requested.ts
-│     │  │  │  │  │  ├─ on-password-reset.spec.ts
-│     │  │  │  │  │  ├─ on-password-reset.ts
-│     │  │  │  │  │  ├─ on-user-registered.spec.ts
-│     │  │  │  │  │  └─ on-user-registered.ts
-│     │  │  │  │  └─ use-cases
-│     │  │  │  │     ├─ create-email-request.spec.ts
-│     │  │  │  │     ├─ create-email-request.ts
-│     │  │  │  │     ├─ get-email-request-by-id.ts
-│     │  │  │  │     ├─ update-email-request-status.spec.ts
-│     │  │  │  │     └─ update-email-request-status.ts
-│     │  │  │  └─ enterprise
-│     │  │  │     └─ entities
-│     │  │  │        ├─ email-request.spec.ts
-│     │  │  │        ├─ email-request.ts
-│     │  │  │        └─ value-objects
-│     │  │  │           ├─ email-status.spec.ts
-│     │  │  │           └─ email-status.ts
-│     │  │  └─ task-management
+│     │  │  └─ email
 │     │  │     ├─ application
 │     │  │     │  ├─ repositories
-│     │  │     │  │  └─ tasks-repository.ts
+│     │  │     │  │  └─ email-requests-repository.ts
+│     │  │     │  ├─ services
+│     │  │     │  │  ├─ email-queue-service.ts
+│     │  │     │  │  └─ email-sender-service.ts
+│     │  │     │  ├─ subscribers
+│     │  │     │  │  ├─ on-email-updated.spec.ts
+│     │  │     │  │  ├─ on-email-updated.ts
+│     │  │     │  │  ├─ on-email-verification-requested.spec.ts
+│     │  │     │  │  ├─ on-email-verification-requested.ts
+│     │  │     │  │  ├─ on-password-recovery-requested.spec.ts
+│     │  │     │  │  ├─ on-password-recovery-requested.ts
+│     │  │     │  │  ├─ on-password-reset.spec.ts
+│     │  │     │  │  ├─ on-password-reset.ts
+│     │  │     │  │  ├─ on-user-registered.spec.ts
+│     │  │     │  │  └─ on-user-registered.ts
 │     │  │     │  └─ use-cases
-│     │  │     │     ├─ create-task.spec.ts
-│     │  │     │     └─ create-task.ts
+│     │  │     │     ├─ create-email-request.spec.ts
+│     │  │     │     ├─ create-email-request.ts
+│     │  │     │     ├─ get-email-request-by-id.spec.ts
+│     │  │     │     ├─ get-email-request-by-id.ts
+│     │  │     │     ├─ update-email-request-status.spec.ts
+│     │  │     │     └─ update-email-request-status.ts
 │     │  │     └─ enterprise
 │     │  │        └─ entities
-│     │  │           ├─ attachment.ts
-│     │  │           ├─ task-attachment.ts
-│     │  │           ├─ task.ts
+│     │  │           ├─ email-request.spec.ts
+│     │  │           ├─ email-request.ts
 │     │  │           └─ value-objects
-│     │  │              ├─ slug.spec.ts
-│     │  │              ├─ slug.ts
-│     │  │              ├─ task-status.spec.ts
-│     │  │              └─ task-status.ts
+│     │  │              ├─ email-status.spec.ts
+│     │  │              └─ email-status.ts
 │     │  ├─ infra
 │     │  │  ├─ app.module.ts
 │     │  │  ├─ auth
@@ -370,6 +358,8 @@ task-sync
 │     │  │  │  │  ├─ confirm-email.controller.ts
 │     │  │  │  │  ├─ forgot-password.controller.e2e-spec.ts
 │     │  │  │  │  ├─ forgot-password.controller.ts
+│     │  │  │  │  ├─ get-avatar-url.controller.e2e-spec.ts
+│     │  │  │  │  ├─ get-avatar-url.controller.ts
 │     │  │  │  │  ├─ get-profile.controller.e2e-spec.ts
 │     │  │  │  │  ├─ get-profile.controller.ts
 │     │  │  │  │  ├─ logout.controller.e2e-spec.ts
@@ -384,6 +374,7 @@ task-sync
 │     │  │  │  │  ├─ revoke-all-sessions.controller.ts
 │     │  │  │  │  ├─ update-profile.controller.e2e-spec.ts
 │     │  │  │  │  ├─ update-profile.controller.ts
+│     │  │  │  │  ├─ upload-avatar.controller.e2e-spec.ts
 │     │  │  │  │  └─ upload-avatar.controller.ts
 │     │  │  │  ├─ decorators
 │     │  │  │  │  ├─ api-union-response.ts
@@ -394,9 +385,11 @@ task-sync
 │     │  │  │  │     ├─ api-zod-conflict-response.ts
 │     │  │  │  │     ├─ api-zod-gone-response.ts
 │     │  │  │  │     ├─ api-zod-not-found-response.ts
+│     │  │  │  │     ├─ api-zod-param.ts
 │     │  │  │  │     ├─ api-zod-query.ts
 │     │  │  │  │     ├─ api-zod-response.ts
 │     │  │  │  │     ├─ api-zod-unauthorized-response.ts
+│     │  │  │  │     ├─ api-zod-unsupported-media-type-response.ts
 │     │  │  │  │     ├─ api-zod-validation-failed-response.ts
 │     │  │  │  │     └─ index.ts
 │     │  │  │  ├─ exceptions
@@ -413,6 +406,7 @@ task-sync
 │     │  │  │  │  ├─ jwt-unauthorized.ts
 │     │  │  │  │  ├─ not-found.ts
 │     │  │  │  │  ├─ unauthorized.ts
+│     │  │  │  │  ├─ unsupported-media-type.ts
 │     │  │  │  │  └─ validation-failed.ts
 │     │  │  │  └─ validators
 │     │  │  │     └─ file-upload-validators.ts
@@ -436,6 +430,9 @@ task-sync
 │     │  │  │  │  ├─ redis-email-queue.service.e2e-spec.ts
 │     │  │  │  │  └─ redis-email-queue.service.ts
 │     │  │  │  └─ services.module.ts
+│     │  │  ├─ storage
+│     │  │  │  ├─ storage.module.ts
+│     │  │  │  └─ supabase-storage.ts
 │     │  │  └─ workers
 │     │  │     ├─ queue
 │     │  │     │  ├─ bull
@@ -456,8 +453,11 @@ task-sync
 │     │  ├─ cryptography
 │     │  │  ├─ fake-encryptor.ts
 │     │  │  └─ fake-hasher.ts
+│     │  ├─ e2e
+│     │  │  └─ sample-upload.jpg
 │     │  ├─ factories
 │     │  │  ├─ make-auth-token.ts
+│     │  │  ├─ make-email-request.spec.ts
 │     │  │  ├─ make-email-request.ts
 │     │  │  ├─ make-task.ts
 │     │  │  ├─ make-user.ts
@@ -542,6 +542,7 @@ task-sync
 │     └─ tsconfig.json
 ├─ pnpm-lock.yaml
 ├─ pnpm-workspace.yaml
+├─ tasks.md
 └─ turbo.json
 
 ```

@@ -44,6 +44,16 @@ export class BullEmailQueueWorker implements EmailQueueWorker {
 
     if (!updateResult.isRight()) {
       console.log(`Erro ao atualizar status do email ${emailRequestId}`)
+
+      await this.keyValueRepository.lpush(
+        'status:update:queue',
+        JSON.stringify({
+          emailRequestId,
+          statusTransition: 'progress',
+          attempts: 0,
+        }),
+      )
+
       return
     }
 
@@ -65,6 +75,14 @@ export class BullEmailQueueWorker implements EmailQueueWorker {
 
       if (!result.isRight()) {
         console.log(`Erro ao atualizar status do email ${emailRequestId}`)
+        await this.keyValueRepository.lpush(
+          'status:update:queue',
+          JSON.stringify({
+            emailRequestId,
+            statusTransition: 'progress',
+            attempts: 0,
+          }),
+        )
         return
       }
 
@@ -77,6 +95,14 @@ export class BullEmailQueueWorker implements EmailQueueWorker {
 
       if (!result.isRight()) {
         console.log(`Erro ao atualizar status do email ${emailRequestId}`)
+        await this.keyValueRepository.lpush(
+          'status:update:queue',
+          JSON.stringify({
+            emailRequestId,
+            statusTransition: 'setFailed',
+            attempts: 0,
+          }),
+        )
         return
       }
 
@@ -99,6 +125,16 @@ export class BullEmailQueueWorker implements EmailQueueWorker {
 
           if (!result.isRight()) {
             console.log(`Erro ao atualizar status do email ${emailRequestId}`)
+
+            await this.keyValueRepository.lpush(
+              'status:update:queue',
+              JSON.stringify({
+                emailRequestId,
+                statusTransition: 'setSent',
+                attempts: 0,
+              }),
+            )
+
             return
           }
 

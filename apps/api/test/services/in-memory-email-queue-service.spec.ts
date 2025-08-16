@@ -59,6 +59,12 @@ describe('In Memory Email Queue Service', () => {
       expect(queue).toEqual([])
     })
 
+    it('should return an empty array for an invalid priority', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const queue = sut.getQueue('invalid' as any)
+      expect(queue).toEqual([])
+    })
+
     it('should return a copy of the queue to prevent external mutations', async () => {
       const emailRequestId = new UniqueEntityID('request-1')
       await sut.enqueueEmailRequest(emailRequestId, 'medium')
@@ -81,6 +87,17 @@ describe('In Memory Email Queue Service', () => {
 
       const queue = sut.getQueue('high')
       expect(queue).toHaveLength(0)
+    })
+
+    it('should do anything for an invalid priority', async () => {
+      const emailRequestId = new UniqueEntityID('request-1')
+      await sut.enqueueEmailRequest(emailRequestId, 'high')
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sut.clearQueue('invalid' as any)
+
+      const queue = sut.getQueue('high')
+      expect(queue).toHaveLength(1)
     })
 
     it('should not affect other priority queues when clearing one', async () => {

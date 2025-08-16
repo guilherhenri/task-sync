@@ -51,4 +51,47 @@ describe('Forgot Password (E2E)', () => {
 
     expect(value).not.toBeNull()
   })
+
+  it('[POST] /forgot-password | invalid input data', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/forgot-password')
+      .send({
+        email: 'johndoe',
+      })
+      .expect(400)
+
+    expect(response.body).toMatchObject({
+      message: 'Validation failed',
+      statusCode: 400,
+      errors: {
+        type: 'validation',
+        details: [
+          {
+            field: 'email',
+            message: 'O e-mail deve ser válido.',
+          },
+        ],
+      },
+    })
+  })
+
+  it('[POST] /forgot-password | unverified email', async () => {
+    await userFactory.makeTypeOrmUser({
+      email: 'johndoe2@email.com',
+      emailVerified: false,
+    })
+
+    const response = await request(app.getHttpServer())
+      .post('/forgot-password')
+      .send({
+        email: 'johndoe2@email.com',
+      })
+      .expect(400)
+
+    expect(response.body).toMatchObject({
+      message:
+        'Este endereço de e-mail ainda não foi verificado, por favor cheque seu e-mail.',
+      statusCode: 400,
+    })
+  })
 })

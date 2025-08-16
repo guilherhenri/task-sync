@@ -35,7 +35,7 @@ export class AuthenticateSessionUseCase {
     const user = await this.usersRepository.findByEmail(email)
 
     if (!user) {
-      return left(new InvalidCredentialsError('E-mail ou senha inválidos.'))
+      return left(new InvalidCredentialsError())
     }
 
     const isPasswordMatch = await this.hasher.compare(
@@ -44,7 +44,7 @@ export class AuthenticateSessionUseCase {
     )
 
     if (!isPasswordMatch) {
-      return left(new InvalidCredentialsError('E-mail ou senha inválidos.'))
+      return left(new InvalidCredentialsError())
     }
 
     const accessToken = await this.encryptor.encrypt({
