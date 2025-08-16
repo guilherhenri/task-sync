@@ -58,4 +58,17 @@ describe('Confirm Email (E2E)', () => {
 
     expect(userUpdated?.emailVerified).toBeTruthy()
   })
+
+  it('[POST] /confirm-email | not found data', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/confirm-email')
+      .query({ token: 'token' })
+      .expect(404)
+
+    expect(response.body).toMatchObject({
+      message: 'Token não encontrado.',
+      error: 'Not Found',
+      statusCode: 404,
+    })
+  })
 })
