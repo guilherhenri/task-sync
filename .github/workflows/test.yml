@@ -4,30 +4,54 @@ on:
   push:
   pull_request:
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   setup:
     runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Install pnpm
         run: npm install -g pnpm@10.12.3
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Cache Turbo
+
+      - name: Cache dependencies
+        id: cache-deps
         uses: actions/cache@v4
         with:
           path: |
             node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: |
             .turbo
-          key: ${{ runner.os }}-turbo-${{ hashFiles('**/pnpm-lock.yaml') }}
+            **/dist
+            **/build
+            **/.next/cache
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
 
@@ -38,29 +62,53 @@ jobs:
       docker:
         image: docker:dind
         options: --privileged
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+
       - name: Install pnpm
         run: npm install -g pnpm@10.12.3
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Cache Docker images
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('docker-compose.test.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/v2.24.7/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
+
       - name: Start Docker Compose
         run: |
           docker-compose -f docker-compose.test.yml up -d
+
       - name: Wait for services
         run: |
           echo "Waiting for services to be healthy..."
@@ -89,6 +137,7 @@ jobs:
             fi
             echo "$service is healthy!"
           done
+
       - name: Create .env file
         run: |
           echo "NODE_ENV=test" >> .env
@@ -117,16 +166,45 @@ jobs:
           echo "REDIS_DB=0" >> .env
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
           echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
-          echo "SUPABASE_STORAGE_BUCKET=user-avatars-test" >> .env;
+          echo "SUPABASE_STORAGE_BUCKET=user-avatars-test" >> .env
         working-directory: .
+
       - name: Unit tests
-        run: pnpm test --filter=@task-sync/api
+        run: pnpm turbo test --filter=@task-sync/api --cache-dir=.turbo
+
       - name: E2E tests
-        run: pnpm test:e2e --filter=@task-sync/api
+        run: pnpm turbo test:e2e --filter=@task-sync/api --cache-dir=.turbo
+
       - name: Show Docker Compose logs on failure
         if: failure()
         run: docker-compose -f docker-compose.test.yml logs
+
       - name: Stop Docker Compose
         if: always()
         run: |
           docker-compose -f docker-compose.test.yml down
+
+  cache-warm:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [setup, backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Warm Turbo cache
+        run: pnpm turbo build --filter=@task-sync/api --cache-dir=.turbo
