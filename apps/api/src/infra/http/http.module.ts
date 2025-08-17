@@ -29,6 +29,7 @@ import { ResetPasswordController } from './controllers/reset-password.controller
 import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.controller'
 import { UpdateProfileController } from './controllers/update-profile.controller'
 import { UploadAvatarController } from './controllers/upload-avatar.controller'
+import { HealthCheckerController } from './health/health-checker.controller'
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { UploadAvatarController } from './controllers/upload-avatar.controller'
     UpdateProfileController,
     UploadAvatarController,
     GetAvatarUrlController,
+    HealthCheckerController,
   ],
   providers: [
     EnrollIdentityUseCase,
