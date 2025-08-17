@@ -8,7 +8,7 @@ import { EnvService } from './env/env.service'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  app.setGlobalPrefix('/api/v1')
+  app.setGlobalPrefix('/api/v1', { exclude: ['health'] })
 
   const configSwagger = new DocumentBuilder()
     .setTitle('TaskSync API')
@@ -25,6 +25,6 @@ async function bootstrap() {
 
   app.use(cookieParser(cookieSecret))
 
-  await app.listen(port)
+  await app.listen(port, '0.0.0.0')
 }
 bootstrap()
