@@ -1,0 +1,16 @@
+{
+  "extends": "@task-sync/tsconfig/node",
+  "include": ["src", "test", "scripts"],
+  "compilerOptions": {
+    "isolatedModules": true,
+
+    "sourceMap": true,
+    "outDir": "./dist",
+    
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@test/*": ["test/*"]
+    }
+  }
+}
