@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "pnpm env:load nest build",
+    "build": "NODE_ENV=production pnpm env:load nest build",
     "start": "pnpm env:load nest start",
     "start:dev": "pnpm env:load nest start --watch",
     "typeorm": "typeorm-ts-node-commonjs -d ./src/infra/database/typeorm/data-source.ts",
