@@ -11,6 +11,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import type { Response } from 'express'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { AuthenticateSessionUseCase } from '@/domain/auth/application/use-cases/authenticate-session'
 import { InvalidCredentialsError } from '@/domain/auth/application/use-cases/errors/invalid-credentials'
 import { Public } from '@/infra/auth/decorators/public'
@@ -64,6 +65,7 @@ export class AuthenticateController {
   constructor(
     private readonly authenticateSession: AuthenticateSessionUseCase,
     private readonly config: EnvService,
+    private readonly logger: LoggerPort,
   ) {}
 
   @Post()
@@ -94,6 +96,16 @@ export class AuthenticateController {
     @Body(bodyValidationPipe) body: AuthenticateBodySchema,
     @Res() res: Response,
   ) {
+    this.logger.logBusinessEvent({
+      action: 'login_attempt',
+      resource: 'authentication',
+      userId: body.email,
+      metadata: {
+        method: 'email_password',
+        userAgent: 'extracted from request context',
+      },
+    })
+
     const { email, password } = body
 
     const result = await this.authenticateSession.execute({
