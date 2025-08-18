@@ -394,6 +394,8 @@ task-sync
 │     │  │  │  │     └─ index.ts
 │     │  │  │  ├─ exceptions
 │     │  │  │  │  └─ jwt-auth.ts
+│     │  │  │  ├─ health
+│     │  │  │  │  └─ health-checker.controller.ts
 │     │  │  │  ├─ http.module.ts
 │     │  │  │  ├─ pipes
 │     │  │  │  │  └─ zod-validation-pipe.ts
@@ -422,6 +424,22 @@ task-sync
 │     │  │  │        ├─ redis-auth-tokens-repository.ts
 │     │  │  │        ├─ redis-key-values-repository.ts
 │     │  │  │        └─ redis-verification-tokens-repository.ts
+│     │  │  ├─ logging
+│     │  │  │  ├─ formatters
+│     │  │  │  │  ├─ development.formatter.ts
+│     │  │  │  │  ├─ json.formatter.ts
+│     │  │  │  │  └─ production.formatter.ts
+│     │  │  │  ├─ interceptors
+│     │  │  │  │  ├─ error-logging.interceptor.ts
+│     │  │  │  │  └─ logging.interceptor.ts
+│     │  │  │  ├─ logging.module.ts
+│     │  │  │  ├─ logging.types.ts
+│     │  │  │  ├─ transports
+│     │  │  │  │  ├─ console.transport.ts
+│     │  │  │  │  ├─ external.transport.ts
+│     │  │  │  │  └─ file.transport.ts
+│     │  │  │  ├─ winston.config.ts
+│     │  │  │  └─ winston.service.ts
 │     │  │  ├─ main.ts
 │     │  │  ├─ services
 │     │  │  │  ├─ data
@@ -448,6 +466,7 @@ task-sync
 │     │  │     └─ workers.module.ts
 │     │  └─ utils
 │     │     ├─ bytes-to-readable.ts
+│     │     ├─ zod-to-openapi.spec.ts
 │     │     └─ zod-to-openapi.ts
 │     ├─ test
 │     │  ├─ cryptography
@@ -542,7 +561,6 @@ task-sync
 │     └─ tsconfig.json
 ├─ pnpm-lock.yaml
 ├─ pnpm-workspace.yaml
-├─ tasks.md
 └─ turbo.json
 
 ```

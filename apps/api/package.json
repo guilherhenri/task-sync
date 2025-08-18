@@ -65,9 +65,11 @@
     "@task-sync/env": "workspace:*",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
+    "chalk": "^5.6.0",
     "cookie-parser": "^1.4.7",
     "ioredis": "^5.6.1",
     "mongoose": "^8.16.5",
+    "nest-winston": "^1.10.2",
     "nodemailer": "^7.0.5",
     "passport-jwt": "^4.0.1",
     "pg": "^8.16.3",
@@ -75,13 +77,9 @@
     "rxjs": "^7.8.2",
     "typeorm": "^0.3.25",
     "typeorm-extension": "^3.7.1",
+    "winston": "^3.17.0",
+    "winston-transport": "^4.9.0",
     "zod": "^3.25.75",
     "zod-validation-error": "^4.0.1"
-  },
-  "pnpm": {
-    "overrides": {
-      "typeorm": "^0.3.25",
-      "whatwg-url": "13.0.0"
-    }
   }
 }

@@ -7,6 +7,7 @@ export const envServerSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   PORT: z.coerce.number().optional().default(3333),
+  APP_VERSION: z.string(),
 
   JWT_PRIVATE_KEY: z.string(),
   JWT_PUBLIC_KEY: z.string(),
@@ -42,6 +43,28 @@ export const envServerSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string(),
   SUPABASE_STORAGE_BUCKET: z.string(),
+
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  LOG_ENABLE_CONSOLE: z
+    .string()
+    .optional()
+    .default('false')
+    .transform((val) => val === 'true'),
+  LOG_ENABLE_FILE: z
+    .string()
+    .optional()
+    .default('false')
+    .transform((val) => val === 'true'),
+  LOG_ENABLE_EXTERNAL: z
+    .string()
+    .optional()
+    .default('false')
+    .transform((val) => val === 'true'),
+  LOG_DIR: z.string(),
+  LOG_MAX_SIZE: z.string(),
+  LOG_MAX_FILES: z.string(),
+  VECTOR_ENDPOINT: z.url(),
+  VECTOR_TIMEOUT: z.string(),
 })
 
 export type EnvServer = z.infer<typeof envServerSchema>
@@ -53,6 +76,7 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
+    APP_VERSION: process.env.APP_VERSION,
 
     JWT_PRIVATE_KEY: process.env.JWT_PRIVATE_KEY,
     JWT_PUBLIC_KEY: process.env.JWT_PUBLIC_KEY,
@@ -88,6 +112,16 @@ export const env = createEnv({
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     SUPABASE_STORAGE_BUCKET: process.env.SUPABASE_STORAGE_BUCKET,
+
+    LOG_LEVEL: process.env.LOG_LEVEL,
+    LOG_ENABLE_CONSOLE: process.env.LOG_ENABLE_CONSOLE,
+    LOG_ENABLE_FILE: process.env.LOG_ENABLE_FILE,
+    LOG_ENABLE_EXTERNAL: process.env.LOG_ENABLE_EXTERNAL,
+    LOG_DIR: process.env.LOG_DIR,
+    LOG_MAX_SIZE: process.env.LOG_MAX_SIZE,
+    LOG_MAX_FILES: process.env.LOG_MAX_FILES,
+    VECTOR_ENDPOINT: process.env.VECTOR_ENDPOINT,
+    VECTOR_TIMEOUT: process.env.VECTOR_TIMEOUT,
   },
   emptyStringAsUndefined: true,
 })
