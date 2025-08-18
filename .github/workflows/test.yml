@@ -142,6 +142,7 @@ jobs:
         run: |
           echo "NODE_ENV=test" >> .env
           echo "PORT=3333" >> .env
+          echo "APP_VERSION=1.0.0" >> .env
           echo "JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}" >> .env
           echo "JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}" >> .env
           echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" >> .env
@@ -167,6 +168,15 @@ jobs:
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
           echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
           echo "SUPABASE_STORAGE_BUCKET=user-avatars-test" >> .env
+          echo "LOG_LEVEL=debug" >> .env
+          echo "LOG_ENABLE_CONSOLE=false" >> .env
+          echo "LOG_ENABLE_FILE=false" >> .env
+          echo "LOG_ENABLE_EXTERNAL=false" >> .env
+          echo "LOG_DIR=./logs" >> .env
+          echo "LOG_MAX_SIZE=20m" >> .env
+          echo "LOG_MAX_FILES=14" >> .env
+          echo "VECTOR_ENDPOINT=http://localhost:8080/logs" >> .env
+          echo "VECTOR_TIMEOUT=5000" >> .env
         working-directory: .
 
       - name: Unit tests
