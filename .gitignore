@@ -26,9 +26,9 @@ coverage
 out/
 build
 dist
+
 .react-email
 logs/
-
 
 # Debug
 npm-debug.log*
