@@ -1,0 +1,17 @@
+{
+  "name": "@task-sync/env",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@task-sync/tsconfig": "workspace:*",
+    "@types/node": "^22.16.0"
+  },
+  "dependencies": {
+    "zod": "^3.25.75"
+  }
+}

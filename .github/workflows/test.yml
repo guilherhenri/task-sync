@@ -1,0 +1,220 @@
+name: Unit and E2E Tests
+
+on:
+  push:
+  pull_request:
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            **/dist
+            **/build
+            **/.next/cache
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+  backend:
+    needs: setup
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Docker images
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('docker-compose.test.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Install Docker Compose
+        run: |
+          curl -L "https://github.com/docker/compose/releases/download/v2.24.7/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: Start Docker Compose
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for services to be healthy..."
+          services=("postgres" "mongodb" "redis")
+          for service in "${services[@]}"; do
+            container_name=$(docker-compose -f docker-compose.test.yml ps -q $service | xargs docker inspect --format '{{.Name}}' | sed 's/^\///')
+            if [ -z "$container_name" ]; then
+              echo "Container for $service not found. Showing logs..."
+              docker-compose -f docker-compose.test.yml logs $service
+              exit 1
+            fi
+            echo "Checking health for $container_name ($service)..."
+            timeout 60s bash -c "while [ \"\$(docker inspect --format='{{.State.Health.Status}}' $container_name)\" != \"healthy\" ]; do
+              echo \"Waiting for $service to be healthy...\"
+              sleep 2
+              if [ \"\$(docker inspect --format='{{.State.Status}}' $container_name)\" != \"running\" ]; then
+                echo \"Service $service is not running. Showing logs...\"
+                docker-compose -f docker-compose.test.yml logs $service
+                exit 1
+              fi
+            done"
+            if [ $? -ne 0 ]; then
+              echo "Timeout waiting for $service to be healthy. Showing logs..."
+              docker-compose -f docker-compose.test.yml logs $service
+              exit 1
+            fi
+            echo "$service is healthy!"
+          done
+
+      - name: Create .env file
+        run: |
+          echo "NODE_ENV=test" >> .env
+          echo "PORT=3333" >> .env
+          echo "APP_VERSION=1.0.0" >> .env
+          echo "JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}" >> .env
+          echo "JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}" >> .env
+          echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" >> .env
+          echo "APP_URL=http://localhost:3000" >> .env
+          echo "LOGO_CDN_URL=${{ secrets.LOGO_CDN_URL }}" >> .env
+          echo "SMTP_HOST=sandbox.smtp.mailtrap.io" >> .env
+          echo "SMTP_PORT=2525" >> .env
+          echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+          echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+          echo "EMAIL_DEFAULT_SENDER=suporte@tasksync.com" >> .env
+          echo "POSTGRES_HOST=127.0.0.1" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "POSTGRES_USER=tasksync" >> .env
+          echo "POSTGRES_PASSWORD=tasksync123" >> .env
+          echo "POSTGRES_DB=tasksync_dev" >> .env
+          echo "MONGO_URI=mongodb://localhost:27017/?authSource=admin" >> .env
+          echo "MONGO_DB=tasksync_logs" >> .env
+          echo "MONGO_USERNAME=tasksync" >> .env
+          echo "MONGO_PASSWORD=tasksync123" >> .env
+          echo "REDIS_HOST=127.0.0.1" >> .env
+          echo "REDIS_PORT=6379" >> .env
+          echo "REDIS_DB=0" >> .env
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
+          echo "SUPABASE_STORAGE_BUCKET=user-avatars-test" >> .env
+          echo "LOG_LEVEL=debug" >> .env
+          echo "LOG_ENABLE_CONSOLE=false" >> .env
+          echo "LOG_ENABLE_FILE=false" >> .env
+          echo "LOG_ENABLE_EXTERNAL=false" >> .env
+          echo "LOG_DIR=./logs" >> .env
+          echo "LOG_MAX_SIZE=20m" >> .env
+          echo "LOG_MAX_FILES=14" >> .env
+          echo "VECTOR_ENDPOINT=http://localhost:8080/logs" >> .env
+          echo "VECTOR_TIMEOUT=5000" >> .env
+        working-directory: .
+
+      - name: Unit tests
+        run: pnpm turbo test --filter=@task-sync/api --cache-dir=.turbo
+
+      - name: E2E tests
+        run: pnpm turbo test:e2e --filter=@task-sync/api --cache-dir=.turbo
+
+      - name: Show Docker Compose logs on failure
+        if: failure()
+        run: docker-compose -f docker-compose.test.yml logs
+
+      - name: Stop Docker Compose
+        if: always()
+        run: |
+          docker-compose -f docker-compose.test.yml down
+
+  cache-warm:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [setup, backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Warm Turbo cache
+        run: pnpm turbo build --filter=@task-sync/api --cache-dir=.turbo

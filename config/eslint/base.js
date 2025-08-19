@@ -22,7 +22,6 @@ export default tseslint.config(
   {
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.recommended,
       ...compat.extends('@rocketseat/eslint-config/react'),
       ...compat.extends('prettier'),
     ],
@@ -37,6 +36,7 @@ export default tseslint.config(
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'prettier/prettier': 'error',
+      'no-new': 'off',
     },
   },
 )
