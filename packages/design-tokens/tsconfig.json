@@ -1,0 +1,10 @@
+{
+  "extends": "@task-sync/tsconfig/base",
+  "compilerOptions": {
+    "declaration": true,
+    "noEmit": false,
+
+    "outDir": "dist",
+  },
+  "include": ["src"]
+}
