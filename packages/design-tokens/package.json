@@ -4,8 +4,9 @@
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "style": "dist/tokens.scss",
   "scripts": {
-    "build": "tsup src/index.ts --dts"
+    "build": "tsup"
   },
   "devDependencies": {
     "@task-sync/tsconfig": "workspace:*",
