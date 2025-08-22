@@ -1,0 +1,43 @@
+@use '../abstracts' as *;
+
+.input {
+  width: auto;
+  height: $space-12;
+
+  background-color: $color-input;
+  color: $color-foreground;
+  padding: $space-0 $space-4;
+
+  border: $border-width-px solid $color-border;
+  border-radius: $radius-sm;
+
+  font-size: $font-size-base;
+
+  &::placeholder,
+  &::-webkit-input-placeholder, 
+  &::-moz-placeholder,
+  &:-ms-input-placeholder {
+    color: $color-muted-foreground; 
+  }
+
+  @include focus-ring;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--filled:not(.input--error) {
+    border-color: $color-primary;
+  }
+
+  &--error {
+    @include focus-ring($color-ring-destructive);
+    border-color: $color-destructive;
+  }
+
+  &--icon {
+    padding-left: calc($space-4 + $space-2-5);
+  }
+}
