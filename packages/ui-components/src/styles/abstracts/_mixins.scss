@@ -1,0 +1,52 @@
+@use 'variables' as *;
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == mobile {
+    @media screen and (min-width: $breakpoint-mobile) {
+      @content;
+    }
+  }
+  @if $breakpoint == tablet {
+    @media screen and (min-width: $breakpoint-tablet) {
+      @content;
+    }
+  }
+  @if $breakpoint == desktop {
+    @media screen and (min-width: $breakpoint-desktop) {
+      @content;
+    }
+  }
+}
+ 
+@mixin transition($property: all, $duration: $transition-normal, $easing: $easing-ease-out) {
+  transition: $property $duration $easing;
+}
+ 
+@mixin focus-ring($ring: $color-ring) {
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px $ring;
+  }
+}
+
+@mixin button-reset() {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+ 
+@mixin text-truncate() {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ 
+@mixin center-content() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
