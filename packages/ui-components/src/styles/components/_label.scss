@@ -1,0 +1,14 @@
+@use '../abstracts' as *;
+
+.label {
+  color: $color-foreground;
+  font-size: $font-size-sm;
+  
+  @include respond-to(desktop) {
+    font-size: $font-size-base;
+  }
+
+  &--xs { font-size: $font-size-xs !important; }
+  &--sm { font-size: $font-size-sm !important; }
+  &--base { font-size: $font-size-base !important; }
+}
