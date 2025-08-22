@@ -7,6 +7,7 @@ on:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
 
 jobs:
   setup:
@@ -50,7 +51,6 @@ jobs:
             .turbo
             **/dist
             **/build
-            **/.next/cache
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
@@ -194,9 +194,38 @@ jobs:
         run: |
           docker-compose -f docker-compose.test.yml down
 
+  frontend:
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm turbo test --filter=@task-sync/ui-components --cache-dir=.turbo
+
   cache-warm:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [setup, backend]
+    needs: [setup, backend, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -217,4 +246,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Warm Turbo cache
-        run: pnpm turbo build --filter=@task-sync/api --cache-dir=.turbo
+        run: pnpm turbo build --filter=@task-sync/api --filter=@task-sync/ui-components --cache-dir=.turbo
