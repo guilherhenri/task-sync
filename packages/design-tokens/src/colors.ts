@@ -6,6 +6,7 @@ export const colors = {
   popover: 'oklch(0.2007 0.0097 234.31)',
   'popover-foreground': 'oklch(0.9392 0.0101 238.52)',
   primary: 'oklch(0.6196 0.173982 249.6907)',
+  'primary-hover': 'oklch(0.5267 0.173982 249.6907)',
   'primary-foreground': 'oklch(0.9813 0.01 238.51)',
   secondary: 'oklch(0.2498 0.0195 239.07)',
   'secondary-foreground': 'oklch(0.8791 0.0095 242.85)',
@@ -18,5 +19,6 @@ export const colors = {
   warn: 'oklch(0.6801 0.141974 77.5978)',
   border: 'oklch(0.2791 0.0203 242.61)',
   input: 'oklch(0.2197 0.0099 248.28)',
-  ring: 'oklch(0.666 0.17785 247.6632)',
+  ring: 'oklch(0.75 0.15 247.6632)',
+  'ring-destructive': 'oklch(0.7565 0.1456 24.6)',
 }
