@@ -1,0 +1,14 @@
+.colors-grid {
+  padding: 2rem;
+}
+
+.colors-grid div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.colors-grid strong,
+.colors-grid span {
+  font-family: 'Inter';
+  font-size: 1rem;
+}
