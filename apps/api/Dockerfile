@@ -2,7 +2,7 @@
 FROM node:22-alpine AS builder
 
 # Install build dependencies in one layer
-RUN npm install -g pnpm@10.12.3
+RUN npm install -g pnpm@10.15.0
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-RUN npm install -g pnpm@10.12.3
+RUN npm install -g pnpm@10.15.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
@@ -43,7 +43,7 @@ FROM node:22-alpine AS runner
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
-RUN npm install -g pnpm@10.12.3
+RUN npm install -g pnpm@10.15.0
 
 WORKDIR /app
 
