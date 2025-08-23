@@ -7,7 +7,7 @@ export const colors = {
   'popover-foreground': 'oklch(0.9392 0.0101 238.52)',
   primary: 'oklch(0.6196 0.173982 249.6907)',
   'primary-hover': 'oklch(0.5267 0.173982 249.6907)',
-  'primary-foreground': 'oklch(0.9813 0.01 238.51)',
+  'primary-foreground': 'oklch(0.20 0.01 240)',
   secondary: 'oklch(0.2498 0.0195 239.07)',
   'secondary-foreground': 'oklch(0.8791 0.0095 242.85)',
   muted: 'oklch(0.2197 0.0099 248.28)',
