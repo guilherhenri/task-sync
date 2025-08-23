@@ -226,9 +226,65 @@ jobs:
       - name: Unit tests
         run: pnpm turbo test --filter=@task-sync/ui-components --cache-dir=.turbo
 
+  storybook:
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.12.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace dependencies
+        run: pnpm turbo build --filter=@task-sync/icons --filter=@task-sync/design-tokens --filter=@task-sync/ui-components --cache-dir=.turbo
+
+      - name: Install Playwright browsers
+        run: pnpm --filter=@task-sync/storybook exec playwright install --with-deps
+
+      - name: Start Storybook
+        run: |
+          pnpm --filter=@task-sync/storybook run dev &
+          sleep 30  # Aguarda o Storybook inicializar
+
+      - name: Wait for Storybook to be ready
+        run: |
+          timeout 60s bash -c 'until curl -f http://localhost:6006 > /dev/null 2>&1; do
+            echo "Waiting for Storybook to start..."
+            sleep 2
+          done'
+
+      - name: Run Storybook tests
+        run: pnpm --filter=@task-sync/storybook run test:storybook
+
+      - name: Run visual regression tests
+        run: pnpm --filter=@task-sync/storybook run test:visual:ci
+
   cache-warm:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [setup, backend, frontend]
+    needs: [setup, backend, frontend, storybook]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -249,4 +305,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Warm Turbo cache
-        run: pnpm turbo build --filter=@task-sync/api --filter=@task-sync/ui-components --cache-dir=.turbo
+        run: pnpm turbo build --filter=@task-sync/api --filter=@task-sync/ui-components --filter=@task-sync/storybook --cache-dir=.turbo
