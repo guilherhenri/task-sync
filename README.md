@@ -191,6 +191,9 @@ task-sync
 │     │  │  │  ├─ domain-events.spec.ts
 │     │  │  │  ├─ domain-events.ts
 │     │  │  │  └─ event-handler.ts
+│     │  │  ├─ ports
+│     │  │  │  ├─ logger.ts
+│     │  │  │  └─ logger.types.ts
 │     │  │  └─ types
 │     │  │     └─ optional.ts
 │     │  ├─ domain
@@ -478,19 +481,20 @@ task-sync
 │     │  │  ├─ make-auth-token.ts
 │     │  │  ├─ make-email-request.spec.ts
 │     │  │  ├─ make-email-request.ts
-│     │  │  ├─ make-task.ts
 │     │  │  ├─ make-user.ts
 │     │  │  └─ make-verification-token.ts
+│     │  ├─ logging
+│     │  │  └─ fake-logger.ts
 │     │  ├─ mocks
-│     │  │  └─ @task-sync
-│     │  │     └─ email-templates.ts
+│     │  │  ├─ @task-sync
+│     │  │  │  └─ email-templates.ts
+│     │  │  └─ chalk.ts
 │     │  ├─ modules
 │     │  │  ├─ auth-test.module.ts
 │     │  │  └─ test-app.module.ts
 │     │  ├─ repositories
 │     │  │  ├─ in-memory-auth-tokens-repository.ts
 │     │  │  ├─ in-memory-email-requests-repository.ts
-│     │  │  ├─ in-memory-tasks-repository.ts
 │     │  │  ├─ in-memory-users-repository.ts
 │     │  │  └─ in-memory-verification-tokens-repository.ts
 │     │  ├─ services
@@ -531,6 +535,23 @@ task-sync
 │  │  │  ├─ email-types.ts
 │  │  │  └─ index.ts
 │  │  └─ tsconfig.json
+│  ├─ design-tokens
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ border-widths.ts
+│  │  │  ├─ breakpoints.ts
+│  │  │  ├─ colors.ts
+│  │  │  ├─ font-sizes.ts
+│  │  │  ├─ font-weights.ts
+│  │  │  ├─ fonts.ts
+│  │  │  ├─ index.ts
+│  │  │  ├─ line-heights.ts
+│  │  │  ├─ motions.ts
+│  │  │  ├─ radius.ts
+│  │  │  ├─ shadows.ts
+│  │  │  └─ space.ts
+│  │  ├─ tsconfig.json
+│  │  └─ tsup.config.ts
 │  ├─ email-templates
 │  │  ├─ .babelrc
 │  │  ├─ eslint.config.mjs
@@ -554,11 +575,150 @@ task-sync
 │  │  │  ├─ index.spec.ts
 │  │  │  └─ index.ts
 │  │  └─ tsconfig.json
-│  └─ env
-│     ├─ create-env.ts
-│     ├─ index.ts
+│  ├─ env
+│  │  ├─ create-env.ts
+│  │  ├─ index.ts
+│  │  ├─ package.json
+│  │  └─ tsconfig.json
+│  ├─ icons
+│  │  ├─ eslint.config.mjs
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ components
+│  │  │  │  └─ icon.tsx
+│  │  │  ├─ icons
+│  │  │  │  ├─ arrow-left.tsx
+│  │  │  │  ├─ arrow-right.tsx
+│  │  │  │  ├─ check.tsx
+│  │  │  │  ├─ chevron-down.tsx
+│  │  │  │  ├─ hide.tsx
+│  │  │  │  ├─ key.tsx
+│  │  │  │  ├─ mail.tsx
+│  │  │  │  ├─ show.tsx
+│  │  │  │  ├─ warn.tsx
+│  │  │  │  └─ x.tsx
+│  │  │  ├─ index.ts
+│  │  │  └─ types
+│  │  │     └─ index.ts
+│  │  └─ tsconfig.json
+│  ├─ storybook
+│  │  ├─ .storybook
+│  │  │  ├─ main.ts
+│  │  │  ├─ manager.ts
+│  │  │  ├─ preview-head.html
+│  │  │  └─ preview.ts
+│  │  ├─ README.md
+│  │  ├─ eslint.config.js
+│  │  ├─ index.html
+│  │  ├─ package.json
+│  │  ├─ playwright.config.ts
+│  │  ├─ public
+│  │  │  └─ vite.svg
+│  │  ├─ src
+│  │  │  ├─ components
+│  │  │  │  ├─ colors-grid.tsx
+│  │  │  │  └─ tokens-grid.tsx
+│  │  │  ├─ pages
+│  │  │  │  ├─ home.mdx
+│  │  │  │  └─ tokens
+│  │  │  │     ├─ border-width.mdx
+│  │  │  │     ├─ breakpoints.mdx
+│  │  │  │     ├─ colors.mdx
+│  │  │  │     ├─ font-sizes.mdx
+│  │  │  │     ├─ font-weights.mdx
+│  │  │  │     ├─ fonts.mdx
+│  │  │  │     ├─ line-heights.mdx
+│  │  │  │     ├─ motion.mdx
+│  │  │  │     ├─ radius.mdx
+│  │  │  │     ├─ shadows.mdx
+│  │  │  │     └─ spaces.mdx
+│  │  │  ├─ stories
+│  │  │  │  ├─ button.stories.tsx
+│  │  │  │  ├─ card.stories.tsx
+│  │  │  │  ├─ checkbox.stories.tsx
+│  │  │  │  ├─ input.stories.tsx
+│  │  │  │  ├─ label.stories.tsx
+│  │  │  │  ├─ text.stories.tsx
+│  │  │  │  └─ toast.stories.tsx
+│  │  │  ├─ styles
+│  │  │  │  ├─ colors-grid.css
+│  │  │  │  └─ tokens-grid.css
+│  │  │  └─ vite-env.d.ts
+│  │  ├─ test-results
+│  │  │  └─ .last-run.json
+│  │  ├─ tests
+│  │  │  └─ visual
+│  │  │     ├─ button.spec.ts
+│  │  │     ├─ button.spec.ts-snapshots
+│  │  │     │  ├─ button-fullwidth-darwin.png
+│  │  │     │  └─ button-primary-darwin.png
+│  │  │     ├─ card.spec.ts
+│  │  │     ├─ card.spec.ts-snapshots
+│  │  │     │  └─ card-primary-darwin.png
+│  │  │     ├─ checkbox.spec.ts
+│  │  │     ├─ checkbox.spec.ts-snapshots
+│  │  │     │  └─ checkbox-primary-darwin.png
+│  │  │     ├─ input.spec.ts
+│  │  │     ├─ input.spec.ts-snapshots
+│  │  │     │  └─ input-primary-darwin.png
+│  │  │     ├─ label.spec.ts
+│  │  │     ├─ label.spec.ts-snapshots
+│  │  │     │  └─ label-primary-darwin.png
+│  │  │     ├─ text.spec.ts
+│  │  │     ├─ text.spec.ts-snapshots
+│  │  │     │  └─ text-default-darwin.png
+│  │  │     ├─ toast.spec.ts
+│  │  │     └─ toast.spec.ts-snapshots
+│  │  │        ├─ toast-error-darwin.png
+│  │  │        ├─ toast-success-darwin.png
+│  │  │        └─ toast-warning-darwin.png
+│  │  ├─ tsconfig.app.json
+│  │  ├─ tsconfig.json
+│  │  ├─ tsconfig.node.json
+│  │  └─ vite.config.ts
+│  └─ ui-components
+│     ├─ eslint.config.mjs
+│     ├─ jest.config.js
 │     ├─ package.json
-│     └─ tsconfig.json
+│     ├─ src
+│     │  ├─ components
+│     │  │  ├─ button.spec.tsx
+│     │  │  ├─ button.tsx
+│     │  │  ├─ card.spec.tsx
+│     │  │  ├─ card.tsx
+│     │  │  ├─ checkbox.spec.tsx
+│     │  │  ├─ checkbox.tsx
+│     │  │  ├─ input.spec.tsx
+│     │  │  ├─ input.tsx
+│     │  │  ├─ label.spec.tsx
+│     │  │  ├─ label.tsx
+│     │  │  ├─ text.spec.tsx
+│     │  │  ├─ text.tsx
+│     │  │  └─ toast
+│     │  │     ├─ index.ts
+│     │  │     ├─ toast-component.spec.tsx
+│     │  │     ├─ toast-component.tsx
+│     │  │     ├─ toast-context.spec.tsx
+│     │  │     ├─ toast-context.tsx
+│     │  │     ├─ toast-functions.spec.ts
+│     │  │     └─ toast-functions.ts
+│     │  ├─ index.ts
+│     │  └─ styles
+│     │     ├─ abstracts
+│     │     │  ├─ _index.scss
+│     │     │  ├─ _mixins.scss
+│     │     │  └─ _variables.scss
+│     │     └─ components
+│     │        ├─ _button.scss
+│     │        ├─ _card.scss
+│     │        ├─ _checkbox.scss
+│     │        ├─ _input.scss
+│     │        ├─ _label.scss
+│     │        └─ _toast.scss
+│     ├─ tests
+│     │  └─ setup.ts
+│     ├─ tsconfig.json
+│     └─ tsup.config.ts
 ├─ pnpm-lock.yaml
 ├─ pnpm-workspace.yaml
 └─ turbo.json
