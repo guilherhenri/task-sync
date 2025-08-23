@@ -133,3 +133,594 @@ Learn more about the power of Turborepo:
 - [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
 - [Configuration Options](https://turborepo.com/docs/reference/configuration)
 - [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+
+```
+task-sync
+├─ .github
+│  ├─ workflows
+│  │  ├─ commitlint.yml
+│  │  ├─ release.yml
+│  │  ├─ test.yml
+├─ .dockerignore
+├─ .husky
+│  ├─ _
+│  │  ├─ applypatch-msg
+│  │  ├─ commit-msg
+│  │  ├─ h
+│  │  ├─ husky.sh
+│  │  ├─ post-applypatch
+│  │  ├─ post-checkout
+│  │  ├─ post-commit
+│  │  ├─ post-merge
+│  │  ├─ post-rewrite
+│  │  ├─ pre-applypatch
+│  │  ├─ pre-auto-gc
+│  │  ├─ pre-commit
+│  │  ├─ pre-merge-commit
+│  │  ├─ pre-push
+│  │  ├─ pre-rebase
+│  │  └─ prepare-commit-msg
+│  ├─ commit-msg
+│  └─ pre-commit
+├─ .npmrc
+├─ .releaserc.json
+├─ README.md
+├─ apps
+│  └─ api
+│     ├─ Dockerfile
+│     ├─ eslint.config.mjs
+│     ├─ jest.config.ts
+│     ├─ jest.e2e.config.ts
+│     ├─ nest-cli.json
+│     ├─ package.json
+│     ├─ scripts
+│     │  └─ generate-migration.ts
+│     ├─ src
+│     │  ├─ core
+│     │  │  ├─ either.spec.ts
+│     │  │  ├─ either.ts
+│     │  │  ├─ entities
+│     │  │  │  ├─ aggregate-root.ts
+│     │  │  │  ├─ entity.spec.ts
+│     │  │  │  ├─ entity.ts
+│     │  │  │  └─ unique-entity-id.ts
+│     │  │  ├─ errors
+│     │  │  │  └─ use-case-error.ts
+│     │  │  ├─ events
+│     │  │  │  ├─ domain-event.ts
+│     │  │  │  ├─ domain-events.spec.ts
+│     │  │  │  ├─ domain-events.ts
+│     │  │  │  └─ event-handler.ts
+│     │  │  ├─ ports
+│     │  │  │  ├─ logger.ts
+│     │  │  │  └─ logger.types.ts
+│     │  │  └─ types
+│     │  │     └─ optional.ts
+│     │  ├─ domain
+│     │  │  ├─ auth
+│     │  │  │  ├─ application
+│     │  │  │  │  ├─ cryptography
+│     │  │  │  │  │  ├─ encryptor.ts
+│     │  │  │  │  │  └─ hasher.ts
+│     │  │  │  │  ├─ repositories
+│     │  │  │  │  │  ├─ auth-tokens-repository.ts
+│     │  │  │  │  │  ├─ users-repository.ts
+│     │  │  │  │  │  └─ verification-tokens-repository.ts
+│     │  │  │  │  ├─ services
+│     │  │  │  │  │  └─ auth-user-service.ts
+│     │  │  │  │  ├─ storage
+│     │  │  │  │  │  ├─ file-access-controller.ts
+│     │  │  │  │  │  └─ file-storage.ts
+│     │  │  │  │  └─ use-cases
+│     │  │  │  │     ├─ authenticate-session.spec.ts
+│     │  │  │  │     ├─ authenticate-session.ts
+│     │  │  │  │     ├─ confirm-email.spec.ts
+│     │  │  │  │     ├─ confirm-email.ts
+│     │  │  │  │     ├─ enroll-identity.spec.ts
+│     │  │  │  │     ├─ enroll-identity.ts
+│     │  │  │  │     ├─ errors
+│     │  │  │  │     │  ├─ email-already-in-use.ts
+│     │  │  │  │     │  ├─ forbidden-action.ts
+│     │  │  │  │     │  ├─ invalid-avatar-type.ts
+│     │  │  │  │     │  ├─ invalid-credentials.ts
+│     │  │  │  │     │  ├─ refresh-token-expired.ts
+│     │  │  │  │     │  ├─ resource-gone.ts
+│     │  │  │  │     │  ├─ resource-invalid.ts
+│     │  │  │  │     │  └─ resource-not-found.ts
+│     │  │  │  │     ├─ initiate-password-recovery.spec.ts
+│     │  │  │  │     ├─ initiate-password-recovery.ts
+│     │  │  │  │     ├─ refine-profile.spec.ts
+│     │  │  │  │     ├─ refine-profile.ts
+│     │  │  │  │     ├─ renew-token.spec.ts
+│     │  │  │  │     ├─ renew-token.ts
+│     │  │  │  │     ├─ reset-password.spec.ts
+│     │  │  │  │     ├─ reset-password.ts
+│     │  │  │  │     ├─ retrieve-profile.spec.ts
+│     │  │  │  │     ├─ retrieve-profile.ts
+│     │  │  │  │     ├─ revoke-tokens.spec.ts
+│     │  │  │  │     ├─ revoke-tokens.ts
+│     │  │  │  │     ├─ terminate-session.spec.ts
+│     │  │  │  │     ├─ terminate-session.ts
+│     │  │  │  │     ├─ upload-and-update-avatar.spec.ts
+│     │  │  │  │     └─ upload-and-update-avatar.ts
+│     │  │  │  └─ enterprise
+│     │  │  │     ├─ entities
+│     │  │  │     │  ├─ auth-token.spec.ts
+│     │  │  │     │  ├─ auth-token.ts
+│     │  │  │     │  ├─ user.spec.ts
+│     │  │  │     │  ├─ user.ts
+│     │  │  │     │  ├─ verification-token.spec.ts
+│     │  │  │     │  └─ verification-token.ts
+│     │  │  │     └─ events
+│     │  │  │        ├─ email-update-verification-requested-event.ts
+│     │  │  │        ├─ email-verification-requested-event.ts
+│     │  │  │        ├─ event-classes.spec.ts
+│     │  │  │        ├─ password-recovery-requested-event.ts
+│     │  │  │        ├─ password-reset-event.ts
+│     │  │  │        └─ user-registered-event.ts
+│     │  │  └─ email
+│     │  │     ├─ application
+│     │  │     │  ├─ repositories
+│     │  │     │  │  └─ email-requests-repository.ts
+│     │  │     │  ├─ services
+│     │  │     │  │  ├─ email-queue-service.ts
+│     │  │     │  │  └─ email-sender-service.ts
+│     │  │     │  ├─ subscribers
+│     │  │     │  │  ├─ on-email-updated.spec.ts
+│     │  │     │  │  ├─ on-email-updated.ts
+│     │  │     │  │  ├─ on-email-verification-requested.spec.ts
+│     │  │     │  │  ├─ on-email-verification-requested.ts
+│     │  │     │  │  ├─ on-password-recovery-requested.spec.ts
+│     │  │     │  │  ├─ on-password-recovery-requested.ts
+│     │  │     │  │  ├─ on-password-reset.spec.ts
+│     │  │     │  │  ├─ on-password-reset.ts
+│     │  │     │  │  ├─ on-user-registered.spec.ts
+│     │  │     │  │  └─ on-user-registered.ts
+│     │  │     │  └─ use-cases
+│     │  │     │     ├─ create-email-request.spec.ts
+│     │  │     │     ├─ create-email-request.ts
+│     │  │     │     ├─ get-email-request-by-id.spec.ts
+│     │  │     │     ├─ get-email-request-by-id.ts
+│     │  │     │     ├─ update-email-request-status.spec.ts
+│     │  │     │     └─ update-email-request-status.ts
+│     │  │     └─ enterprise
+│     │  │        └─ entities
+│     │  │           ├─ email-request.spec.ts
+│     │  │           ├─ email-request.ts
+│     │  │           └─ value-objects
+│     │  │              ├─ email-status.spec.ts
+│     │  │              └─ email-status.ts
+│     │  ├─ infra
+│     │  │  ├─ app.module.ts
+│     │  │  ├─ auth
+│     │  │  │  ├─ auth.module.ts
+│     │  │  │  ├─ decorators
+│     │  │  │  │  ├─ current-user.ts
+│     │  │  │  │  └─ public.ts
+│     │  │  │  ├─ guards
+│     │  │  │  │  ├─ jwt-auth.guard.ts
+│     │  │  │  │  └─ jwt-refresh-auth.guard.ts
+│     │  │  │  ├─ strategies
+│     │  │  │  │  ├─ jwt-refresh.strategy.ts
+│     │  │  │  │  └─ jwt.strategy.ts
+│     │  │  │  └─ types
+│     │  │  │     └─ jwt-payload.ts
+│     │  │  ├─ cryptography
+│     │  │  │  ├─ bcrypt-hasher.ts
+│     │  │  │  ├─ cryptography.module.ts
+│     │  │  │  └─ jwt-encryptor.ts
+│     │  │  ├─ database
+│     │  │  │  ├─ database.module.ts
+│     │  │  │  ├─ mongoose
+│     │  │  │  │  ├─ mappers
+│     │  │  │  │  │  └─ mongoose-email-request-mapper.ts
+│     │  │  │  │  ├─ mongoose.config.ts
+│     │  │  │  │  ├─ mongoose.service.ts
+│     │  │  │  │  ├─ repositories
+│     │  │  │  │  │  └─ mongoose-email-requests-repository.ts
+│     │  │  │  │  └─ schemas
+│     │  │  │  │     └─ email-request.schema.ts
+│     │  │  │  └─ typeorm
+│     │  │  │     ├─ data-source.ts
+│     │  │  │     ├─ entities
+│     │  │  │     │  └─ user.entity.ts
+│     │  │  │     ├─ factories
+│     │  │  │     │  └─ user.factory.ts
+│     │  │  │     ├─ mappers
+│     │  │  │     │  └─ typeorm-user-mapper.ts
+│     │  │  │     ├─ migrations
+│     │  │  │     │  └─ 1753384781835-create-users-table.ts
+│     │  │  │     ├─ repositories
+│     │  │  │     │  └─ typeorm-users-repository.ts
+│     │  │  │     ├─ seeds
+│     │  │  │     │  └─ user.seeder.ts
+│     │  │  │     ├─ typeorm.config.ts
+│     │  │  │     └─ typeorm.service.ts
+│     │  │  ├─ email
+│     │  │  │  ├─ contracts
+│     │  │  │  │  └─ email-service.ts
+│     │  │  │  ├─ email.module.ts
+│     │  │  │  └─ nodemailer
+│     │  │  │     ├─ nodemailer-email.service.spec.ts
+│     │  │  │     └─ nodemailer-email.service.ts
+│     │  │  ├─ env
+│     │  │  │  ├─ env.module.ts
+│     │  │  │  └─ env.service.ts
+│     │  │  ├─ events
+│     │  │  │  ├─ events.module.ts
+│     │  │  │  ├─ on-email-updated.e2e-spec.ts
+│     │  │  │  ├─ on-email-verification-requested.e2e-spec.ts
+│     │  │  │  ├─ on-password-recovery-requested.e2e-spec.ts
+│     │  │  │  ├─ on-password-reset.e2e-spec.ts
+│     │  │  │  └─ on-user-registered.e2e-spec.ts
+│     │  │  ├─ http
+│     │  │  │  ├─ controllers
+│     │  │  │  │  ├─ authenticate.controller.e2e-spec.ts
+│     │  │  │  │  ├─ authenticate.controller.ts
+│     │  │  │  │  ├─ confirm-email.controller.e2e-spec.ts
+│     │  │  │  │  ├─ confirm-email.controller.ts
+│     │  │  │  │  ├─ forgot-password.controller.e2e-spec.ts
+│     │  │  │  │  ├─ forgot-password.controller.ts
+│     │  │  │  │  ├─ get-avatar-url.controller.e2e-spec.ts
+│     │  │  │  │  ├─ get-avatar-url.controller.ts
+│     │  │  │  │  ├─ get-profile.controller.e2e-spec.ts
+│     │  │  │  │  ├─ get-profile.controller.ts
+│     │  │  │  │  ├─ logout.controller.e2e-spec.ts
+│     │  │  │  │  ├─ logout.controller.ts
+│     │  │  │  │  ├─ refresh-token.controller.e2e-spec.ts
+│     │  │  │  │  ├─ refresh-token.controller.ts
+│     │  │  │  │  ├─ register.controller.e2e-spec.ts
+│     │  │  │  │  ├─ register.controller.ts
+│     │  │  │  │  ├─ reset-password.controller.e2e-spec.ts
+│     │  │  │  │  ├─ reset-password.controller.ts
+│     │  │  │  │  ├─ revoke-all-sessions.controller.e2e-spec.ts
+│     │  │  │  │  ├─ revoke-all-sessions.controller.ts
+│     │  │  │  │  ├─ update-profile.controller.e2e-spec.ts
+│     │  │  │  │  ├─ update-profile.controller.ts
+│     │  │  │  │  ├─ upload-avatar.controller.e2e-spec.ts
+│     │  │  │  │  └─ upload-avatar.controller.ts
+│     │  │  │  ├─ decorators
+│     │  │  │  │  ├─ api-union-response.ts
+│     │  │  │  │  ├─ types.ts
+│     │  │  │  │  └─ zod-openapi
+│     │  │  │  │     ├─ api-zod-bad-response.ts
+│     │  │  │  │     ├─ api-zod-body.ts
+│     │  │  │  │     ├─ api-zod-conflict-response.ts
+│     │  │  │  │     ├─ api-zod-gone-response.ts
+│     │  │  │  │     ├─ api-zod-not-found-response.ts
+│     │  │  │  │     ├─ api-zod-param.ts
+│     │  │  │  │     ├─ api-zod-query.ts
+│     │  │  │  │     ├─ api-zod-response.ts
+│     │  │  │  │     ├─ api-zod-unauthorized-response.ts
+│     │  │  │  │     ├─ api-zod-unsupported-media-type-response.ts
+│     │  │  │  │     ├─ api-zod-validation-failed-response.ts
+│     │  │  │  │     └─ index.ts
+│     │  │  │  ├─ exceptions
+│     │  │  │  │  └─ jwt-auth.ts
+│     │  │  │  ├─ health
+│     │  │  │  │  └─ health-checker.controller.ts
+│     │  │  │  ├─ http.module.ts
+│     │  │  │  ├─ pipes
+│     │  │  │  │  └─ zod-validation-pipe.ts
+│     │  │  │  ├─ presenters
+│     │  │  │  │  └─ user-presenter.ts
+│     │  │  │  ├─ responses
+│     │  │  │  │  ├─ bad-response.ts
+│     │  │  │  │  ├─ conflict.ts
+│     │  │  │  │  ├─ gone.ts
+│     │  │  │  │  ├─ jwt-unauthorized.ts
+│     │  │  │  │  ├─ not-found.ts
+│     │  │  │  │  ├─ unauthorized.ts
+│     │  │  │  │  ├─ unsupported-media-type.ts
+│     │  │  │  │  └─ validation-failed.ts
+│     │  │  │  └─ validators
+│     │  │  │     └─ file-upload-validators.ts
+│     │  │  ├─ key-value
+│     │  │  │  ├─ key-value.module.ts
+│     │  │  │  ├─ key-values-repository.ts
+│     │  │  │  └─ redis
+│     │  │  │     ├─ mappers
+│     │  │  │     │  ├─ redis-auth-token-mapper.ts
+│     │  │  │     │  └─ redis-verification-token-mapper.ts
+│     │  │  │     ├─ redis.service.ts
+│     │  │  │     └─ repositories
+│     │  │  │        ├─ redis-auth-tokens-repository.ts
+│     │  │  │        ├─ redis-key-values-repository.ts
+│     │  │  │        └─ redis-verification-tokens-repository.ts
+│     │  │  ├─ logging
+│     │  │  │  ├─ formatters
+│     │  │  │  │  ├─ development.formatter.ts
+│     │  │  │  │  ├─ json.formatter.ts
+│     │  │  │  │  └─ production.formatter.ts
+│     │  │  │  ├─ interceptors
+│     │  │  │  │  ├─ error-logging.interceptor.ts
+│     │  │  │  │  └─ logging.interceptor.ts
+│     │  │  │  ├─ logging.module.ts
+│     │  │  │  ├─ logging.types.ts
+│     │  │  │  ├─ transports
+│     │  │  │  │  ├─ console.transport.ts
+│     │  │  │  │  ├─ external.transport.ts
+│     │  │  │  │  └─ file.transport.ts
+│     │  │  │  ├─ winston.config.ts
+│     │  │  │  └─ winston.service.ts
+│     │  │  ├─ main.ts
+│     │  │  ├─ services
+│     │  │  │  ├─ data
+│     │  │  │  │  └─ infra-auth-user.service.ts
+│     │  │  │  ├─ queue
+│     │  │  │  │  ├─ redis-email-queue.service.e2e-spec.ts
+│     │  │  │  │  └─ redis-email-queue.service.ts
+│     │  │  │  └─ services.module.ts
+│     │  │  ├─ storage
+│     │  │  │  ├─ storage.module.ts
+│     │  │  │  └─ supabase-storage.ts
+│     │  │  └─ workers
+│     │  │     ├─ queue
+│     │  │     │  ├─ bull
+│     │  │     │  │  ├─ services
+│     │  │     │  │  │  ├─ bull-queue.service.spec.ts
+│     │  │     │  │  │  └─ bull-queue.service.ts
+│     │  │     │  │  └─ workers
+│     │  │     │  │     ├─ bull-email-queue.worker.spec.ts
+│     │  │     │  │     └─ bull-email-queue.worker.ts
+│     │  │     │  └─ contracts
+│     │  │     │     ├─ email-queue-worker.ts
+│     │  │     │     └─ queue-service.ts
+│     │  │     └─ workers.module.ts
+│     │  └─ utils
+│     │     ├─ bytes-to-readable.ts
+│     │     ├─ zod-to-openapi.spec.ts
+│     │     └─ zod-to-openapi.ts
+│     ├─ test
+│     │  ├─ cryptography
+│     │  │  ├─ fake-encryptor.ts
+│     │  │  └─ fake-hasher.ts
+│     │  ├─ e2e
+│     │  │  └─ sample-upload.jpg
+│     │  ├─ factories
+│     │  │  ├─ make-auth-token.ts
+│     │  │  ├─ make-email-request.spec.ts
+│     │  │  ├─ make-email-request.ts
+│     │  │  ├─ make-user.ts
+│     │  │  └─ make-verification-token.ts
+│     │  ├─ logging
+│     │  │  └─ fake-logger.ts
+│     │  ├─ mocks
+│     │  │  ├─ @task-sync
+│     │  │  │  └─ email-templates.ts
+│     │  │  └─ chalk.ts
+│     │  ├─ modules
+│     │  │  ├─ auth-test.module.ts
+│     │  │  └─ test-app.module.ts
+│     │  ├─ repositories
+│     │  │  ├─ in-memory-auth-tokens-repository.ts
+│     │  │  ├─ in-memory-email-requests-repository.ts
+│     │  │  ├─ in-memory-users-repository.ts
+│     │  │  └─ in-memory-verification-tokens-repository.ts
+│     │  ├─ services
+│     │  │  ├─ in-memory-auth-user-service.spec.ts
+│     │  │  ├─ in-memory-auth-user-service.ts
+│     │  │  ├─ in-memory-email-queue-service.spec.ts
+│     │  │  └─ in-memory-email-queue-service.ts
+│     │  ├─ setup-e2e.ts
+│     │  ├─ storage
+│     │  │  └─ fake-uploader.ts
+│     │  └─ utils
+│     │     ├─ create-isolated-workers-test-setup.ts
+│     │     ├─ wait-for.spec.ts
+│     │     └─ wait-for.ts
+│     ├─ tsconfig.json
+│     ├─ tsconfig.seed.json
+│     └─ webpack.config.js
+├─ commitlint.config.ts
+├─ config
+│  ├─ eslint
+│  │  ├─ base.js
+│  │  ├─ node.js
+│  │  ├─ package.json
+│  │  └─ react.js
+│  └─ tsconfig
+│     ├─ base.json
+│     ├─ node.json
+│     ├─ package.json
+│     └─ react.json
+├─ docker-compose.test.yml
+├─ docker-compose.yml
+├─ eslint.config.mjs
+├─ package.json
+├─ packages
+│  ├─ api-types
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ email-types.ts
+│  │  │  └─ index.ts
+│  │  └─ tsconfig.json
+│  ├─ design-tokens
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ border-widths.ts
+│  │  │  ├─ breakpoints.ts
+│  │  │  ├─ colors.ts
+│  │  │  ├─ font-sizes.ts
+│  │  │  ├─ font-weights.ts
+│  │  │  ├─ fonts.ts
+│  │  │  ├─ index.ts
+│  │  │  ├─ line-heights.ts
+│  │  │  ├─ motions.ts
+│  │  │  ├─ radius.ts
+│  │  │  ├─ shadows.ts
+│  │  │  └─ space.ts
+│  │  ├─ tsconfig.json
+│  │  └─ tsup.config.ts
+│  ├─ email-templates
+│  │  ├─ .babelrc
+│  │  ├─ eslint.config.mjs
+│  │  ├─ jest.config.js
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ components
+│  │  │  │  ├─ content.tsx
+│  │  │  │  ├─ footer.tsx
+│  │  │  │  ├─ header.tsx
+│  │  │  │  ├─ main.tsx
+│  │  │  │  └─ title.tsx
+│  │  │  ├─ constants
+│  │  │  │  └─ index.ts
+│  │  │  ├─ emails
+│  │  │  │  ├─ email-verification.tsx
+│  │  │  │  ├─ password-recovery.tsx
+│  │  │  │  ├─ password-reset-confirmation.tsx
+│  │  │  │  ├─ update-email-verification.tsx
+│  │  │  │  └─ welcome.tsx
+│  │  │  ├─ index.spec.ts
+│  │  │  └─ index.ts
+│  │  └─ tsconfig.json
+│  ├─ env
+│  │  ├─ create-env.ts
+│  │  ├─ index.ts
+│  │  ├─ package.json
+│  │  └─ tsconfig.json
+│  ├─ icons
+│  │  ├─ eslint.config.mjs
+│  │  ├─ package.json
+│  │  ├─ src
+│  │  │  ├─ components
+│  │  │  │  └─ icon.tsx
+│  │  │  ├─ icons
+│  │  │  │  ├─ arrow-left.tsx
+│  │  │  │  ├─ arrow-right.tsx
+│  │  │  │  ├─ check.tsx
+│  │  │  │  ├─ chevron-down.tsx
+│  │  │  │  ├─ hide.tsx
+│  │  │  │  ├─ key.tsx
+│  │  │  │  ├─ mail.tsx
+│  │  │  │  ├─ show.tsx
+│  │  │  │  ├─ warn.tsx
+│  │  │  │  └─ x.tsx
+│  │  │  ├─ index.ts
+│  │  │  └─ types
+│  │  │     └─ index.ts
+│  │  └─ tsconfig.json
+│  ├─ storybook
+│  │  ├─ .storybook
+│  │  │  ├─ main.ts
+│  │  │  ├─ manager.ts
+│  │  │  ├─ preview-head.html
+│  │  │  └─ preview.ts
+│  │  ├─ README.md
+│  │  ├─ eslint.config.js
+│  │  ├─ index.html
+│  │  ├─ package.json
+│  │  ├─ playwright.config.ts
+│  │  ├─ public
+│  │  │  └─ vite.svg
+│  │  ├─ src
+│  │  │  ├─ components
+│  │  │  │  ├─ colors-grid.tsx
+│  │  │  │  └─ tokens-grid.tsx
+│  │  │  ├─ pages
+│  │  │  │  ├─ home.mdx
+│  │  │  │  └─ tokens
+│  │  │  │     ├─ border-width.mdx
+│  │  │  │     ├─ breakpoints.mdx
+│  │  │  │     ├─ colors.mdx
+│  │  │  │     ├─ font-sizes.mdx
+│  │  │  │     ├─ font-weights.mdx
+│  │  │  │     ├─ fonts.mdx
+│  │  │  │     ├─ line-heights.mdx
+│  │  │  │     ├─ motion.mdx
+│  │  │  │     ├─ radius.mdx
+│  │  │  │     ├─ shadows.mdx
+│  │  │  │     └─ spaces.mdx
+│  │  │  ├─ stories
+│  │  │  │  ├─ button.stories.tsx
+│  │  │  │  ├─ card.stories.tsx
+│  │  │  │  ├─ checkbox.stories.tsx
+│  │  │  │  ├─ input.stories.tsx
+│  │  │  │  ├─ label.stories.tsx
+│  │  │  │  ├─ text.stories.tsx
+│  │  │  │  └─ toast.stories.tsx
+│  │  │  ├─ styles
+│  │  │  │  ├─ colors-grid.css
+│  │  │  │  └─ tokens-grid.css
+│  │  │  └─ vite-env.d.ts
+│  │  ├─ test-results
+│  │  │  └─ .last-run.json
+│  │  ├─ tests
+│  │  │  └─ visual
+│  │  │     ├─ button.spec.ts
+│  │  │     ├─ button.spec.ts-snapshots
+│  │  │     │  ├─ button-fullwidth-darwin.png
+│  │  │     │  └─ button-primary-darwin.png
+│  │  │     ├─ card.spec.ts
+│  │  │     ├─ card.spec.ts-snapshots
+│  │  │     │  └─ card-primary-darwin.png
+│  │  │     ├─ checkbox.spec.ts
+│  │  │     ├─ checkbox.spec.ts-snapshots
+│  │  │     │  └─ checkbox-primary-darwin.png
+│  │  │     ├─ input.spec.ts
+│  │  │     ├─ input.spec.ts-snapshots
+│  │  │     │  └─ input-primary-darwin.png
+│  │  │     ├─ label.spec.ts
+│  │  │     ├─ label.spec.ts-snapshots
+│  │  │     │  └─ label-primary-darwin.png
+│  │  │     ├─ text.spec.ts
+│  │  │     ├─ text.spec.ts-snapshots
+│  │  │     │  └─ text-default-darwin.png
+│  │  │     ├─ toast.spec.ts
+│  │  │     └─ toast.spec.ts-snapshots
+│  │  │        ├─ toast-error-darwin.png
+│  │  │        ├─ toast-success-darwin.png
+│  │  │        └─ toast-warning-darwin.png
+│  │  ├─ tsconfig.app.json
+│  │  ├─ tsconfig.json
+│  │  ├─ tsconfig.node.json
+│  │  └─ vite.config.ts
+│  └─ ui-components
+│     ├─ eslint.config.mjs
+│     ├─ jest.config.js
+│     ├─ package.json
+│     ├─ src
+│     │  ├─ components
+│     │  │  ├─ button.spec.tsx
+│     │  │  ├─ button.tsx
+│     │  │  ├─ card.spec.tsx
+│     │  │  ├─ card.tsx
+│     │  │  ├─ checkbox.spec.tsx
+│     │  │  ├─ checkbox.tsx
+│     │  │  ├─ input.spec.tsx
+│     │  │  ├─ input.tsx
+│     │  │  ├─ label.spec.tsx
+│     │  │  ├─ label.tsx
+│     │  │  ├─ text.spec.tsx
+│     │  │  ├─ text.tsx
+│     │  │  └─ toast
+│     │  │     ├─ index.ts
+│     │  │     ├─ toast-component.spec.tsx
+│     │  │     ├─ toast-component.tsx
+│     │  │     ├─ toast-context.spec.tsx
+│     │  │     ├─ toast-context.tsx
+│     │  │     ├─ toast-functions.spec.ts
+│     │  │     └─ toast-functions.ts
+│     │  ├─ index.ts
+│     │  └─ styles
+│     │     ├─ abstracts
+│     │     │  ├─ _index.scss
+│     │     │  ├─ _mixins.scss
+│     │     │  └─ _variables.scss
+│     │     └─ components
+│     │        ├─ _button.scss
+│     │        ├─ _card.scss
+│     │        ├─ _checkbox.scss
+│     │        ├─ _input.scss
+│     │        ├─ _label.scss
+│     │        └─ _toast.scss
+│     ├─ tests
+│     │  └─ setup.ts
+│     ├─ tsconfig.json
+│     └─ tsup.config.ts
+├─ pnpm-lock.yaml
+├─ pnpm-workspace.yaml
+└─ turbo.json
+
+```

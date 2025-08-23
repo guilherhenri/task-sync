@@ -1,0 +1,20 @@
+{
+  "name": "@task-sync/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "style": "dist/tokens.scss",
+  "scripts": {
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "@task-sync/tsconfig": "workspace:*",
+    "tsup": "^8.5.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.3"
+}

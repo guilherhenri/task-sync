@@ -3,5 +3,10 @@
     {
       "mode": "auto"
     }
+  ],
+  "cSpell.words": [
+    "encryptor",
+    "ocurred",
+    "supabase",
   ]
 }

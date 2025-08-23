@@ -1,0 +1,96 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: task-sync-api
+    ports:
+      - '3333:3333'
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+    networks:
+      - tasksync-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/web/Dockerfile
+  #   ports:
+  #     - '3000:80'
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - tasksync-network
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+  #     interval: 30s
+  #     timeout: 3s
+  #     retries: 3
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: tasksync
+      POSTGRES_PASSWORD: tasksync123
+      POSTGRES_DB: tasksync_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - tasksync-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasksync"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: bitnami/mongodb:8.0.11-debian-12-r1
+    environment:
+      MONGODB_DATABASE: tasksync_logs
+      MONGODB_ROOT_USER: tasksync
+      MONGODB_ROOT_PASSWORD: tasksync123
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/bitnami/mongodb
+    networks:
+      - tasksync-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - tasksync-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  mongo-data:
+  redis-data:
+
+networks:
+  tasksync-network:
+    driver: bridge
