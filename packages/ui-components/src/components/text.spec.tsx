@@ -13,6 +13,9 @@ jest.mock('@task-sync/design-tokens', () => ({
     lg: '18px',
     xl: '20px',
   },
+  colors: {
+    foreground: 'oklch(0.9513 0.0101 238.51)',
+  },
 }))
 
 describe('Text Component', () => {
