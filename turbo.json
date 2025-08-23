@@ -1,64 +1,21 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "remoteCache": {
-    "signature": true
-  },
-  "globalDependencies": [".env*", "docker-compose.test.yml"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", "build/**"],
-      "env": ["*"],
-      "cache": true
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"],
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".eslintrc*",
-        "eslint.config.*",
-        ".prettierrc*",
-        "prettier.config.*"
-      ]
+      "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"],
-      "cache": true,
-      "outputs": [],
-      "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"]
+      "dependsOn": ["^check-types"]
     },
     "dev": {
       "cache": false,
       "persistent": true
-    },
-    "test": {
-      "dependsOn": ["^test"],
-      "outputs": ["coverage/**", "test-results/**"],
-      "cache": true,
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "jest.config.*",
-        "vitest.config.*",
-        "test/**",
-        "spec/**",
-        "__tests__/**"
-      ]
-    },
-    "test:e2e": {
-      "dependsOn": ["^test:e2e"],
-      "outputs": ["test-results/**", "playwright-report/**", "e2e-results/**"],
-      "cache": false,
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "playwright.config.*",
-        "e2e/**",
-        "tests/**/*.e2e.*",
-        "docker-compose.test.yml"
-      ]
     }
   }
 }

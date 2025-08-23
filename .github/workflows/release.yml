@@ -12,10 +12,6 @@ permissions:
   pull-requests: write
   id-token: write
 
-env:
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -36,34 +32,8 @@ jobs:
           node-version: "22"
           cache: "pnpm"
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Cache Turbo
-        uses: actions/cache@v4
-        with:
-          path: |
-            .turbo
-            **/dist
-            **/build
-            **/.next/cache
-          key: ${{ runner.os }}-turbo-release-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-release-
-            ${{ runner.os }}-turbo-
-
-      - name: Build packages
-        run: pnpm turbo build --cache-dir=.turbo
 
       - name: Run Semantic Release
         run: pnpm semantic-release

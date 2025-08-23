@@ -7,9 +7,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prepare": "husky",
-    "test": "turbo run test",
-    "test:e2e": "turbo run test:e2e"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -34,11 +32,5 @@
   "packageManager": "pnpm@10.12.3",
   "engines": {
     "node": ">=18"
-  },
-  "pnpm": {
-    "overrides": {
-      "typeorm": "^0.3.25",
-      "whatwg-url": "13.0.0"
-    }
   }
 }
