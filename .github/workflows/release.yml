@@ -28,7 +28,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install pnpm
-        run: npm install -g pnpm@10.12.3
+        run: npm install -g pnpm@10.15.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

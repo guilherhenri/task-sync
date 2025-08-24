@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.3",
+  "packageManager": "pnpm@10.15.0",
   "devDependencies": {
     "@task-sync/design-tokens": "workspace:*",
     "@task-sync/icons": "workspace:*",

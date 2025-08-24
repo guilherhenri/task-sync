@@ -10,6 +10,13 @@ async function bootstrap() {
 
   app.setGlobalPrefix('/api/v1', { exclude: ['health'] })
 
+  app.enableCors({
+    origin: ['*'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+
   const configSwagger = new DocumentBuilder()
     .setTitle('TaskSync API')
     .setVersion('1.0')
