@@ -60,7 +60,6 @@ export class ConfirmEmailController {
   @ApiZodQuery({
     name: 'token',
     schema: confirmEmailQuerySchema,
-    examples: { token: 'string' },
     description: confirmEmailQueryDescription,
   })
   @ApiZodResponse({
