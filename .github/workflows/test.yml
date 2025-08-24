@@ -258,16 +258,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache Playwright browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Build workspace dependencies
         run: pnpm turbo build --filter=@task-sync/icons --filter=@task-sync/design-tokens --filter=@task-sync/ui-components --cache-dir=.turbo
 
       - name: Install Playwright browsers
-        run: pnpm --filter=@task-sync/storybook exec playwright install --with-deps
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: pnpm --filter=@task-sync/storybook exec playwright install chromium --with-deps
 
       - name: Start Storybook
         run: |
           pnpm --filter=@task-sync/storybook run dev &
-          sleep 30  # Aguarda o Storybook inicializar
+          sleep 30
 
       - name: Wait for Storybook to be ready
         run: |
