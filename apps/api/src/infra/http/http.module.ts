@@ -30,6 +30,7 @@ import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.c
 import { UpdateProfileController } from './controllers/update-profile.controller'
 import { UploadAvatarController } from './controllers/upload-avatar.controller'
 import { HealthCheckerController } from './health/health-checker.controller'
+import { LoggingHealthCheckerController } from './health/logging-health-checker.controller'
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { HealthCheckerController } from './health/health-checker.controller'
     UploadAvatarController,
     GetAvatarUrlController,
     HealthCheckerController,
+    LoggingHealthCheckerController,
   ],
   providers: [
     EnrollIdentityUseCase,
