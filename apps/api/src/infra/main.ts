@@ -8,7 +8,7 @@ import { EnvService } from './env/env.service'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  app.setGlobalPrefix('/api/v1', { exclude: ['health'] })
+  app.setGlobalPrefix('/api/v1', { exclude: ['health', 'logging-health'] })
 
   app.enableCors({
     origin: ['*'],
