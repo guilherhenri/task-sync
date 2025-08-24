@@ -1,4 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common'
+import * as http from 'node:http'
+import * as https from 'node:https'
+
+import { Inject, Injectable, type OnModuleDestroy } from '@nestjs/common'
 import { AsyncLocalStorage } from 'async_hooks'
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston'
 import { Logger } from 'winston'
@@ -10,17 +13,29 @@ import {
   PerformanceLogData,
   SecurityLogData,
 } from '@/core/ports/logger.types'
+import { EnvService } from '@/infra/env/env.service'
 
 import type { LogLevel } from './logging.types'
 
+export type HealthStatusType = 'healthy' | 'degraded' | 'unhealthy'
+
+export interface HealthStatus {
+  transports: Array<{
+    name: string
+    status: HealthStatusType
+    lastError?: string
+  }>
+}
+
 @Injectable()
-export class WinstonService implements LoggerPort {
+export class WinstonService implements LoggerPort, OnModuleDestroy {
   private readonly asyncLocalStorage = new AsyncLocalStorage<
     Map<string, unknown>
   >()
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly config: EnvService,
   ) {}
 
   setContext(key: string, value: unknown): void {
@@ -160,5 +175,92 @@ export class WinstonService implements LoggerPort {
       type: 'queue_job',
       ...data,
     })
+  }
+
+  async healthCheck(): Promise<HealthStatus> {
+    const transports = []
+
+    transports.push({
+      name: 'console',
+      status: 'healthy' as const,
+    })
+
+    try {
+      const fs = await import('fs')
+      await fs.promises.access('./logs', fs.constants.W_OK)
+      transports.push({
+        name: 'file',
+        status: 'healthy' as const,
+      })
+    } catch (error) {
+      transports.push({
+        name: 'file',
+        status: 'unhealthy' as const,
+        lastError: (error as Error).message,
+      })
+    }
+
+    try {
+      await this.pingVectorEndpoint()
+      transports.push({ name: 'vector', status: 'healthy' as const })
+    } catch (error) {
+      transports.push({
+        name: 'vector',
+        status: 'unhealthy' as const,
+        lastError: (error as Error).message,
+      })
+    }
+
+    return { transports }
+  }
+
+  private async pingVectorEndpoint(): Promise<void> {
+    const url = new URL(this.config.get('VECTOR_ENDPOINT'))
+    const isHttps = url.protocol === 'https:'
+    const client = isHttps ? https : http
+
+    return new Promise<void>((resolve, reject) => {
+      const options = {
+        hostname: url.hostname,
+        port: url.port || (isHttps ? 443 : 80),
+        path: '/health',
+        method: 'GET',
+        timeout: 5000,
+      }
+
+      const req = client.request(options, (res) => {
+        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 400) {
+          resolve()
+        } else {
+          reject(new Error(`Vector health check failed: ${res.statusCode}`))
+        }
+      })
+
+      req.on('error', reject)
+      req.on('timeout', () => {
+        req.destroy()
+        reject(new Error('Vector health check timeout'))
+      })
+
+      req.end()
+    })
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.flushPendingLogs()
+    await this.closeTransports()
+  }
+
+  private async flushPendingLogs(): Promise<void> {
+    const transports = this.logger.transports
+    await Promise.allSettled(
+      transports.map((transport) =>
+        transport.close ? transport.close() : Promise.resolve(),
+      ),
+    )
+  }
+
+  private async closeTransports(): Promise<void> {
+    this.logger.close()
   }
 }
