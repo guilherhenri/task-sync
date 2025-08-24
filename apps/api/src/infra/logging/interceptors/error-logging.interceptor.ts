@@ -15,6 +15,20 @@ import { WinstonService } from '../winston.service'
 
 @Injectable()
 export class ErrorLoggingInterceptor implements NestInterceptor {
+  private readonly ERROR_CLASSIFICATIONS = {
+    security: [401, 403, 422],
+    critical: {
+      statusCodes: [401, 403, 429, 500],
+      errorTypes: [
+        'DatabaseError',
+        'ExternalServiceError',
+        'TimeoutError',
+        'ConnectionError',
+      ],
+    },
+    clientErrors: [429],
+  }
+
   constructor(
     private readonly logger: WinstonService,
     private readonly config: EnvService,
@@ -31,53 +45,77 @@ export class ErrorLoggingInterceptor implements NestInterceptor {
 
   private logError(error: Error, context: ExecutionContext): void {
     const errorContext = this.buildErrorContext(error, context)
+    const errorInfo = this.analyzeError(error)
+
+    this.performLogging(error, errorInfo, errorContext)
+    this.handleSpecialCases(error, errorInfo, errorContext)
+  }
+
+  private analyzeError(error: Error): {
+    isHttpError: boolean
+    statusCode: number
+    logLevel: 'error' | 'warn' | 'info'
+  } {
     const isHttpError = error instanceof HttpException
     const statusCode = isHttpError ? error.getStatus() : 500
-
     const logLevel = this.determineLogLevel(statusCode)
 
+    return { isHttpError, statusCode, logLevel }
+  }
+
+  private performLogging(
+    error: Error,
+    errorInfo: { statusCode: number; logLevel: string },
+    errorContext: ErrorContext,
+  ): void {
     const errorMessage = this.formatErrorMessage(error, errorContext)
 
-    if (logLevel === 'error') {
+    if (errorInfo.logLevel === 'error') {
       this.logger.error(errorMessage, error, {
         type: 'application_error',
-        statusCode,
+        statusCode: errorInfo.statusCode,
         errorType: error.constructor.name,
         ...errorContext,
       })
-
-      if (this.isSecurityError(statusCode)) {
-        this.logger.logSecurity({
-          event: this.getSecurityEventType(statusCode),
-          userId: errorContext.userId,
-          ip: errorContext.ip,
-          userAgent: errorContext.userAgent,
-          success: false,
-          reason: error.message,
-          metadata: {
-            statusCode,
-            method: errorContext.method,
-            url: errorContext.url,
-          },
-        })
-      }
-    } else if (logLevel === 'warn') {
+    } else if (errorInfo.logLevel === 'warn') {
       this.logger.warn(errorMessage, {
         type: 'client_error',
-        statusCode,
+        statusCode: errorInfo.statusCode,
         errorType: error.constructor.name,
         ...errorContext,
       })
     }
+  }
 
-    if (this.isCriticalError(statusCode, error)) {
+  private handleSpecialCases(
+    error: Error,
+    errorInfo: { statusCode: number },
+    errorContext: ErrorContext,
+  ): void {
+    if (this.isSecurityError(errorInfo.statusCode)) {
+      this.logger.logSecurity({
+        event: this.getSecurityEventType(errorInfo.statusCode),
+        userId: errorContext.userId,
+        ip: errorContext.ip,
+        userAgent: errorContext.userAgent,
+        success: false,
+        reason: error.message,
+        metadata: {
+          statusCode: errorInfo.statusCode,
+          method: errorContext.method,
+          url: errorContext.url,
+        },
+      })
+    }
+
+    if (this.isCriticalError(errorInfo.statusCode, error)) {
       this.logger.logBusinessEvent({
         action: 'error_occurred',
         resource: 'application',
         userId: errorContext.userId,
         metadata: {
           errorType: error.constructor.name,
-          statusCode,
+          statusCode: errorInfo.statusCode,
           url: errorContext.url,
           correlationId: errorContext.correlationId,
         },
@@ -126,16 +164,33 @@ export class ErrorLoggingInterceptor implements NestInterceptor {
     }
 
     if (statusCode >= 400) {
-      const criticalClientErrors = [401, 403, 429] // Unauthorized, Forbidden, Rate Limit
-
-      if (criticalClientErrors.includes(statusCode)) {
+      if (
+        this.ERROR_CLASSIFICATIONS.critical.statusCodes.includes(statusCode)
+      ) {
         return 'error'
       }
-
       return 'warn'
     }
 
     return 'info'
+  }
+
+  private isSecurityError(statusCode: number): boolean {
+    return this.ERROR_CLASSIFICATIONS.security.includes(statusCode)
+  }
+
+  private isCriticalError(statusCode: number, error: Error): boolean {
+    if (statusCode >= 500) {
+      return true
+    }
+
+    if (this.ERROR_CLASSIFICATIONS.critical.statusCodes.includes(statusCode)) {
+      return true
+    }
+
+    return this.ERROR_CLASSIFICATIONS.critical.errorTypes.some((type) =>
+      error.constructor.name.includes(type),
+    )
   }
 
   private formatErrorMessage(error: Error, context: ErrorContext): string {
@@ -146,10 +201,6 @@ export class ErrorLoggingInterceptor implements NestInterceptor {
     }
 
     return baseMessage
-  }
-
-  private isSecurityError(statusCode: number): boolean {
-    return [401, 403, 422].includes(statusCode)
   }
 
   private getSecurityEventType(statusCode: number): string {
@@ -163,28 +214,6 @@ export class ErrorLoggingInterceptor implements NestInterceptor {
       default:
         return 'security_event'
     }
-  }
-
-  private isCriticalError(statusCode: number, error: Error): boolean {
-    if (statusCode >= 500) {
-      return true
-    }
-
-    const criticalClientErrors = [401, 403, 429]
-    if (criticalClientErrors.includes(statusCode)) {
-      return true
-    }
-
-    const criticalErrorTypes = [
-      'DatabaseError',
-      'ExternalServiceError',
-      'TimeoutError',
-      'ConnectionError',
-    ]
-
-    return criticalErrorTypes.some((type) =>
-      error.constructor.name.includes(type),
-    )
   }
 
   private sanitizeRequestData(data: unknown): unknown {
