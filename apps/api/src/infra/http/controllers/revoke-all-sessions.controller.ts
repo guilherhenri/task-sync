@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import type { Response } from 'express'
 import { z } from 'zod/v4'
 
-import type { LoggerPort } from '@/core/ports/logger'
+import { LoggerPort } from '@/core/ports/logger'
 import { RevokeTokensUseCase } from '@/domain/auth/application/use-cases/revoke-tokens'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'

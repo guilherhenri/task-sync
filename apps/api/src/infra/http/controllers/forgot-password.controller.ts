@@ -8,7 +8,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import type { LoggerPort } from '@/core/ports/logger'
+import { LoggerPort } from '@/core/ports/logger'
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
 import { Public } from '@/infra/auth/decorators/public'
 
