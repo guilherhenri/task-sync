@@ -10,6 +10,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-password'
@@ -60,7 +61,10 @@ const resetPasswordBodyDescription: Record<
 @Controller('/reset-password')
 @Public()
 export class ResetPasswordController {
-  constructor(private readonly resetPassword: ResetPasswordUseCase) {}
+  constructor(
+    private readonly resetPassword: ResetPasswordUseCase,
+    private readonly logger: LoggerPort,
+  ) {}
 
   @Post()
   @HttpCode(200)
@@ -95,6 +99,12 @@ export class ResetPasswordController {
     },
   })
   async handle(@Body(bodyValidationPipe) body: ResetPasswordBodySchema) {
+    this.logger.logBusinessEvent({
+      action: 'password_reset_attempt',
+      resource: 'password',
+      userId: body.token,
+    })
+
     const { token, newPassword } = body
 
     const result = await this.resetPassword.execute({
@@ -105,6 +115,13 @@ export class ResetPasswordController {
     if (result.isLeft()) {
       const error = result.value
 
+      this.logger.logBusinessEvent({
+        action: 'password_reset_failed',
+        resource: 'password',
+        userId: body.token,
+        metadata: { reason: error.constructor.name },
+      })
+
       switch (error.constructor) {
         case ResourceNotFoundError:
           throw new NotFoundException(error.message)
@@ -114,6 +131,12 @@ export class ResetPasswordController {
           throw new BadRequestException(error.message)
       }
     }
+
+    this.logger.logBusinessEvent({
+      action: 'password_reset_success',
+      resource: 'password',
+      userId: body.token,
+    })
 
     return { message: 'Sua senha foi redefinida com sucesso.' }
   }
