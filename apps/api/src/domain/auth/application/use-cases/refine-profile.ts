@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
 
 import { VerificationToken } from '../../enterprise/entities/verification-token'
 import { Hasher } from '../cryptography/hasher'
@@ -27,6 +28,7 @@ export class RefineProfileUseCase {
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
     private hasher: Hasher,
+    private logger: LoggerPort,
   ) {}
 
   async execute({
@@ -35,10 +37,24 @@ export class RefineProfileUseCase {
     email,
     newPassword,
   }: RefineProfileUseCaseRequest): Promise<RefineProfileUseCaseResponse> {
+    const startTime = Date.now()
+
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
-      return left(new ResourceNotFoundError('Usuário não encontrado.'))
+      const error = new ResourceNotFoundError('Usuário não encontrado.')
+
+      this.logger.logPerformance({
+        operation: 'refine_profile',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     let verificationToken: VerificationToken | null = null
@@ -47,7 +63,19 @@ export class RefineProfileUseCase {
       const emailAlreadyInUse = await this.usersRepository.findByEmail(email)
 
       if (emailAlreadyInUse) {
-        return left(new EmailAlreadyInUseError(email))
+        const error = new EmailAlreadyInUseError(email)
+
+        this.logger.logPerformance({
+          operation: 'refine_profile',
+          duration: Date.now() - startTime,
+          success: false,
+          metadata: {
+            userId,
+            error: error.message,
+          },
+        })
+
+        return left(error)
       }
 
       verificationToken = VerificationToken.create({
@@ -71,6 +99,13 @@ export class RefineProfileUseCase {
       verificationToken &&
         this.verificationTokensRepository.save(verificationToken),
     ])
+
+    this.logger.logPerformance({
+      operation: 'refine_profile',
+      duration: Date.now() - startTime,
+      success: true,
+      metadata: { userId },
+    })
 
     return right({})
   }
