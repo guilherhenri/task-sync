@@ -13,6 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { InvalidAvatarTypeError } from '@/domain/auth/application/use-cases/errors/invalid-avatar-type'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { UploadAndUpdateAvatarUseCase } from '@/domain/auth/application/use-cases/upload-and-update-avatar'
@@ -57,6 +58,7 @@ export class UploadAvatarController {
   constructor(
     private readonly uploadAndUpdateAvatar: UploadAndUpdateAvatarUseCase,
     private readonly config: EnvService,
+    private readonly logger: LoggerPort,
   ) {}
 
   @Post()
@@ -131,6 +133,13 @@ export class UploadAvatarController {
 
     file = await parsePipe.transform(file)
 
+    this.logger.logBusinessEvent({
+      action: 'avatar_upload_attempt',
+      resource: 'profile',
+      userId: user.sub,
+      metadata: { fileSize: file.size },
+    })
+
     const result = await this.uploadAndUpdateAvatar.execute({
       userId: user.sub,
       fileName: file.originalname,
@@ -140,6 +149,14 @@ export class UploadAvatarController {
 
     if (result.isLeft()) {
       const error = result.value
+
+      this.logger.logBusinessEvent({
+        action: 'avatar_upload_failed',
+        resource: 'profile',
+        userId: user.sub,
+        metadata: { reason: error.constructor.name },
+      })
+
       switch (error.constructor) {
         case ResourceNotFoundError:
           throw new NotFoundException(error.message)
@@ -151,6 +168,12 @@ export class UploadAvatarController {
     }
 
     const { avatarUrl } = result.value
+
+    this.logger.logBusinessEvent({
+      action: 'avatar_upload_success',
+      resource: 'profile',
+      userId: user.sub,
+    })
 
     return { avatar_url: avatarUrl }
   }
