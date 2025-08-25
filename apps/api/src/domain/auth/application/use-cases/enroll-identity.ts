@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
 
 import { User } from '../../enterprise/entities/user'
 import { VerificationToken } from '../../enterprise/entities/verification-token'
@@ -23,6 +24,7 @@ export class EnrollIdentityUseCase {
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
     private hasher: Hasher,
+    private logger: LoggerPort,
   ) {}
 
   async execute({
@@ -30,10 +32,24 @@ export class EnrollIdentityUseCase {
     email,
     password,
   }: EnrollIdentityUseCaseRequest): Promise<EnrollIdentityUseCaseResponse> {
+    const startTime = Date.now()
+
     const emailAlreadyInUse = await this.usersRepository.findByEmail(email)
 
     if (emailAlreadyInUse) {
-      return left(new EmailAlreadyInUseError(email))
+      const error = new EmailAlreadyInUseError(email)
+
+      this.logger.logPerformance({
+        operation: 'enroll_identity',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: email,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     const passwordHash = await this.hasher.hash(password)
@@ -53,6 +69,13 @@ export class EnrollIdentityUseCase {
       this.usersRepository.create(user),
       this.verificationTokensRepository.save(verificationToken),
     ])
+
+    this.logger.logPerformance({
+      operation: 'enroll_identity',
+      duration: Date.now() - startTime,
+      success: true,
+      metadata: { userId: email },
+    })
 
     return right({ user })
   }
