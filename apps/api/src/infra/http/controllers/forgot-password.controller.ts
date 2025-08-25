@@ -8,6 +8,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import type { LoggerPort } from '@/core/ports/logger'
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
 import { Public } from '@/infra/auth/decorators/public'
 
@@ -43,6 +44,7 @@ type ForgotPasswordBodySchema = z.infer<typeof forgotPasswordBodySchema>
 export class ForgotPasswordController {
   constructor(
     private readonly initiatePasswordRecovery: InitiatePasswordRecoveryUseCase,
+    private readonly logger: LoggerPort,
   ) {}
 
   @Post()
@@ -75,6 +77,12 @@ export class ForgotPasswordController {
     }),
   ])
   async handle(@Body(bodyValidationPipe) body: ForgotPasswordBodySchema) {
+    this.logger.logBusinessEvent({
+      action: 'request_recovery_password_attempt',
+      resource: 'authentication',
+      userId: body.email,
+    })
+
     const { email } = body
 
     const result = await this.initiatePasswordRecovery.execute({
@@ -84,8 +92,21 @@ export class ForgotPasswordController {
     if (result.isLeft()) {
       const error = result.value
 
+      this.logger.logBusinessEvent({
+        action: 'request_recovery_password_failed',
+        resource: 'authentication',
+        userId: body.email,
+        metadata: { reason: error.constructor.name },
+      })
+
       throw new BadRequestException(error.message)
     }
+
+    this.logger.logBusinessEvent({
+      action: 'request_recovery_password_success',
+      resource: 'authentication',
+      userId: body.email,
+    })
 
     return { message: 'Um e-mail de recuperação foi enviado para você.' }
   }
