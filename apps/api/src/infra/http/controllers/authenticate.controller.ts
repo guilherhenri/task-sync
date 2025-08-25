@@ -100,10 +100,6 @@ export class AuthenticateController {
       action: 'login_attempt',
       resource: 'authentication',
       userId: body.email,
-      metadata: {
-        method: 'email_password',
-        userAgent: 'extracted from request context',
-      },
     })
 
     const { email, password } = body
@@ -115,6 +111,13 @@ export class AuthenticateController {
 
     if (result.isLeft()) {
       const error = result.value
+
+      this.logger.logBusinessEvent({
+        action: 'login_failed',
+        resource: 'authentication',
+        userId: body.email,
+        metadata: { reason: error.constructor.name },
+      })
 
       switch (error.constructor) {
         case InvalidCredentialsError:
@@ -132,6 +135,12 @@ export class AuthenticateController {
       path: '/',
       maxAge: 10 * 60 * 1000, // 10 minutes
       signed: true,
+    })
+
+    this.logger.logBusinessEvent({
+      action: 'login_success',
+      resource: 'authentication',
+      userId: email,
     })
 
     return res.status(200).send()
