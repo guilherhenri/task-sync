@@ -8,6 +8,7 @@ import type {
   EmailRequest,
 } from '@/domain/email/enterprise/entities/email-request'
 import type { EmailStatus } from '@/domain/email/enterprise/entities/value-objects/email-status'
+import { WinstonService } from '@/infra/logging/winston.service'
 
 import { MongooseEmailRequestMapper } from '../mappers/mongoose-email-request-mapper'
 import { MongooseService } from '../mongoose.service'
@@ -22,7 +23,10 @@ export class MongooseEmailRequestsRepository
 {
   private emailRequestModel: Model<MongooseEmailRequest>
 
-  constructor(private readonly mongoose: MongooseService) {
+  constructor(
+    private readonly mongoose: MongooseService,
+    private readonly winston: WinstonService,
+  ) {
     this.emailRequestModel =
       this.mongoose.connection.model<MongooseEmailRequest>(
         'EmailRequest',
@@ -31,25 +35,74 @@ export class MongooseEmailRequestsRepository
   }
 
   async findById(id: string): Promise<EmailRequest<EmailTemplateType> | null> {
-    const emailRequest = await this.emailRequestModel.findById(id).lean().exec()
+    const startTime = Date.now()
 
-    if (!emailRequest) return null
+    try {
+      const emailRequest = await this.emailRequestModel
+        .findById(id)
+        .lean()
+        .exec()
 
-    return MongooseEmailRequestMapper.toDomain(emailRequest)
+      this.winston.logDatabaseQuery({
+        query: 'SELECT email request by id',
+        duration: Date.now() - startTime,
+        success: true,
+        table: 'email_requests',
+        operation: 'SELECT',
+      })
+
+      if (!emailRequest) return null
+
+      return MongooseEmailRequestMapper.toDomain(emailRequest)
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'SELECT email request by id',
+        duration: Date.now() - startTime,
+        success: false,
+        table: 'email_requests',
+        operation: 'SELECT',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 
   async findPending(
     limit: number,
     offset: number = 0,
   ): Promise<Array<EmailRequest<EmailTemplateType>>> {
-    const emailRequests = await this.emailRequestModel
-      .find({ status: 'pending' as MongooseEmailRequest['status'] })
-      .limit(limit)
-      .skip(offset)
-      .lean()
-      .exec()
+    const startTime = Date.now()
 
-    return emailRequests.map(MongooseEmailRequestMapper.toDomain)
+    try {
+      const emailRequests = await this.emailRequestModel
+        .find({ status: 'pending' as MongooseEmailRequest['status'] })
+        .limit(limit)
+        .skip(offset)
+        .lean()
+        .exec()
+
+      this.winston.logDatabaseQuery({
+        query: 'SELECT pending email requests',
+        duration: Date.now() - startTime,
+        success: true,
+        table: 'email_requests',
+        operation: 'SELECT',
+      })
+
+      return emailRequests.map(MongooseEmailRequestMapper.toDomain)
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'SELECT pending email requests',
+        duration: Date.now() - startTime,
+        success: false,
+        table: 'email_requests',
+        operation: 'SELECT',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 
   async findByStatusAndPriority(
@@ -58,35 +111,104 @@ export class MongooseEmailRequestsRepository
     limit: number,
     offset: number = 0,
   ): Promise<Array<EmailRequest<EmailTemplateType>>> {
-    const emailRequests = await this.emailRequestModel
-      .find({ status, priority })
-      .limit(limit)
-      .skip(offset)
-      .lean()
-      .exec()
+    const startTime = Date.now()
 
-    return emailRequests.map(MongooseEmailRequestMapper.toDomain)
+    try {
+      const emailRequests = await this.emailRequestModel
+        .find({ status, priority })
+        .limit(limit)
+        .skip(offset)
+        .lean()
+        .exec()
+
+      this.winston.logDatabaseQuery({
+        query: 'SELECT email requests by status and priority',
+        duration: Date.now() - startTime,
+        success: true,
+        table: 'email_requests',
+        operation: 'SELECT',
+      })
+
+      return emailRequests.map(MongooseEmailRequestMapper.toDomain)
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'SELECT email requests by status and priority',
+        duration: Date.now() - startTime,
+        success: false,
+        table: 'email_requests',
+        operation: 'SELECT',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 
   async create(emailRequest: EmailRequest<EmailTemplateType>): Promise<void> {
-    const mongooseEmailRequest =
-      MongooseEmailRequestMapper.toMongoose(emailRequest)
+    const startTime = Date.now()
 
-    await this.emailRequestModel.create(mongooseEmailRequest)
+    try {
+      const mongooseEmailRequest =
+        MongooseEmailRequestMapper.toMongoose(emailRequest)
+
+      await this.emailRequestModel.create(mongooseEmailRequest)
+
+      this.winston.logDatabaseQuery({
+        query: 'INSERT email request',
+        duration: Date.now() - startTime,
+        success: true,
+        table: 'email_requests',
+        operation: 'INSERT',
+      })
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'INSERT email request',
+        duration: Date.now() - startTime,
+        success: false,
+        table: 'email_requests',
+        operation: 'INSERT',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 
   async save(emailRequest: EmailRequest<EmailTemplateType>): Promise<void> {
-    const mongooseEmailRequest =
-      MongooseEmailRequestMapper.toMongoose(emailRequest)
+    const startTime = Date.now()
 
-    await this.emailRequestModel
-      .updateOne(
-        {
-          _id: emailRequest.id.toString(),
-        },
-        { $set: mongooseEmailRequest },
-        { upsert: true },
-      )
-      .exec()
+    try {
+      const mongooseEmailRequest =
+        MongooseEmailRequestMapper.toMongoose(emailRequest)
+
+      await this.emailRequestModel
+        .updateOne(
+          {
+            _id: emailRequest.id.toString(),
+          },
+          { $set: mongooseEmailRequest },
+          { upsert: true },
+        )
+        .exec()
+
+      this.winston.logDatabaseQuery({
+        query: 'UPDATE email request',
+        duration: Date.now() - startTime,
+        success: true,
+        table: 'email_requests',
+        operation: 'UPDATE',
+      })
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'UPDATE email request',
+        duration: Date.now() - startTime,
+        success: false,
+        table: 'email_requests',
+        operation: 'UPDATE',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 }
