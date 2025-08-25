@@ -1,6 +1,7 @@
 import { makeAuthToken } from '@test/factories/make-auth-token'
 import { makeUser } from '@test/factories/make-user'
 import { makeVerificationToken } from '@test/factories/make-verification-token'
+import { FakeLogger } from '@test/logging/fake-logger'
 import { InMemoryAuthTokensRepository } from '@test/repositories/in-memory-auth-tokens-repository'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
@@ -12,6 +13,7 @@ import { RevokeTokensUseCase } from './revoke-tokens'
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryAuthTokensRepository: InMemoryAuthTokensRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
+let fakeLogger: FakeLogger
 let sut: RevokeTokensUseCase
 
 describe('Revoke Tokens Use-case', () => {
@@ -20,9 +22,11 @@ describe('Revoke Tokens Use-case', () => {
     inMemoryAuthTokensRepository = new InMemoryAuthTokensRepository()
     inMemoryVerificationTokensRepository =
       new InMemoryVerificationTokensRepository()
+    fakeLogger = new FakeLogger()
     sut = new RevokeTokensUseCase(
       inMemoryAuthTokensRepository,
       inMemoryVerificationTokensRepository,
+      fakeLogger,
     )
   })
 

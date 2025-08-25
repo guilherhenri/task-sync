@@ -1,5 +1,6 @@
 import { makeUser } from '@test/factories/make-user'
 import { makeVerificationToken } from '@test/factories/make-verification-token'
+import { FakeLogger } from '@test/logging/fake-logger'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
@@ -12,6 +13,7 @@ import { ResourceNotFoundError } from './errors/resource-not-found'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
+let fakeLogger: FakeLogger
 let sut: ConfirmEmailUseCase
 
 describe('Confirm Email Use-case', () => {
@@ -19,9 +21,11 @@ describe('Confirm Email Use-case', () => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     inMemoryVerificationTokensRepository =
       new InMemoryVerificationTokensRepository()
+    fakeLogger = new FakeLogger()
     sut = new ConfirmEmailUseCase(
       inMemoryUsersRepository,
       inMemoryVerificationTokensRepository,
+      fakeLogger,
     )
   })
 

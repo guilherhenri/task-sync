@@ -1,6 +1,7 @@
 import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
 import { makeVerificationToken } from '@test/factories/make-verification-token'
+import { FakeLogger } from '@test/logging/fake-logger'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
@@ -16,6 +17,7 @@ import { ResetPasswordUseCase } from './reset-password'
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let fakeHasher: FakeHasher
+let fakeLogger: FakeLogger
 let sut: ResetPasswordUseCase
 
 describe('Reset Password Use-case', () => {
@@ -24,10 +26,12 @@ describe('Reset Password Use-case', () => {
     inMemoryVerificationTokensRepository =
       new InMemoryVerificationTokensRepository()
     fakeHasher = new FakeHasher()
+    fakeLogger = new FakeLogger()
     sut = new ResetPasswordUseCase(
       inMemoryUsersRepository,
       inMemoryVerificationTokensRepository,
       fakeHasher,
+      fakeLogger,
     )
   })
 

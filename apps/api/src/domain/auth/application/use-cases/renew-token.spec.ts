@@ -1,5 +1,6 @@
 import { FakeEncryptor } from '@test/cryptography/fake-encryptor'
 import { makeUser } from '@test/factories/make-user'
+import { FakeLogger } from '@test/logging/fake-logger'
 import { InMemoryAuthTokensRepository } from '@test/repositories/in-memory-auth-tokens-repository'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 
@@ -14,6 +15,7 @@ import { RenewTokenUseCase } from './renew-token'
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryAuthTokensRepository: InMemoryAuthTokensRepository
 let fakeEncryptor: FakeEncryptor
+let fakeLogger: FakeLogger
 let sut: RenewTokenUseCase
 
 describe('Renew Token Use-case', () => {
@@ -21,10 +23,12 @@ describe('Renew Token Use-case', () => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     inMemoryAuthTokensRepository = new InMemoryAuthTokensRepository()
     fakeEncryptor = new FakeEncryptor()
+    fakeLogger = new FakeLogger()
     sut = new RenewTokenUseCase(
       inMemoryUsersRepository,
       inMemoryAuthTokensRepository,
       fakeEncryptor,
+      fakeLogger,
     )
   })
 

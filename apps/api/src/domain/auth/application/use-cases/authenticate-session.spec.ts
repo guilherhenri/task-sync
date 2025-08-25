@@ -1,6 +1,7 @@
 import { FakeEncryptor } from '@test/cryptography/fake-encryptor'
 import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
+import { FakeLogger } from '@test/logging/fake-logger'
 import { InMemoryAuthTokensRepository } from '@test/repositories/in-memory-auth-tokens-repository'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 
@@ -11,6 +12,7 @@ let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryAuthTokensRepository: InMemoryAuthTokensRepository
 let fakeEncryptor: FakeEncryptor
 let fakeHasher: FakeHasher
+let fakeLogger: FakeLogger
 let sut: AuthenticateSessionUseCase
 
 describe('Authenticate Session Use-case', () => {
@@ -19,11 +21,13 @@ describe('Authenticate Session Use-case', () => {
     inMemoryAuthTokensRepository = new InMemoryAuthTokensRepository()
     fakeEncryptor = new FakeEncryptor()
     fakeHasher = new FakeHasher()
+    fakeLogger = new FakeLogger()
     sut = new AuthenticateSessionUseCase(
       inMemoryUsersRepository,
       inMemoryAuthTokensRepository,
       fakeEncryptor,
       fakeHasher,
+      fakeLogger,
     )
   })
 

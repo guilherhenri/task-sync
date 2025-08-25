@@ -1,4 +1,5 @@
 import { makeUser } from '@test/factories/make-user'
+import { FakeLogger } from '@test/logging/fake-logger'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { FakeUploader } from '@test/storage/fake-uploader'
 
@@ -8,15 +9,18 @@ import { UploadAndUpdateAvatarUseCase } from './upload-and-update-avatar'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let fakeUploader: FakeUploader
+let fakeLogger: FakeLogger
 let sut: UploadAndUpdateAvatarUseCase
 
 describe('Upload and Update Avatar Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     fakeUploader = new FakeUploader()
+    fakeLogger = new FakeLogger()
     sut = new UploadAndUpdateAvatarUseCase(
       inMemoryUsersRepository,
       fakeUploader,
+      fakeLogger,
     )
   })
 
