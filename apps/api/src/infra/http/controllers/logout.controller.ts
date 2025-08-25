@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger'
 import type { Response } from 'express'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { TerminateSessionUseCase } from '@/domain/auth/application/use-cases/terminate-session'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
@@ -21,6 +22,7 @@ export class LogoutController {
   constructor(
     private readonly terminateSession: TerminateSessionUseCase,
     private readonly config: EnvService,
+    private readonly logger: LoggerPort,
   ) {}
 
   @Delete()
@@ -35,6 +37,12 @@ export class LogoutController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload, @Res() res: Response) {
+    this.logger.logBusinessEvent({
+      action: 'session_end_attempt',
+      resource: 'authentication',
+      userId: user.sub,
+    })
+
     await this.terminateSession.execute({
       userId: user.sub,
     })
@@ -43,6 +51,12 @@ export class LogoutController {
       httpOnly: true,
       secure: this.config.get('NODE_ENV') === 'production',
       path: '/',
+    })
+
+    this.logger.logBusinessEvent({
+      action: 'session_end_success',
+      resource: 'authentication',
+      userId: user.sub,
     })
 
     return res.status(200).send()
