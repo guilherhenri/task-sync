@@ -2,6 +2,7 @@ import { Controller, Get, HttpCode, Param } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { FileAccessController } from '@/domain/auth/application/storage/file-access-controller'
 
 import {
@@ -34,7 +35,10 @@ const getAvatarUrlResponseSchema = z.object({
 @ApiTags('auth')
 @Controller('/avatar/url/:key')
 export class GetAvatarUrlController {
-  constructor(private readonly fileAccessController: FileAccessController) {}
+  constructor(
+    private readonly fileAccessController: FileAccessController,
+    private readonly logger: LoggerPort,
+  ) {}
 
   @Get()
   @HttpCode(200)
@@ -64,6 +68,12 @@ export class GetAvatarUrlController {
   })
   @JwtUnauthorizedResponse()
   async handle(@Param(paramValidationPipe) query: GetAvatarUrlParamSchema) {
+    this.logger.logBusinessEvent({
+      action: 'get_avatar_attempt',
+      resource: 'profile',
+      metadata: { avatarUrl: query.key },
+    })
+
     const { key } = query
     const expiresIn = 24 * 60 * 60 // 24h in seconds
 
@@ -71,6 +81,11 @@ export class GetAvatarUrlController {
       key,
       expiresIn,
     )
+
+    this.logger.logBusinessEvent({
+      action: 'get_avatar_success',
+      resource: 'profile',
+    })
 
     return {
       url: signedUrl,
