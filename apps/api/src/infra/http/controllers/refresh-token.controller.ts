@@ -15,6 +15,7 @@ import {
 } from '@nestjs/swagger'
 import type { Response } from 'express'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { RefreshTokenExpiredError } from '@/domain/auth/application/use-cases/errors/refresh-token-expired'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { RenewTokenUseCase } from '@/domain/auth/application/use-cases/renew-token'
@@ -35,6 +36,7 @@ export class RefreshTokenController {
   constructor(
     private readonly renewToken: RenewTokenUseCase,
     private readonly config: EnvService,
+    private readonly logger: LoggerPort,
   ) {}
 
   @Get()
@@ -53,12 +55,25 @@ export class RefreshTokenController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload, @Res() res: Response) {
+    this.logger.logBusinessEvent({
+      action: 'token_refresh_attempt',
+      resource: 'authentication',
+      userId: user.sub,
+    })
+
     const result = await this.renewToken.execute({
       userId: user.sub,
     })
 
     if (result.isLeft()) {
       const error = result.value
+
+      this.logger.logBusinessEvent({
+        action: 'token_refresh_failed',
+        resource: 'authentication',
+        userId: user.sub,
+        metadata: { reason: error.constructor.name },
+      })
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -78,6 +93,12 @@ export class RefreshTokenController {
       path: '/',
       maxAge: 10 * 60 * 1000, // 10 minutes
       signed: true,
+    })
+
+    this.logger.logBusinessEvent({
+      action: 'token_refresh_success',
+      resource: 'authentication',
+      userId: user.sub,
     })
 
     return res.status(200).send()
