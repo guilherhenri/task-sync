@@ -1,7 +1,7 @@
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
-import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis'
 
 import { AuthModule } from './auth/auth.module'
 import { EnvModule } from './env/env.module'
