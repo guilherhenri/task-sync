@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
 
 import { UsersRepository } from '../repositories/users-repository'
 import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
@@ -22,11 +23,14 @@ export class ConfirmEmailUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
+    private logger: LoggerPort,
   ) {}
 
   async execute({
     token,
   }: ConfirmEmailUseCaseRequest): Promise<ConfirmEmailUseCaseResponse> {
+    const startTime = Date.now()
+
     const verificationToken =
       (await this.verificationTokensRepository.get(token, 'email:verify')) ??
       (await this.verificationTokensRepository.get(
@@ -35,19 +39,55 @@ export class ConfirmEmailUseCase {
       ))
 
     if (!verificationToken) {
-      return left(new ResourceNotFoundError('Token não encontrado.'))
+      const error = new ResourceNotFoundError('Token não encontrado.')
+
+      this.logger.logPerformance({
+        operation: 'confirm_email',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: token,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     if (!verificationToken.verifyToken(token)) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new ResourceInvalidError('Token inválido.'))
+      const error = new ResourceInvalidError('Token inválido.')
+
+      this.logger.logPerformance({
+        operation: 'confirm_email',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: token,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     if (verificationToken.isExpired()) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new ResourceGoneError('Token expirado.'))
+      const error = new ResourceGoneError('Token expirado.')
+
+      this.logger.logPerformance({
+        operation: 'confirm_email',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: token,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     const user = await this.usersRepository.findById(
@@ -57,7 +97,19 @@ export class ConfirmEmailUseCase {
     if (!user) {
       await this.verificationTokensRepository.delete(verificationToken)
 
-      return left(new ResourceNotFoundError('Usuário não encontrado.'))
+      const error = new ResourceNotFoundError('Usuário não encontrado.')
+
+      this.logger.logPerformance({
+        operation: 'confirm_email',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: token,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     user.verifyEmail()
@@ -66,6 +118,13 @@ export class ConfirmEmailUseCase {
       this.usersRepository.save(user),
       this.verificationTokensRepository.delete(verificationToken),
     ])
+
+    this.logger.logPerformance({
+      operation: 'confirm_email',
+      duration: Date.now() - startTime,
+      success: true,
+      metadata: { userId: user.id.toString() },
+    })
 
     return right({})
   }
