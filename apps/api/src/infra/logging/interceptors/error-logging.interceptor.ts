@@ -225,6 +225,7 @@ export class ErrorLoggingInterceptor implements NestInterceptor {
 
     const sensitiveFields = [
       'password',
+      'newPassword',
       'token',
       'authorization',
       'secret',
