@@ -10,6 +10,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm-email'
 import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
@@ -48,7 +49,10 @@ const confirmEmailQueryDescription: Record<
 @Controller('/confirm-email')
 @Public()
 export class ConfirmEmailController {
-  constructor(private readonly confirmEmail: ConfirmEmailUseCase) {}
+  constructor(
+    private readonly confirmEmail: ConfirmEmailUseCase,
+    private readonly logger: LoggerPort,
+  ) {}
 
   @Get()
   @HttpCode(200)
@@ -80,6 +84,12 @@ export class ConfirmEmailController {
     custom: { field: 'token', message: 'O token é obrigatório.' },
   })
   async handle(@Query(queryValidationPipe) query: ConfirmEmailQuerySchema) {
+    this.logger.logBusinessEvent({
+      action: 'confirm_email_attempt',
+      resource: 'user',
+      userId: query.token,
+    })
+
     const { token } = query
 
     const result = await this.confirmEmail.execute({
@@ -88,6 +98,13 @@ export class ConfirmEmailController {
 
     if (result.isLeft()) {
       const error = result.value
+
+      this.logger.logBusinessEvent({
+        action: 'confirm_email_failed',
+        resource: 'user',
+        userId: query.token,
+        metadata: { reason: error.constructor.name },
+      })
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -98,6 +115,12 @@ export class ConfirmEmailController {
           throw new BadRequestException(error.message)
       }
     }
+
+    this.logger.logBusinessEvent({
+      action: 'confirm_email_success',
+      resource: 'user',
+      userId: query.token,
+    })
 
     return { message: 'Seu e-mail foi confirmado com sucesso.' }
   }
