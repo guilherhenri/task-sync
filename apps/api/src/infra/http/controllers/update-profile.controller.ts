@@ -10,6 +10,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/errors/email-already-in-use'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { RefineProfileUseCase } from '@/domain/auth/application/use-cases/refine-profile'
@@ -69,7 +70,10 @@ const updateProfileBodyDescription: Record<
 @ApiTags('auth')
 @Controller('/me')
 export class UpdateProfileController {
-  constructor(private readonly refineProfile: RefineProfileUseCase) {}
+  constructor(
+    private readonly refineProfile: RefineProfileUseCase,
+    private readonly logger: LoggerPort,
+  ) {}
 
   @Put()
   @HttpCode(200)
@@ -101,6 +105,13 @@ export class UpdateProfileController {
     @CurrentUser() user: UserPayload,
     @Body(bodyValidationPipe) body: UpdateProfileBodySchema,
   ) {
+    this.logger.logBusinessEvent({
+      action: 'profile_update_attempt',
+      resource: 'profile',
+      userId: user.sub,
+      metadata: { fields: Object.keys(body) },
+    })
+
     const { name, email, newPassword } = body
 
     const result = await this.refineProfile.execute({
@@ -113,6 +124,13 @@ export class UpdateProfileController {
     if (result.isLeft()) {
       const error = result.value
 
+      this.logger.logBusinessEvent({
+        action: 'profile_update_failed',
+        resource: 'profile',
+        userId: user.sub,
+        metadata: { reason: error.constructor.name },
+      })
+
       switch (error.constructor) {
         case EmailAlreadyInUseError:
           throw new ConflictException(error.message)
@@ -122,6 +140,12 @@ export class UpdateProfileController {
           throw new BadRequestException(error.message)
       }
     }
+
+    this.logger.logBusinessEvent({
+      action: 'profile_update_success',
+      resource: 'profile',
+      userId: user.sub,
+    })
 
     return { message: 'Perfil atualizado com sucesso.' }
   }
