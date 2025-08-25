@@ -1,17 +1,68 @@
 import { Injectable } from '@nestjs/common'
 
+import { WinstonService } from '@/infra/logging/winston.service'
+
 import { KeyValuesRepository } from '../../key-values-repository'
 import { RedisService } from '../redis.service'
 
 @Injectable()
 export class RedisKeyValueRepository implements KeyValuesRepository {
-  constructor(private readonly redis: RedisService) {}
+  constructor(
+    private readonly redis: RedisService,
+    private readonly winston: WinstonService,
+  ) {}
 
   async lpush(queue: string, value: string): Promise<void> {
-    await this.redis.lpush(queue, value)
+    const startTime = Date.now()
+
+    try {
+      await this.redis.lpush(queue, value)
+
+      this.winston.logDatabaseQuery({
+        query: 'LPUSH to queue',
+        duration: Date.now() - startTime,
+        success: true,
+        table: queue,
+        operation: 'LPUSH',
+      })
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'LPUSH to queue',
+        duration: Date.now() - startTime,
+        success: false,
+        table: queue,
+        operation: 'LPUSH',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 
   async publish(channel: string, message: string): Promise<void> {
-    await this.redis.publish(channel, message)
+    const startTime = Date.now()
+
+    try {
+      await this.redis.publish(channel, message)
+
+      this.winston.logDatabaseQuery({
+        query: 'PUBLISH to channel',
+        duration: Date.now() - startTime,
+        success: true,
+        table: channel,
+        operation: 'PUBLISH',
+      })
+    } catch (error) {
+      this.winston.logDatabaseQuery({
+        query: 'PUBLISH to channel',
+        duration: Date.now() - startTime,
+        success: false,
+        table: channel,
+        operation: 'PUBLISH',
+        error: (error as Error).message,
+      })
+
+      throw error
+    }
   }
 }
