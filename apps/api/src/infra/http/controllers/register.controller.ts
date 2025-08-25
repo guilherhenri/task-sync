@@ -9,6 +9,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
+import { LoggerPort } from '@/core/ports/logger'
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/errors/email-already-in-use'
 import { Public } from '@/infra/auth/decorators/public'
@@ -65,7 +66,10 @@ const registerBodyDescription: Record<
 @Controller('/sign-up')
 @Public()
 export class RegisterController {
-  constructor(private readonly enrollIdentity: EnrollIdentityUseCase) {}
+  constructor(
+    private readonly enrollIdentity: EnrollIdentityUseCase,
+    private readonly logger: LoggerPort,
+  ) {}
 
   @Post()
   @HttpCode(201)
@@ -94,6 +98,12 @@ export class RegisterController {
     custom: { field: 'email', message: 'O e-mail deve ser válido.' },
   })
   async handle(@Body(bodyValidationPipe) body: RegisterBodySchema) {
+    this.logger.logBusinessEvent({
+      action: 'register_attempt',
+      resource: 'user',
+      userId: body.email,
+    })
+
     const { name, email, password } = body
 
     const result = await this.enrollIdentity.execute({
@@ -105,6 +115,13 @@ export class RegisterController {
     if (result.isLeft()) {
       const error = result.value
 
+      this.logger.logBusinessEvent({
+        action: 'register_failed',
+        resource: 'user',
+        userId: body.email,
+        metadata: { reason: error.constructor.name },
+      })
+
       switch (error.constructor) {
         case EmailAlreadyInUseError:
           throw new ConflictException(error.message)
@@ -112,6 +129,12 @@ export class RegisterController {
           throw new BadRequestException(error.message)
       }
     }
+
+    this.logger.logBusinessEvent({
+      action: 'register_success',
+      resource: 'user',
+      userId: email,
+    })
 
     return { message: 'Usuário registrado com sucesso.' }
   }
