@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
 import { Encryptor } from '../cryptography/encryptor'
@@ -26,16 +27,31 @@ export class AuthenticateSessionUseCase {
     private authTokensRepository: AuthTokensRepository,
     private encryptor: Encryptor,
     private hasher: Hasher,
+    private logger: LoggerPort,
   ) {}
 
   async execute({
     email,
     password,
   }: AuthenticateSessionUseCaseRequest): Promise<AuthenticateSessionUseCaseResponse> {
+    const startTime = Date.now()
+
     const user = await this.usersRepository.findByEmail(email)
 
     if (!user) {
-      return left(new InvalidCredentialsError())
+      const error = new InvalidCredentialsError()
+
+      this.logger.logPerformance({
+        operation: 'authenticate_session',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: email,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     const isPasswordMatch = await this.hasher.compare(
@@ -44,7 +60,19 @@ export class AuthenticateSessionUseCase {
     )
 
     if (!isPasswordMatch) {
-      return left(new InvalidCredentialsError())
+      const error = new InvalidCredentialsError()
+
+      this.logger.logPerformance({
+        operation: 'authenticate_session',
+        duration: Date.now() - startTime,
+        success: false,
+        metadata: {
+          userId: email,
+          error: error.message,
+        },
+      })
+
+      return left(error)
     }
 
     const accessToken = await this.encryptor.encrypt({
@@ -63,6 +91,13 @@ export class AuthenticateSessionUseCase {
     })
 
     await this.authTokensRepository.create(authToken)
+
+    this.logger.logPerformance({
+      operation: 'authenticate_session',
+      duration: Date.now() - startTime,
+      success: true,
+      metadata: { userId: email },
+    })
 
     return right({ accessToken })
   }
