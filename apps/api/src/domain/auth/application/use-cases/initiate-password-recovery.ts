@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
 import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { VerificationToken } from '../../enterprise/entities/verification-token'
 import { UsersRepository } from '../repositories/users-repository'
@@ -19,32 +21,26 @@ export class InitiatePasswordRecoveryUseCase {
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
     private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'initiate_password_recovery',
+    className: 'InitiatePasswordRecovery',
+    identifier: 'email',
+  })
   async execute({
     email,
   }: InitiatePasswordRecoveryUseCaseRequest): Promise<InitiatePasswordRecoveryUseCaseResponse> {
-    const startTime = Date.now()
-
     const user = await this.usersRepository.findByEmail(email)
 
     if (user) {
       if (!user.emailVerified) {
-        const error = new Error(
-          'Este endereço de e-mail ainda não foi verificado, por favor cheque seu e-mail.',
+        return left(
+          new Error(
+            'Este endereço de e-mail ainda não foi verificado, por favor cheque seu e-mail.',
+          ),
         )
-
-        this.logger.logPerformance({
-          operation: 'initiate_password_recovery',
-          duration: Date.now() - startTime,
-          success: false,
-          metadata: {
-            userId: email,
-            error: error.message,
-          },
-        })
-
-        return left(error)
       }
 
       const verificationToken = VerificationToken.create({
@@ -54,13 +50,6 @@ export class InitiatePasswordRecoveryUseCase {
 
       await this.verificationTokensRepository.save(verificationToken)
     }
-
-    this.logger.logPerformance({
-      operation: 'initiate_password_recovery',
-      duration: Date.now() - startTime,
-      success: true,
-      metadata: { userId: email },
-    })
 
     return right({})
   }
