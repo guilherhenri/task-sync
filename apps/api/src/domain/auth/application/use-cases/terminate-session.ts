@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, right } from '@/core/either'
 import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { AuthTokensRepository } from '../repositories/auth-tokens-repository'
 
@@ -16,25 +18,22 @@ export class TerminateSessionUseCase {
   constructor(
     private authTokensRepository: AuthTokensRepository,
     private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'terminate_session',
+    className: 'TerminateSession',
+    identifier: 'userId',
+  })
   async execute({
     userId,
   }: TerminateSessionUseCaseRequest): Promise<TerminateSessionUseCaseResponse> {
-    const startTime = Date.now()
-
     const authToken = await this.authTokensRepository.findByUserId(userId)
 
     if (authToken) {
       await this.authTokensRepository.delete(authToken)
     }
-
-    this.logger.logPerformance({
-      operation: 'terminate_session',
-      duration: Date.now() - startTime,
-      success: true,
-      metadata: { userId },
-    })
 
     return right({})
   }
