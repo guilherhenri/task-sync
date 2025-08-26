@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
 import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { VerificationToken } from '../../enterprise/entities/verification-token'
 import { Hasher } from '../cryptography/hasher'
@@ -29,32 +31,24 @@ export class RefineProfileUseCase {
     private verificationTokensRepository: VerificationTokensRepository,
     private hasher: Hasher,
     private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'refine_profile',
+    className: 'RefineProfile',
+    identifier: 'userId',
+  })
   async execute({
     userId,
     name,
     email,
     newPassword,
   }: RefineProfileUseCaseRequest): Promise<RefineProfileUseCaseResponse> {
-    const startTime = Date.now()
-
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
-      const error = new ResourceNotFoundError('Usuário não encontrado.')
-
-      this.logger.logPerformance({
-        operation: 'refine_profile',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId,
-          error: error.message,
-        },
-      })
-
-      return left(error)
+      return left(new ResourceNotFoundError('Usuário não encontrado.'))
     }
 
     let verificationToken: VerificationToken | null = null
@@ -63,19 +57,7 @@ export class RefineProfileUseCase {
       const emailAlreadyInUse = await this.usersRepository.findByEmail(email)
 
       if (emailAlreadyInUse) {
-        const error = new EmailAlreadyInUseError(email)
-
-        this.logger.logPerformance({
-          operation: 'refine_profile',
-          duration: Date.now() - startTime,
-          success: false,
-          metadata: {
-            userId,
-            error: error.message,
-          },
-        })
-
-        return left(error)
+        return left(new EmailAlreadyInUseError(email))
       }
 
       verificationToken = VerificationToken.create({
@@ -99,13 +81,6 @@ export class RefineProfileUseCase {
       verificationToken &&
         this.verificationTokensRepository.save(verificationToken),
     ])
-
-    this.logger.logPerformance({
-      operation: 'refine_profile',
-      duration: Date.now() - startTime,
-      success: true,
-      metadata: { userId },
-    })
 
     return right({})
   }
