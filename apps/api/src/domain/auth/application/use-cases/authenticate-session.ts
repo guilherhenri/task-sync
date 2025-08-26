@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
 import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
 import { Encryptor } from '../cryptography/encryptor'
@@ -28,28 +30,22 @@ export class AuthenticateSessionUseCase {
     private encryptor: Encryptor,
     private hasher: Hasher,
     private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'authenticate_session',
+    className: 'AuthenticateSession',
+    identifier: 'email',
+  })
   async execute({
     email,
     password,
   }: AuthenticateSessionUseCaseRequest): Promise<AuthenticateSessionUseCaseResponse> {
-    const startTime = Date.now()
-
     const user = await this.usersRepository.findByEmail(email)
 
     if (!user) {
       const error = new InvalidCredentialsError()
-
-      this.logger.logPerformance({
-        operation: 'authenticate_session',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId: email,
-          error: error.message,
-        },
-      })
 
       return left(error)
     }
@@ -60,19 +56,7 @@ export class AuthenticateSessionUseCase {
     )
 
     if (!isPasswordMatch) {
-      const error = new InvalidCredentialsError()
-
-      this.logger.logPerformance({
-        operation: 'authenticate_session',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId: email,
-          error: error.message,
-        },
-      })
-
-      return left(error)
+      return left(new InvalidCredentialsError())
     }
 
     const accessToken = await this.encryptor.encrypt({
@@ -91,13 +75,6 @@ export class AuthenticateSessionUseCase {
     })
 
     await this.authTokensRepository.create(authToken)
-
-    this.logger.logPerformance({
-      operation: 'authenticate_session',
-      duration: Date.now() - startTime,
-      success: true,
-      metadata: { userId: email },
-    })
 
     return right({ accessToken })
   }
