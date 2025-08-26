@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
 import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import type { User } from '../../enterprise/entities/user'
 import { UsersRepository } from '../repositories/users-repository'
@@ -21,37 +23,22 @@ export class RetrieveProfileUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'retrieve_profile',
+    className: 'RetrieveProfile',
+    identifier: 'userId',
+  })
   async execute({
     userId,
   }: RetrieveProfileUseCaseRequest): Promise<RetrieveProfileUseCaseResponse> {
-    const startTime = Date.now()
-
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
-      const error = new ResourceNotFoundError('Usuário não encontrado.')
-
-      this.logger.logPerformance({
-        operation: 'authenticate_session',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId,
-          error: error.message,
-        },
-      })
-
-      return left(error)
+      return left(new ResourceNotFoundError('Usuário não encontrado.'))
     }
-
-    this.logger.logPerformance({
-      operation: 'retrieve_profile',
-      duration: Date.now() - startTime,
-      success: true,
-      metadata: { userId },
-    })
 
     return right({ user })
   }
