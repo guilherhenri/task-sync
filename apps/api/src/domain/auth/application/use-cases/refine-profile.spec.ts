@@ -1,6 +1,7 @@
 import { FakeHasher } from '@test/cryptography/fake-hasher'
 import { makeUser } from '@test/factories/make-user'
 import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
@@ -16,6 +17,7 @@ let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let fakeHasher: FakeHasher
 let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: RefineProfileUseCase
 
 describe('Refine Profile Use-case', () => {
@@ -25,11 +27,13 @@ describe('Refine Profile Use-case', () => {
       new InMemoryVerificationTokensRepository()
     fakeHasher = new FakeHasher()
     fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
     sut = new RefineProfileUseCase(
       inMemoryUsersRepository,
       inMemoryVerificationTokensRepository,
       fakeHasher,
       fakeLogger,
+      fakeMetrics,
     )
   })
 

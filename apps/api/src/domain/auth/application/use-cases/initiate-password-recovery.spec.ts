@@ -1,5 +1,6 @@
 import { makeUser } from '@test/factories/make-user'
 import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
 
@@ -11,6 +12,7 @@ import { InitiatePasswordRecoveryUseCase } from './initiate-password-recovery'
 let inMemoryUsersRepository: InMemoryUsersRepository
 let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: InitiatePasswordRecoveryUseCase
 
 describe('Initiate Password Recovery Use-case', () => {
@@ -19,10 +21,12 @@ describe('Initiate Password Recovery Use-case', () => {
     inMemoryVerificationTokensRepository =
       new InMemoryVerificationTokensRepository()
     fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
     sut = new InitiatePasswordRecoveryUseCase(
       inMemoryUsersRepository,
       inMemoryVerificationTokensRepository,
       fakeLogger,
+      fakeMetrics,
     )
   })
 

@@ -1,5 +1,6 @@
 import { FakeEncryptor } from '@test/cryptography/fake-encryptor'
 import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryAuthTokensRepository } from '@test/repositories/in-memory-auth-tokens-repository'
 
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
@@ -10,13 +11,19 @@ import { TerminateSessionUseCase } from './terminate-session'
 let inMemoryAuthTokensRepository: InMemoryAuthTokensRepository
 let fakeEncryptor: FakeEncryptor
 let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: TerminateSessionUseCase
 
 describe('Terminate Session Use-case', () => {
   beforeEach(() => {
     inMemoryAuthTokensRepository = new InMemoryAuthTokensRepository()
     fakeLogger = new FakeLogger()
-    sut = new TerminateSessionUseCase(inMemoryAuthTokensRepository, fakeLogger)
+    fakeMetrics = new FakeMetrics()
+    sut = new TerminateSessionUseCase(
+      inMemoryAuthTokensRepository,
+      fakeLogger,
+      fakeMetrics,
+    )
     fakeEncryptor = new FakeEncryptor()
   })
 
