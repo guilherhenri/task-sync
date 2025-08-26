@@ -10,6 +10,7 @@ export default async (): Promise<Config> => ({
     '^@test/(.*)$': '<rootDir>/test/$1',
     '^@task-sync/email-templates$':
       '<rootDir>/test/mocks/@task-sync/email-templates.ts',
+    '^chalk$': '<rootDir>/test/mocks/chalk.ts',
   },
   coveragePathIgnorePatterns: [
     'redis.service.ts',
