@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
 import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
 import { Encryptor } from '../cryptography/encryptor'
@@ -27,83 +29,39 @@ export class RenewTokenUseCase {
     private authTokensRepository: AuthTokensRepository,
     private encryptor: Encryptor,
     private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'renew_token',
+    className: 'RenewToken',
+    identifier: 'userId',
+  })
   async execute({
     userId,
   }: RenewTokenUseCaseRequest): Promise<RenewTokenUseCaseResponse> {
-    const startTime = Date.now()
-
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
-      const error = new ResourceNotFoundError('Usuário não encontrado.')
-
-      this.logger.logPerformance({
-        operation: 'renew_token',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId,
-          error: error.message,
-        },
-      })
-
-      return left(error)
+      return left(new ResourceNotFoundError('Usuário não encontrado.'))
     }
 
     const oldAuthToken = await this.authTokensRepository.findByUserId(userId)
 
     if (!oldAuthToken) {
-      const error = new RefreshTokenExpiredError()
-
-      this.logger.logPerformance({
-        operation: 'renew_token',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId,
-          error: error.message,
-        },
-      })
-
-      return left(error)
+      return left(new RefreshTokenExpiredError())
     }
 
     if (oldAuthToken.expiresAt < new Date()) {
       await this.authTokensRepository.delete(oldAuthToken)
 
-      const error = new RefreshTokenExpiredError()
-
-      this.logger.logPerformance({
-        operation: 'renew_token',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId,
-          error: error.message,
-        },
-      })
-
-      return left(error)
+      return left(new RefreshTokenExpiredError())
     }
 
     if (!oldAuthToken.userId.equals(user.id)) {
-      const error = new ForbiddenActionError(
-        'Este token não pertence a este usuário.',
+      return left(
+        new ForbiddenActionError('Este token não pertence a este usuário.'),
       )
-
-      this.logger.logPerformance({
-        operation: 'renew_token',
-        duration: Date.now() - startTime,
-        success: false,
-        metadata: {
-          userId,
-          error: error.message,
-        },
-      })
-
-      return left(error)
     }
 
     await this.authTokensRepository.delete(oldAuthToken)
@@ -124,13 +82,6 @@ export class RenewTokenUseCase {
     })
 
     await this.authTokensRepository.create(authToken)
-
-    this.logger.logPerformance({
-      operation: 'renew_token',
-      duration: Date.now() - startTime,
-      success: true,
-      metadata: { userId },
-    })
 
     return right({ accessToken })
   }
