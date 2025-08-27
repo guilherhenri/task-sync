@@ -15,6 +15,7 @@ import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/re
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-password'
 import { Public } from '@/infra/auth/decorators/public'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodBody,
@@ -64,6 +65,7 @@ export class ResetPasswordController {
   constructor(
     private readonly resetPassword: ResetPasswordUseCase,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Post()
@@ -101,9 +103,12 @@ export class ResetPasswordController {
   async handle(@Body(bodyValidationPipe) body: ResetPasswordBodySchema) {
     this.logger.logBusinessEvent({
       action: 'password_reset_attempt',
-      resource: 'password',
+      resource: 'authentication',
       userId: body.token,
     })
+    this.metrics.businessEvents
+      .labels('password_reset', 'auth', 'attempt')
+      .inc()
 
     const { token, newPassword } = body
 
@@ -117,10 +122,13 @@ export class ResetPasswordController {
 
       this.logger.logBusinessEvent({
         action: 'password_reset_failed',
-        resource: 'password',
+        resource: 'authentication',
         userId: body.token,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('password_reset', 'auth', 'failed')
+        .inc()
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -134,9 +142,12 @@ export class ResetPasswordController {
 
     this.logger.logBusinessEvent({
       action: 'password_reset_success',
-      resource: 'password',
+      resource: 'authentication',
       userId: body.token,
     })
+    this.metrics.businessEvents
+      .labels('password_reset', 'auth', 'success')
+      .inc()
 
     return { message: 'Sua senha foi redefinida com sucesso.' }
   }
