@@ -5,12 +5,13 @@ import { EmailQueueService } from '@/domain/email/application/services/email-que
 
 import { DatabaseModule } from '../database/database.module'
 import { KeyValueModule } from '../key-value/key-value.module'
+import { MetricsModule } from '../metrics/metrics.module'
 import { WorkersModule } from '../workers/workers.module'
 import { InfraAuthUserService } from './data/infra-auth-user.service'
 import { RedisEmailQueueService } from './queue/redis-email-queue.service'
 
 @Module({
-  imports: [DatabaseModule, KeyValueModule, WorkersModule],
+  imports: [DatabaseModule, KeyValueModule, WorkersModule, MetricsModule],
   providers: [
     {
       provide: AuthUserService,
