@@ -13,6 +13,7 @@ import { ThrottlerExceptionFilter } from './logging/filters/throttler-exception.
 import { ErrorLoggingInterceptor } from './logging/interceptors/error-logging.interceptor'
 import { LoggingInterceptor } from './logging/interceptors/logging.interceptor'
 import { LoggingModule } from './logging/logging.module'
+import { MetricsModule } from './metrics/metrics.module'
 import { WorkersModule } from './workers/workers.module'
 
 @Module({
@@ -31,6 +32,7 @@ import { WorkersModule } from './workers/workers.module'
       }),
     }),
     LoggingModule,
+    MetricsModule,
     AuthModule,
     HttpModule,
     EnvModule,
