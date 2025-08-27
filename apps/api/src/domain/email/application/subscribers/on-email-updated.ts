@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { env } from '@task-sync/env'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { DomainEvents } from '@/core/events/domain-events'
 import type { EventHandler } from '@/core/events/event-handler'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 import { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
 import { EmailUpdateVerificationRequestedEvent } from '@/domain/auth/enterprise/events/email-update-verification-requested-event'
 
@@ -13,6 +16,8 @@ export class OnEmailUpdated implements EventHandler {
   constructor(
     private authUserService: AuthUserService,
     private createEmailRequestUseCase: CreateEmailRequestUseCase,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {
     this.setupSubscriptions()
   }
@@ -24,6 +29,11 @@ export class OnEmailUpdated implements EventHandler {
     )
   }
 
+  @WithObservability({
+    operation: 'send_email_verification',
+    identifier: 'verificationToken',
+    subIdentifier: 'userId',
+  })
   private async sendEmailVerification({
     verificationToken,
   }: EmailUpdateVerificationRequestedEvent) {
