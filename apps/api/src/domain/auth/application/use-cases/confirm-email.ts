@@ -31,7 +31,6 @@ export class ConfirmEmailUseCase {
 
   @WithObservability({
     operation: 'confirm_email',
-    className: 'ConfirmEmail',
     identifier: 'token',
   })
   async execute({

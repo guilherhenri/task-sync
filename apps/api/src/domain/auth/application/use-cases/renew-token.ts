@@ -34,7 +34,6 @@ export class RenewTokenUseCase {
 
   @WithObservability({
     operation: 'renew_token',
-    className: 'RenewToken',
     identifier: 'userId',
   })
   async execute({

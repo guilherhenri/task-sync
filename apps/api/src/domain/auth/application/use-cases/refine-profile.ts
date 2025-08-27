@@ -36,7 +36,6 @@ export class RefineProfileUseCase {
 
   @WithObservability({
     operation: 'refine_profile',
-    className: 'RefineProfile',
     identifier: 'userId',
   })
   async execute({

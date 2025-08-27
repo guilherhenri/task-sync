@@ -34,7 +34,6 @@ export class ResetPasswordUseCase {
 
   @WithObservability({
     operation: 'reset_password',
-    className: 'ResetPassword',
     identifier: 'token',
   })
   async execute({

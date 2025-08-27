@@ -33,7 +33,6 @@ export class UploadAndUpdateAvatarUseCase {
 
   @WithObservability({
     operation: 'upload_and_update_avatar',
-    className: 'UploadAndUpdateAvatar',
     identifier: 'userId',
   })
   async execute({

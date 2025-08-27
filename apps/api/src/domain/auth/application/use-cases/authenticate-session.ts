@@ -35,7 +35,6 @@ export class AuthenticateSessionUseCase {
 
   @WithObservability({
     operation: 'authenticate_session',
-    className: 'AuthenticateSession',
     identifier: 'email',
   })
   async execute({

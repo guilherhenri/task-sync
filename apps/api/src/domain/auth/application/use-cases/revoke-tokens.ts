@@ -25,7 +25,6 @@ export class RevokeTokensUseCase {
 
   @WithObservability({
     operation: 'revoke_tokens',
-    className: 'RevokeTokens',
     identifier: 'userId',
   })
   async execute({

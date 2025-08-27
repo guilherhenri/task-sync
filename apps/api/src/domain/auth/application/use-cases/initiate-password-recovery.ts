@@ -26,7 +26,6 @@ export class InitiatePasswordRecoveryUseCase {
 
   @WithObservability({
     operation: 'initiate_password_recovery',
-    className: 'InitiatePasswordRecovery',
     identifier: 'email',
   })
   async execute({

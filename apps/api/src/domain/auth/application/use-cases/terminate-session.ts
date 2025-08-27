@@ -23,7 +23,6 @@ export class TerminateSessionUseCase {
 
   @WithObservability({
     operation: 'terminate_session',
-    className: 'TerminateSession',
     identifier: 'userId',
   })
   async execute({

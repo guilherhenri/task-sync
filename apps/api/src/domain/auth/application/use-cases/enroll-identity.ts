@@ -32,7 +32,6 @@ export class EnrollIdentityUseCase {
 
   @WithObservability({
     operation: 'enroll_identity',
-    className: 'EnrollIdentity',
     identifier: 'email',
   })
   async execute({

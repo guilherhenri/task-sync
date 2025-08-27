@@ -28,7 +28,6 @@ export class RetrieveProfileUseCase {
 
   @WithObservability({
     operation: 'retrieve_profile',
-    className: 'RetrieveProfile',
     identifier: 'userId',
   })
   async execute({
