@@ -13,6 +13,7 @@ import { LoggerPort } from '@/core/ports/logger'
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/errors/email-already-in-use'
 import { Public } from '@/infra/auth/decorators/public'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodBody,
@@ -69,6 +70,7 @@ export class RegisterController {
   constructor(
     private readonly enrollIdentity: EnrollIdentityUseCase,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Post()
@@ -103,6 +105,7 @@ export class RegisterController {
       resource: 'user',
       userId: body.email,
     })
+    this.metrics.businessEvents.labels('register', 'user', 'attempt').inc()
 
     const { name, email, password } = body
 
@@ -121,6 +124,7 @@ export class RegisterController {
         userId: body.email,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents.labels('register', 'user', 'failed').inc()
 
       switch (error.constructor) {
         case EmailAlreadyInUseError:
@@ -135,6 +139,7 @@ export class RegisterController {
       resource: 'user',
       userId: email,
     })
+    this.metrics.businessEvents.labels('register', 'user', 'success').inc()
 
     return { message: 'Usuário registrado com sucesso.' }
   }
