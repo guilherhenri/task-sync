@@ -5,6 +5,7 @@ import { DomainEvents } from '@/core/events/domain-events'
 import { UsersRepository } from '@/domain/auth/application/repositories/users-repository'
 import { User } from '@/domain/auth/enterprise/entities/user'
 import { WinstonService } from '@/infra/logging/winston.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { User as TypeOrmUser } from '../entities/user.entity'
 import { TypeOrmUserMapper } from '../mappers/typeorm-user-mapper'
@@ -17,6 +18,7 @@ export class TypeOrmUsersRepository implements UsersRepository {
   constructor(
     private readonly typeorm: TypeOrmService,
     private readonly winston: WinstonService,
+    private readonly metrics: MetricsService,
   ) {
     this.usersRepository = typeorm.getRepository(TypeOrmUser)
   }
@@ -36,6 +38,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         table: 'users',
         operation: 'SELECT',
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'users',
+        Date.now() - startTime,
+        true,
+      )
 
       if (!user) return null
 
@@ -49,6 +57,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         operation: 'SELECT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'users',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -69,6 +83,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         table: 'users',
         operation: 'SELECT',
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'users',
+        Date.now() - startTime,
+        true,
+      )
 
       if (!user) return null
 
@@ -82,6 +102,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         operation: 'SELECT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'users',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -102,6 +128,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         table: 'users',
         operation: 'INSERT',
       })
+      this.metrics.recordDbMetrics(
+        'INSERT',
+        'users',
+        Date.now() - startTime,
+        true,
+      )
 
       DomainEvents.dispatchEventsForAggregate(user.id)
     } catch (error) {
@@ -113,6 +145,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         operation: 'INSERT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'INSERT',
+        'users',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -133,6 +171,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         table: 'users',
         operation: 'UPDATE',
       })
+      this.metrics.recordDbMetrics(
+        'UPDATE',
+        'users',
+        Date.now() - startTime,
+        true,
+      )
 
       DomainEvents.dispatchEventsForAggregate(user.id)
     } catch (error) {
@@ -144,6 +188,12 @@ export class TypeOrmUsersRepository implements UsersRepository {
         operation: 'UPDATE',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'UPDATE',
+        'users',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
