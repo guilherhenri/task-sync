@@ -177,6 +177,21 @@ export class WinstonService implements LoggerPort, OnModuleDestroy {
     })
   }
 
+  logSystemMetrics(): void {
+    const usage = process.memoryUsage()
+
+    this.info('System metrics', {
+      type: 'system_metrics',
+      memory: {
+        heapUsed: usage.heapUsed,
+        heapTotal: usage.heapTotal,
+        rss: usage.rss,
+        external: usage.external,
+      },
+      uptime: process.uptime(),
+    })
+  }
+
   async healthCheck(): Promise<HealthStatus> {
     const transports = []
 
