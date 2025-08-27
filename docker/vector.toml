@@ -1,0 +1,58 @@
+# Vector Configuration
+[api]
+address = "0.0.0.0:8686"
+enabled = true
+
+# Source: Collect logs from Docker containers
+# [sources.docker_logs]
+# include_labels = ["com.docker.compose.project"]
+# type = "docker_logs"
+
+# Source: HTTP endpoint for receiving logs
+[sources.http_logs]
+address = "0.0.0.0:8080"
+path = "/logs"
+type = "http_server"
+
+# Transform: Parse and enrich logs
+[transforms.parse_logs]
+inputs = ["http_logs"]
+source = '''
+  .timestamp = now()
+  .service = .container_name || .service || "unknown"
+  
+  # Parse JSON if possible
+  if is_string(.message) {
+    parsed, err = parse_json(.message)
+    if err == null && is_object(parsed) {
+      . = merge!(., parsed)
+    }
+  }
+'''
+type = "remap"
+
+# Sink: Output to console (for development)
+[sinks.console]
+inputs = ["parse_logs"]
+target = "stdout"
+type = "console"
+
+[sinks.console.encoding]
+codec = "json"
+
+# Sink: Send to Elasticsearch
+[sinks.elasticsearch]
+endpoints = ["http://elasticsearch:9200"]
+inputs = ["parse_logs"]
+mode = "bulk"
+type = "elasticsearch"
+
+[sinks.elasticsearch.bulk]
+action = "index"
+index = "tasksync-logs"
+
+[sinks.elasticsearch.encoding]
+timestamp_format = "rfc3339"
+
+[sinks.elasticsearch.request]
+timeout_secs = 30
