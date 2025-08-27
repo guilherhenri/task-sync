@@ -11,6 +11,7 @@ import { z } from 'zod/v4'
 import { LoggerPort } from '@/core/ports/logger'
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
 import { Public } from '@/infra/auth/decorators/public'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { ApiUnionResponse } from '../decorators/api-union-response'
 import {
@@ -45,6 +46,7 @@ export class ForgotPasswordController {
   constructor(
     private readonly initiatePasswordRecovery: InitiatePasswordRecoveryUseCase,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Post()
@@ -82,6 +84,9 @@ export class ForgotPasswordController {
       resource: 'authentication',
       userId: body.email,
     })
+    this.metrics.businessEvents
+      .labels('request_recovery_password', 'auth', 'attempt')
+      .inc()
 
     const { email } = body
 
@@ -98,6 +103,9 @@ export class ForgotPasswordController {
         userId: body.email,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('request_recovery_password', 'auth', 'failed')
+        .inc()
 
       throw new BadRequestException(error.message)
     }
@@ -107,6 +115,9 @@ export class ForgotPasswordController {
       resource: 'authentication',
       userId: body.email,
     })
+    this.metrics.businessEvents
+      .labels('request_recovery_password', 'auth', 'success')
+      .inc()
 
     return { message: 'Um e-mail de recuperação foi enviado para você.' }
   }
