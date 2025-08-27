@@ -4,10 +4,11 @@ import { FileAccessController } from '@/domain/auth/application/storage/file-acc
 import { FileStorage } from '@/domain/auth/application/storage/file-storage'
 
 import { EnvModule } from '../env/env.module'
+import { ObservabilityModule } from '../observability/observability.module'
 import { SupabaseStorage } from './supabase-storage'
 
 @Module({
-  imports: [EnvModule],
+  imports: [EnvModule, ObservabilityModule],
   providers: [
     {
       provide: FileStorage,
