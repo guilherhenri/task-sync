@@ -16,6 +16,7 @@ import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/error
 import { RefineProfileUseCase } from '@/domain/auth/application/use-cases/refine-profile'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodBody,
@@ -73,6 +74,7 @@ export class UpdateProfileController {
   constructor(
     private readonly refineProfile: RefineProfileUseCase,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Put()
@@ -111,6 +113,9 @@ export class UpdateProfileController {
       userId: user.sub,
       metadata: { fields: Object.keys(body) },
     })
+    this.metrics.businessEvents
+      .labels('profile_update', 'profile', 'attempt')
+      .inc()
 
     const { name, email, newPassword } = body
 
@@ -130,6 +135,9 @@ export class UpdateProfileController {
         userId: user.sub,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('profile_update', 'profile', 'failed')
+        .inc()
 
       switch (error.constructor) {
         case EmailAlreadyInUseError:
@@ -146,6 +154,9 @@ export class UpdateProfileController {
       resource: 'profile',
       userId: user.sub,
     })
+    this.metrics.businessEvents
+      .labels('profile_update', 'profile', 'success')
+      .inc()
 
     return { message: 'Perfil atualizado com sucesso.' }
   }
