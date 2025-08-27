@@ -8,6 +8,7 @@ import { RevokeTokensUseCase } from '@/domain/auth/application/use-cases/revoke-
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { ApiZodResponse } from '../decorators/zod-openapi'
 import { JwtUnauthorizedResponse } from '../responses/jwt-unauthorized'
@@ -24,6 +25,7 @@ export class RevokeAllSessionsController {
     private readonly revokeTokens: RevokeTokensUseCase,
     private readonly config: EnvService,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Post()
@@ -44,6 +46,7 @@ export class RevokeAllSessionsController {
       resource: 'authentication',
       userId: user.sub,
     })
+    this.metrics.businessEvents.labels('mass_logout', 'auth', 'attempt').inc()
 
     await this.revokeTokens.execute({
       userId: user.sub,
@@ -60,6 +63,7 @@ export class RevokeAllSessionsController {
       resource: 'authentication',
       userId: user.sub,
     })
+    this.metrics.businessEvents.labels('mass_logout', 'auth', 'success').inc()
 
     return res
       .status(200)
