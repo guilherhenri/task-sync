@@ -10,6 +10,7 @@ import type {
 } from '@/domain/auth/application/storage/file-storage'
 
 import { EnvService } from '../env/env.service'
+import { ObservableService } from '../observability/observable-service'
 
 export interface SupabaseUploadResult {
   url: string
@@ -18,11 +19,16 @@ export interface SupabaseUploadResult {
 }
 
 @Injectable()
-export class SupabaseStorage implements FileStorage, FileAccessController {
+export class SupabaseStorage
+  extends ObservableService
+  implements FileStorage, FileAccessController
+{
   private client: SupabaseClient
   private bucketName: string
 
-  constructor(private envService: EnvService) {
+  constructor(private readonly envService: EnvService) {
+    super()
+
     const supabaseUrl = envService.get('SUPABASE_URL')
     const supabaseKey = envService.get('SUPABASE_SERVICE_ROLE_KEY')
     this.bucketName = envService.get('SUPABASE_STORAGE_BUCKET')
@@ -57,51 +63,66 @@ export class SupabaseStorage implements FileStorage, FileAccessController {
     fileType,
     body,
   }: UploadParams): Promise<{ url: string }> {
-    const uploadId = randomUUID()
-    const fileExtension = fileName.split('.').pop()
-    const uniqueFileName = `${uploadId}-${Date.now()}.${fileExtension}`
+    return this.trackOperation(
+      async () => {
+        const uploadId = randomUUID()
+        const fileExtension = fileName.split('.').pop()
+        const uniqueFileName = `${uploadId}-${Date.now()}.${fileExtension}`
 
-    this.validateFileType(fileType)
+        this.validateFileType(fileType)
 
-    const { data, error } = await this.client.storage
-      .from(this.bucketName)
-      .upload(uniqueFileName, body, {
-        contentType: fileType,
-        cacheControl: '3600',
-        upsert: false,
-      })
+        const { data, error } = await this.client.storage
+          .from(this.bucketName)
+          .upload(uniqueFileName, body, {
+            contentType: fileType,
+            cacheControl: '3600',
+            upsert: false,
+          })
 
-    if (error) {
-      throw new Error(`Fail to upload file: ${error.message}`)
-    }
+        if (error) {
+          throw new Error(`Fail to upload file: ${error.message}`)
+        }
 
-    return {
-      url: data.path,
-    }
+        return {
+          url: data.path,
+        }
+      },
+      { service: 'supabase_storage', endpoint: '/upload', method: 'POST' },
+    )
   }
 
   async delete(filePath: string): Promise<void> {
-    const { error } = await this.client.storage
-      .from(this.bucketName)
-      .remove([filePath])
+    await this.trackOperation(
+      async () => {
+        const { error } = await this.client.storage
+          .from(this.bucketName)
+          .remove([filePath])
 
-    if (error) {
-      throw new Error(`Falha ao deletar arquivo: ${error.message}`)
-    }
+        if (error) {
+          throw new Error(`Falha ao deletar arquivo: ${error.message}`)
+        }
+      },
+      { service: 'supabase_storage', endpoint: '/delete', method: 'DELETE' },
+    )
   }
 
   async getSignedUrl(
     filePath: string,
     expiresIn: number = 3600,
   ): Promise<string> {
-    const { data, error } = await this.client.storage
-      .from(this.bucketName)
-      .createSignedUrl(filePath, expiresIn)
+    return this.trackOperation(
+      async () => {
+        const { data, error } = await this.client.storage
+          .from(this.bucketName)
+          .createSignedUrl(filePath, expiresIn)
 
-    if (error) {
-      throw new Error(`Erro ao gerar URL assinada: ${error.message}`)
-    }
+        if (error) {
+          throw new Error(`Erro ao gerar URL assinada: ${error.message}`)
+        }
 
-    return data.signedUrl
+        return data.signedUrl
+      },
+      { service: 'supabase_storage', endpoint: '/download', method: 'GET' },
+    )
   }
 }
