@@ -24,6 +24,7 @@ import { JwtRefreshAuthGuard } from '@/infra/auth/guards/jwt-refresh-auth.guard'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
 import { JwtUnauthorizedResponse } from '@/infra/http/responses/jwt-unauthorized'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { ApiZodNotFoundResponse } from '../decorators/zod-openapi'
 import { JwtAuthException } from '../exceptions/jwt-auth'
@@ -37,6 +38,7 @@ export class RefreshTokenController {
     private readonly renewToken: RenewTokenUseCase,
     private readonly config: EnvService,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Get()
@@ -60,6 +62,7 @@ export class RefreshTokenController {
       resource: 'authentication',
       userId: user.sub,
     })
+    this.metrics.businessEvents.labels('token_refresh', 'auth', 'attempt').inc()
 
     const result = await this.renewToken.execute({
       userId: user.sub,
@@ -74,6 +77,9 @@ export class RefreshTokenController {
         userId: user.sub,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('token_refresh', 'auth', 'failed')
+        .inc()
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -100,6 +106,7 @@ export class RefreshTokenController {
       resource: 'authentication',
       userId: user.sub,
     })
+    this.metrics.businessEvents.labels('token_refresh', 'auth', 'success').inc()
 
     return res.status(200).send()
   }
