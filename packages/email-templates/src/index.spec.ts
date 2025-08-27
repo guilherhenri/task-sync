@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import * as ReactEmailComponents from '@react-email/components'
 import type {
   EmailTemplateDataMap,
@@ -20,7 +19,7 @@ jest.mock('@react-email/components', () => ({
 jest.mock('@task-sync/env', () => ({
   env: {
     APP_URL: 'http://localhost:3000',
-    LOGO_CDN_URL: faker.image.url(),
+    LOGO_CDN_URL: 'http://avatar-placeholder.com',
   },
 }))
 

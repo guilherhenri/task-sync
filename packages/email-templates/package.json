@@ -24,7 +24,6 @@
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
-    "@faker-js/faker": "^9.9.0",
     "@react-email/preview-server": "4.2.3",
     "@task-sync/api-types": "workspace:*",
     "@task-sync/env": "workspace:*",
