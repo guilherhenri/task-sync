@@ -4,6 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import { EnvModule } from '@/infra/env/env.module'
 import { RedisService } from '@/infra/key-value/redis/redis.service'
+import { LoggingModule } from '@/infra/logging/logging.module'
+import { MetricsModule } from '@/infra/metrics/metrics.module'
 import { QueueService } from '@/infra/workers/queue/contracts/queue-service'
 
 import { RedisEmailQueueService } from './redis-email-queue.service'
@@ -16,6 +18,7 @@ class MockQueueService {
       data: Record<string, unknown>,
       opts: { priority: number },
     ) => Promise<void>
+    getWaiting: () => Promise<Array<unknown>>
   } = {
     add: async (jobName, data, opts) => {
       await this.redis.zadd(
@@ -24,6 +27,7 @@ class MockQueueService {
         JSON.stringify({ jobName, data }),
       )
     },
+    getWaiting: async () => ['1'],
   }
 
   constructor(private readonly redis: RedisService) {}
@@ -40,7 +44,7 @@ describe('Redis Email Queue Service', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [EnvModule],
+      imports: [EnvModule, LoggingModule, MetricsModule],
       providers: [
         RedisService,
         RedisEmailQueueService,
