@@ -4,6 +4,7 @@ import { z } from 'zod/v4'
 
 import { LoggerPort } from '@/core/ports/logger'
 import { FileAccessController } from '@/domain/auth/application/storage/file-access-controller'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodParam,
@@ -38,6 +39,7 @@ export class GetAvatarUrlController {
   constructor(
     private readonly fileAccessController: FileAccessController,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Get()
@@ -73,6 +75,7 @@ export class GetAvatarUrlController {
       resource: 'profile',
       metadata: { avatarUrl: query.key },
     })
+    this.metrics.businessEvents.labels('get_avatar', 'profile', 'attempt').inc()
 
     const { key } = query
     const expiresIn = 24 * 60 * 60 // 24h in seconds
@@ -86,6 +89,7 @@ export class GetAvatarUrlController {
       action: 'get_avatar_success',
       resource: 'profile',
     })
+    this.metrics.businessEvents.labels('get_avatar', 'profile', 'success').inc()
 
     return {
       url: signedUrl,
