@@ -26,7 +26,10 @@ export const module = {
                 drop_debugger: true,
                 pure_funcs: ['console.log', 'console.info', 'console.debug'],
               },
-              mangle: true,
+              mangle: {
+                keep_classnames: true,
+                keep_fnames: true,
+              },
             },
           },
         },
@@ -55,11 +58,14 @@ export const optimization = {
           passes: 2,
         },
         mangle: {
-          keep_fnames: false,
+          keep_classnames: true,
+          keep_fnames: true,
         },
         format: {
           comments: false,
         },
+        keep_classnames: true,
+        keep_fnames: true,
       },
       extractComments: false,
       parallel: true,
