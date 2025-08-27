@@ -7,6 +7,7 @@ import {
   VerificationToken,
 } from '@/domain/auth/enterprise/entities/verification-token'
 import { WinstonService } from '@/infra/logging/winston.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { RedisVerificationTokenMapper } from '../mappers/redis-verification-token-mapper'
 import { RedisService } from '../redis.service'
@@ -20,6 +21,7 @@ export class RedisVerificationTokensRepository
   constructor(
     private readonly redis: RedisService,
     private readonly winston: WinstonService,
+    private readonly metrics: MetricsService,
   ) {}
 
   private buildKey({ userId, type, token }: VerificationToken) {
@@ -41,6 +43,12 @@ export class RedisVerificationTokensRepository
         table: 'verification_tokens',
         operation: 'SET',
       })
+      this.metrics.recordDbMetrics(
+        'SET',
+        'verification_tokens',
+        Date.now() - startTime,
+        true,
+      )
 
       DomainEvents.dispatchEventsForAggregate(verificationToken.id)
     } catch (error) {
@@ -52,6 +60,12 @@ export class RedisVerificationTokensRepository
         operation: 'SET',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SET',
+        'verification_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -71,6 +85,12 @@ export class RedisVerificationTokensRepository
         table: 'verification_tokens',
         operation: 'KEYS',
       })
+      this.metrics.recordDbMetrics(
+        'KEYS',
+        'verification_tokens',
+        Date.now() - startTime,
+        true,
+      )
 
       if (keys.length === 0) return null
 
@@ -83,6 +103,12 @@ export class RedisVerificationTokensRepository
         table: 'verification_tokens',
         operation: 'GET',
       })
+      this.metrics.recordDbMetrics(
+        'GET',
+        'verification_tokens',
+        Date.now() - startTime,
+        true,
+      )
 
       if (!value) return null
 
@@ -96,6 +122,12 @@ export class RedisVerificationTokensRepository
         operation: 'GET',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'GET',
+        'verification_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -115,6 +147,12 @@ export class RedisVerificationTokensRepository
         table: 'verification_tokens',
         operation: 'DELETE',
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'verification_tokens',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'DELETE verification token',
@@ -124,6 +162,12 @@ export class RedisVerificationTokensRepository
         operation: 'DELETE',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'verification_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -159,6 +203,12 @@ export class RedisVerificationTokensRepository
         table: 'verification_tokens',
         operation: 'DELETE',
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'verification_tokens',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'DELETE verification tokens by user id',
@@ -168,6 +218,12 @@ export class RedisVerificationTokensRepository
         operation: 'DELETE',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'verification_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
