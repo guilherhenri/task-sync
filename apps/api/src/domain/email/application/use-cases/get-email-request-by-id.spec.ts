@@ -1,4 +1,6 @@
 import { makeEmailRequest } from '@test/factories/make-email-request'
+import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryEmailRequestsRepository } from '@test/repositories/in-memory-email-requests-repository'
 
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
@@ -6,12 +8,20 @@ import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/error
 import { GetEmailRequestByIdUseCase } from './get-email-request-by-id'
 
 let inMemoryEmailRequestsRepository: InMemoryEmailRequestsRepository
+let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: GetEmailRequestByIdUseCase
 
 describe('Get Email Request By Id Use-case', () => {
   beforeEach(() => {
     inMemoryEmailRequestsRepository = new InMemoryEmailRequestsRepository()
-    sut = new GetEmailRequestByIdUseCase(inMemoryEmailRequestsRepository)
+    fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
+    sut = new GetEmailRequestByIdUseCase(
+      inMemoryEmailRequestsRepository,
+      fakeLogger,
+      fakeMetrics,
+    )
   })
 
   it('should be able to get email request from id', async () => {
