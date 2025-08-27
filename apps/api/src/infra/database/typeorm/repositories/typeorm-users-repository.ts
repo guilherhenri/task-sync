@@ -4,198 +4,77 @@ import type { Repository } from 'typeorm'
 import { DomainEvents } from '@/core/events/domain-events'
 import { UsersRepository } from '@/domain/auth/application/repositories/users-repository'
 import { User } from '@/domain/auth/enterprise/entities/user'
-import { WinstonService } from '@/infra/logging/winston.service'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableRepository } from '@/infra/observability/observable-repository'
 
 import { User as TypeOrmUser } from '../entities/user.entity'
 import { TypeOrmUserMapper } from '../mappers/typeorm-user-mapper'
 import { TypeOrmService } from '../typeorm.service'
 
 @Injectable()
-export class TypeOrmUsersRepository implements UsersRepository {
+export class TypeOrmUsersRepository
+  extends ObservableRepository
+  implements UsersRepository
+{
   private readonly usersRepository: Repository<TypeOrmUser>
 
-  constructor(
-    private readonly typeorm: TypeOrmService,
-    private readonly winston: WinstonService,
-    private readonly metrics: MetricsService,
-  ) {
+  constructor(private readonly typeorm: TypeOrmService) {
+    super()
     this.usersRepository = typeorm.getRepository(TypeOrmUser)
   }
 
   async findById(id: string): Promise<User | null> {
-    const startTime = Date.now()
+    return this.trackOperation(
+      async () => {
+        const user = await this.usersRepository.findOne({
+          where: { id },
+        })
 
-    try {
-      const user = await this.usersRepository.findOne({
-        where: { id },
-      })
+        if (!user) return null
 
-      this.winston.logDatabaseQuery({
-        query: 'SELECT user by id',
-        duration: Date.now() - startTime,
-        success: true,
-        table: 'users',
-        operation: 'SELECT',
-      })
-      this.metrics.recordDbMetrics(
-        'SELECT',
-        'users',
-        Date.now() - startTime,
-        true,
-      )
-
-      if (!user) return null
-
-      return TypeOrmUserMapper.toDomain(user)
-    } catch (error) {
-      this.winston.logDatabaseQuery({
-        query: 'SELECT user by id',
-        duration: Date.now() - startTime,
-        success: false,
-        table: 'users',
-        operation: 'SELECT',
-        error: (error as Error).message,
-      })
-      this.metrics.recordDbMetrics(
-        'SELECT',
-        'users',
-        Date.now() - startTime,
-        false,
-      )
-
-      throw error
-    }
+        return TypeOrmUserMapper.toDomain(user)
+      },
+      { query: 'SELECT user by id', operation: 'SELECT', table: 'users' },
+    )
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const startTime = Date.now()
+    return this.trackOperation(
+      async () => {
+        const user = await this.usersRepository.findOne({
+          where: { email },
+        })
 
-    try {
-      const user = await this.usersRepository.findOne({
-        where: { email },
-      })
+        if (!user) return null
 
-      this.winston.logDatabaseQuery({
-        query: 'SELECT user by email',
-        duration: Date.now() - startTime,
-        success: true,
-        table: 'users',
-        operation: 'SELECT',
-      })
-      this.metrics.recordDbMetrics(
-        'SELECT',
-        'users',
-        Date.now() - startTime,
-        true,
-      )
-
-      if (!user) return null
-
-      return TypeOrmUserMapper.toDomain(user)
-    } catch (error) {
-      this.winston.logDatabaseQuery({
-        query: 'SELECT user by email',
-        duration: Date.now() - startTime,
-        success: false,
-        table: 'users',
-        operation: 'SELECT',
-        error: (error as Error).message,
-      })
-      this.metrics.recordDbMetrics(
-        'SELECT',
-        'users',
-        Date.now() - startTime,
-        false,
-      )
-
-      throw error
-    }
+        return TypeOrmUserMapper.toDomain(user)
+      },
+      { query: 'SELECT user by email', operation: 'SELECT', table: 'users' },
+    )
   }
 
   async create(user: User): Promise<void> {
-    const startTime = Date.now()
+    await this.trackOperation(
+      async () => {
+        const typeOrmUser = TypeOrmUserMapper.toTypeOrm(user)
 
-    try {
-      const typeOrmUser = TypeOrmUserMapper.toTypeOrm(user)
+        await this.usersRepository.save(typeOrmUser)
 
-      await this.usersRepository.save(typeOrmUser)
-
-      this.winston.logDatabaseQuery({
-        query: 'INSERT user',
-        duration: Date.now() - startTime,
-        success: true,
-        table: 'users',
-        operation: 'INSERT',
-      })
-      this.metrics.recordDbMetrics(
-        'INSERT',
-        'users',
-        Date.now() - startTime,
-        true,
-      )
-
-      DomainEvents.dispatchEventsForAggregate(user.id)
-    } catch (error) {
-      this.winston.logDatabaseQuery({
-        query: 'INSERT user',
-        duration: Date.now() - startTime,
-        success: false,
-        table: 'users',
-        operation: 'INSERT',
-        error: (error as Error).message,
-      })
-      this.metrics.recordDbMetrics(
-        'INSERT',
-        'users',
-        Date.now() - startTime,
-        false,
-      )
-
-      throw error
-    }
+        DomainEvents.dispatchEventsForAggregate(user.id)
+      },
+      { query: 'INSERT user', operation: 'INSERT', table: 'users' },
+    )
   }
 
   async save(user: User): Promise<void> {
-    const startTime = Date.now()
+    await this.trackOperation(
+      async () => {
+        const typeOrmUser = TypeOrmUserMapper.toTypeOrm(user)
 
-    try {
-      const typeOrmUser = TypeOrmUserMapper.toTypeOrm(user)
+        await this.usersRepository.save(typeOrmUser)
 
-      await this.usersRepository.save(typeOrmUser)
-
-      this.winston.logDatabaseQuery({
-        query: 'UPDATE user',
-        duration: Date.now() - startTime,
-        success: true,
-        table: 'users',
-        operation: 'UPDATE',
-      })
-      this.metrics.recordDbMetrics(
-        'UPDATE',
-        'users',
-        Date.now() - startTime,
-        true,
-      )
-
-      DomainEvents.dispatchEventsForAggregate(user.id)
-    } catch (error) {
-      this.winston.logDatabaseQuery({
-        query: 'UPDATE user',
-        duration: Date.now() - startTime,
-        success: false,
-        table: 'users',
-        operation: 'UPDATE',
-        error: (error as Error).message,
-      })
-      this.metrics.recordDbMetrics(
-        'UPDATE',
-        'users',
-        Date.now() - startTime,
-        false,
-      )
-
-      throw error
-    }
+        DomainEvents.dispatchEventsForAggregate(user.id)
+      },
+      { query: 'UPDATE user', operation: 'UPDATE', table: 'users' },
+    )
   }
 }
