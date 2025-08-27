@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { WinstonService } from '@/infra/logging/winston.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { KeyValuesRepository } from '../../key-values-repository'
 import { RedisService } from '../redis.service'
@@ -10,6 +11,7 @@ export class RedisKeyValueRepository implements KeyValuesRepository {
   constructor(
     private readonly redis: RedisService,
     private readonly winston: WinstonService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async lpush(queue: string, value: string): Promise<void> {
@@ -25,6 +27,7 @@ export class RedisKeyValueRepository implements KeyValuesRepository {
         table: queue,
         operation: 'LPUSH',
       })
+      this.metrics.recordDbMetrics('LPUSH', queue, Date.now() - startTime, true)
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'LPUSH to queue',
@@ -34,6 +37,12 @@ export class RedisKeyValueRepository implements KeyValuesRepository {
         operation: 'LPUSH',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'LPUSH',
+        queue,
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -52,6 +61,12 @@ export class RedisKeyValueRepository implements KeyValuesRepository {
         table: channel,
         operation: 'PUBLISH',
       })
+      this.metrics.recordDbMetrics(
+        'PUBLISH',
+        channel,
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'PUBLISH to channel',
@@ -61,6 +76,12 @@ export class RedisKeyValueRepository implements KeyValuesRepository {
         operation: 'PUBLISH',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'PUBLISH',
+        channel,
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
