@@ -12,6 +12,7 @@ import { TerminateSessionUseCase } from '@/domain/auth/application/use-cases/ter
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { JwtUnauthorizedResponse } from '../responses/jwt-unauthorized'
 
@@ -23,6 +24,7 @@ export class LogoutController {
     private readonly terminateSession: TerminateSessionUseCase,
     private readonly config: EnvService,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Delete()
@@ -42,6 +44,7 @@ export class LogoutController {
       resource: 'authentication',
       userId: user.sub,
     })
+    this.metrics.businessEvents.labels('session_end', 'auth', 'attempt').inc()
 
     await this.terminateSession.execute({
       userId: user.sub,
@@ -58,6 +61,7 @@ export class LogoutController {
       resource: 'authentication',
       userId: user.sub,
     })
+    this.metrics.businessEvents.labels('session_end', 'auth', 'success').inc()
 
     return res.status(200).send()
   }
