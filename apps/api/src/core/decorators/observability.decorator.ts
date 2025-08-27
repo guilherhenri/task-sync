@@ -1,3 +1,4 @@
+import type { UniqueEntityID } from '../entities/unique-entity-id'
 import type { LoggerPort } from '../ports/logger'
 import type { MetricsPort } from '../ports/metrics'
 
@@ -8,8 +9,8 @@ export interface ObservabilityDependencies {
 
 export interface ObservabilityOptions {
   operation: string
-  className: string
   identifier: string
+  subIdentifier?: string
 }
 
 export function WithObservability(options: ObservabilityOptions) {
@@ -32,8 +33,15 @@ export function WithObservability(options: ObservabilityOptions) {
         logger: this.logger,
         metrics: this.metrics,
       }
+
       const userIdentifier =
-        args.length > 0 ? args[0][options.identifier] : undefined
+        args.length > 0
+          ? options.subIdentifier
+            ? (args[0][options.identifier] as Record<string, UniqueEntityID>)?.[
+                options.subIdentifier
+              ].toString()
+            : args[0][options.identifier]
+          : undefined
 
       try {
         const result = await originalMethod.apply(this, args)
@@ -49,7 +57,7 @@ export function WithObservability(options: ObservabilityOptions) {
           })
 
           deps.metrics.recordUseCaseExecution({
-            name: options.className,
+            name: this.constructor.name.replace('UseCase', ''),
             status: 'error',
             duration: Date.now() - startTime,
           })
@@ -65,7 +73,7 @@ export function WithObservability(options: ObservabilityOptions) {
         })
 
         deps.metrics.recordUseCaseExecution({
-          name: options.className,
+          name: this.constructor.name.replace('UseCase', ''),
           status: 'success',
           duration: Date.now() - startTime,
         })
@@ -80,7 +88,7 @@ export function WithObservability(options: ObservabilityOptions) {
         })
 
         deps.metrics.recordUseCaseExecution({
-          name: options.className,
+          name: this.constructor.name.replace('UseCase', ''),
           status: 'error',
           duration: Date.now() - startTime,
         })
