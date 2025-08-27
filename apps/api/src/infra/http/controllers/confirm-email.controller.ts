@@ -15,6 +15,7 @@ import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm
 import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { Public } from '@/infra/auth/decorators/public'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodGoneResponse,
@@ -52,6 +53,7 @@ export class ConfirmEmailController {
   constructor(
     private readonly confirmEmail: ConfirmEmailUseCase,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Get()
@@ -89,6 +91,7 @@ export class ConfirmEmailController {
       resource: 'user',
       userId: query.token,
     })
+    this.metrics.businessEvents.labels('confirm_email', 'user', 'attempt').inc()
 
     const { token } = query
 
@@ -105,6 +108,9 @@ export class ConfirmEmailController {
         userId: query.token,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('confirm_email', 'user', 'failed')
+        .inc()
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -121,6 +127,7 @@ export class ConfirmEmailController {
       resource: 'user',
       userId: query.token,
     })
+    this.metrics.businessEvents.labels('confirm_email', 'user', 'success').inc()
 
     return { message: 'Seu e-mail foi confirmado com sucesso.' }
   }
