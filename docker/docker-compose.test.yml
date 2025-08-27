@@ -1,41 +1,4 @@
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    image: task-sync-api
-    ports:
-      - '3333:3333'
-    env_file:
-      - .env
-    depends_on:
-      - postgres
-      - mongodb
-      - redis
-    networks:
-      - tasksync-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/web/Dockerfile
-  #   ports:
-  #     - '3000:80'
-  #   depends_on:
-  #     - backend
-  #   networks:
-  #     - tasksync-network
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
-  #     interval: 30s
-  #     timeout: 3s
-  #     retries: 3
-
   postgres:
     image: postgres:17-alpine
     environment:
