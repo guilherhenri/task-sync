@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import type { AuthTokensRepository } from '@/domain/auth/application/repositories/auth-tokens-repository'
 import type { AuthToken } from '@/domain/auth/enterprise/entities/auth-token'
 import { WinstonService } from '@/infra/logging/winston.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { RedisAuthTokenMapper } from '../mappers/redis-auth-token-mapper'
 import { RedisService } from '../redis.service'
@@ -14,6 +15,7 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
   constructor(
     private readonly redis: RedisService,
     private readonly winston: WinstonService,
+    private readonly metrics: MetricsService,
   ) {}
 
   private buildKey(userId: string): string {
@@ -28,25 +30,37 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
       const value = await this.redis.get(key)
 
       this.winston.logDatabaseQuery({
-        query: 'GET auth token by user id',
+        query: 'GET auth_tokens by user id',
         duration: Date.now() - startTime,
         success: true,
         table: 'auth_tokens',
         operation: 'GET',
       })
+      this.metrics.recordDbMetrics(
+        'GET',
+        'auth_tokens',
+        Date.now() - startTime,
+        true,
+      )
 
       if (!value) return null
 
       return RedisAuthTokenMapper.toDomain(value)
     } catch (error) {
       this.winston.logDatabaseQuery({
-        query: 'GET auth token by user id',
+        query: 'GET auth_tokens by user id',
         duration: Date.now() - startTime,
         success: false,
         table: 'auth_tokens',
         operation: 'GET',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'GET',
+        'auth_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -61,21 +75,33 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
       await this.redis.set(key, value, 'EX', this.expiresIn)
 
       this.winston.logDatabaseQuery({
-        query: 'SET auth token',
+        query: 'SET auth_tokens',
         duration: Date.now() - startTime,
         success: true,
         table: 'auth_tokens',
         operation: 'SET',
       })
+      this.metrics.recordDbMetrics(
+        'SET',
+        'auth_tokens',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
-        query: 'SET auth token',
+        query: 'SET auth_tokens',
         duration: Date.now() - startTime,
         success: false,
         table: 'auth_tokens',
         operation: 'SET',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SET',
+        'auth_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -89,21 +115,33 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
       await this.redis.del(key)
 
       this.winston.logDatabaseQuery({
-        query: 'DELETE auth token',
+        query: 'DELETE auth_tokens',
         duration: Date.now() - startTime,
         success: true,
         table: 'auth_tokens',
         operation: 'DELETE',
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'auth_tokens',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
-        query: 'DELETE auth token',
+        query: 'DELETE auth_tokens',
         duration: Date.now() - startTime,
         success: false,
         table: 'auth_tokens',
         operation: 'DELETE',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'auth_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -139,6 +177,12 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
         table: 'auth_tokens',
         operation: 'DELETE',
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'auth_tokens',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'DELETE auth tokens by user id',
@@ -148,6 +192,12 @@ export class RedisAuthTokensRepository implements AuthTokensRepository {
         operation: 'DELETE',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'DELETE',
+        'auth_tokens',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
