@@ -7,7 +7,7 @@ import { EmailRequestsRepository } from '@/domain/email/application/repositories
 
 import { EnvModule } from '../env/env.module'
 import { EnvService } from '../env/env.service'
-import { MetricsModule } from '../metrics/metrics.module'
+import { ObservabilityModule } from '../observability/observability.module'
 import { mongooseConfig } from './mongoose/mongoose.config'
 import { MongooseService } from './mongoose/mongoose.service'
 import { MongooseEmailRequestsRepository } from './mongoose/repositories/mongoose-email-requests-repository'
@@ -17,7 +17,7 @@ import { TypeOrmService } from './typeorm/typeorm.service'
 
 @Module({
   imports: [
-    MetricsModule,
+    ObservabilityModule,
     TypeOrmModule.forRootAsync({
       imports: [EnvModule],
       useFactory: typeOrmConfig,
