@@ -16,6 +16,7 @@ import { AuthenticateSessionUseCase } from '@/domain/auth/application/use-cases/
 import { InvalidCredentialsError } from '@/domain/auth/application/use-cases/errors/invalid-credentials'
 import { Public } from '@/infra/auth/decorators/public'
 import { EnvService } from '@/infra/env/env.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodBody,
@@ -66,6 +67,7 @@ export class AuthenticateController {
     private readonly authenticateSession: AuthenticateSessionUseCase,
     private readonly config: EnvService,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Post()
@@ -101,6 +103,7 @@ export class AuthenticateController {
       resource: 'authentication',
       userId: body.email,
     })
+    this.metrics.businessEvents.labels('login', 'auth', 'attempt').inc()
 
     const { email, password } = body
 
@@ -118,6 +121,7 @@ export class AuthenticateController {
         userId: body.email,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents.labels('login', 'auth', 'failed').inc()
 
       switch (error.constructor) {
         case InvalidCredentialsError:
@@ -142,6 +146,7 @@ export class AuthenticateController {
       resource: 'authentication',
       userId: email,
     })
+    this.metrics.businessEvents.labels('login', 'auth', 'success').inc()
 
     return res.status(200).send()
   }
