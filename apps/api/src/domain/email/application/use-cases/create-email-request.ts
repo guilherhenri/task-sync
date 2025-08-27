@@ -4,8 +4,11 @@ import type {
   EmailTemplateType,
 } from '@task-sync/api-types'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, right } from '@/core/either'
 import type { UniqueEntityID } from '@/core/entities/unique-entity-id'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import {
   type EmailPriority,
@@ -32,8 +35,14 @@ export class CreateEmailRequestUseCase {
   constructor(
     private emailRequestsRepository: EmailRequestsRepository,
     private emailQueueService: EmailQueueService,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'create_email_request',
+    identifier: 'recipientId',
+  })
   async execute<T extends EmailTemplateType>({
     eventType,
     recipientId,
