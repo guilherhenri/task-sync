@@ -9,6 +9,7 @@ import type {
 } from '@/domain/email/enterprise/entities/email-request'
 import type { EmailStatus } from '@/domain/email/enterprise/entities/value-objects/email-status'
 import { WinstonService } from '@/infra/logging/winston.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { MongooseEmailRequestMapper } from '../mappers/mongoose-email-request-mapper'
 import { MongooseService } from '../mongoose.service'
@@ -26,6 +27,7 @@ export class MongooseEmailRequestsRepository
   constructor(
     private readonly mongoose: MongooseService,
     private readonly winston: WinstonService,
+    private readonly metrics: MetricsService,
   ) {
     this.emailRequestModel =
       this.mongoose.connection.model<MongooseEmailRequest>(
@@ -50,6 +52,12 @@ export class MongooseEmailRequestsRepository
         table: 'email_requests',
         operation: 'SELECT',
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'email_requests',
+        Date.now() - startTime,
+        true,
+      )
 
       if (!emailRequest) return null
 
@@ -63,6 +71,12 @@ export class MongooseEmailRequestsRepository
         operation: 'SELECT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'email_requests',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -89,6 +103,12 @@ export class MongooseEmailRequestsRepository
         table: 'email_requests',
         operation: 'SELECT',
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'email_requests',
+        Date.now() - startTime,
+        true,
+      )
 
       return emailRequests.map(MongooseEmailRequestMapper.toDomain)
     } catch (error) {
@@ -100,6 +120,12 @@ export class MongooseEmailRequestsRepository
         operation: 'SELECT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'email_requests',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -128,6 +154,12 @@ export class MongooseEmailRequestsRepository
         table: 'email_requests',
         operation: 'SELECT',
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'email_requests',
+        Date.now() - startTime,
+        true,
+      )
 
       return emailRequests.map(MongooseEmailRequestMapper.toDomain)
     } catch (error) {
@@ -139,6 +171,12 @@ export class MongooseEmailRequestsRepository
         operation: 'SELECT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'SELECT',
+        'email_requests',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -160,6 +198,12 @@ export class MongooseEmailRequestsRepository
         table: 'email_requests',
         operation: 'INSERT',
       })
+      this.metrics.recordDbMetrics(
+        'INSERT',
+        'email_requests',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'INSERT email request',
@@ -169,6 +213,12 @@ export class MongooseEmailRequestsRepository
         operation: 'INSERT',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'INSERT',
+        'email_requests',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
@@ -198,6 +248,12 @@ export class MongooseEmailRequestsRepository
         table: 'email_requests',
         operation: 'UPDATE',
       })
+      this.metrics.recordDbMetrics(
+        'UPDATE',
+        'email_requests',
+        Date.now() - startTime,
+        true,
+      )
     } catch (error) {
       this.winston.logDatabaseQuery({
         query: 'UPDATE email request',
@@ -207,6 +263,12 @@ export class MongooseEmailRequestsRepository
         operation: 'UPDATE',
         error: (error as Error).message,
       })
+      this.metrics.recordDbMetrics(
+        'UPDATE',
+        'email_requests',
+        Date.now() - startTime,
+        false,
+      )
 
       throw error
     }
