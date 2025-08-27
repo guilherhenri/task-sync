@@ -13,6 +13,7 @@ import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/error
 import { RetrieveProfileUseCase } from '@/domain/auth/application/use-cases/retrieve-profile'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodNotFoundResponse,
@@ -44,6 +45,7 @@ export class GetProfileController {
   constructor(
     private readonly retrieveProfile: RetrieveProfileUseCase,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Get()
@@ -68,6 +70,9 @@ export class GetProfileController {
       resource: 'profile',
       userId: user.sub,
     })
+    this.metrics.businessEvents
+      .labels('get_profile', 'profile', 'attempt')
+      .inc()
 
     const result = await this.retrieveProfile.execute({
       userId: user.sub,
@@ -82,6 +87,9 @@ export class GetProfileController {
         userId: user.sub,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('get_profile', 'profile', 'failed')
+        .inc()
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -98,6 +106,9 @@ export class GetProfileController {
       resource: 'profile',
       userId: user.sub,
     })
+    this.metrics.businessEvents
+      .labels('get_profile', 'profile', 'success')
+      .inc()
 
     return { profile: UserPresenter.toHTTP(profile) }
   }
