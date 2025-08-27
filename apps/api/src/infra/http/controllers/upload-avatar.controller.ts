@@ -20,6 +20,7 @@ import { UploadAndUpdateAvatarUseCase } from '@/domain/auth/application/use-case
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import {
   ApiZodBody,
@@ -59,6 +60,7 @@ export class UploadAvatarController {
     private readonly uploadAndUpdateAvatar: UploadAndUpdateAvatarUseCase,
     private readonly config: EnvService,
     private readonly logger: LoggerPort,
+    private readonly metrics: MetricsService,
   ) {}
 
   @Post()
@@ -139,6 +141,9 @@ export class UploadAvatarController {
       userId: user.sub,
       metadata: { fileSize: file.size },
     })
+    this.metrics.businessEvents
+      .labels('avatar_upload', 'profile', 'attempt')
+      .inc()
 
     const result = await this.uploadAndUpdateAvatar.execute({
       userId: user.sub,
@@ -156,6 +161,9 @@ export class UploadAvatarController {
         userId: user.sub,
         metadata: { reason: error.constructor.name },
       })
+      this.metrics.businessEvents
+        .labels('avatar_upload', 'profile', 'failed')
+        .inc()
 
       switch (error.constructor) {
         case ResourceNotFoundError:
@@ -174,6 +182,9 @@ export class UploadAvatarController {
       resource: 'profile',
       userId: user.sub,
     })
+    this.metrics.businessEvents
+      .labels('avatar_upload', 'profile', 'success')
+      .inc()
 
     return { avatar_url: avatarUrl }
   }
