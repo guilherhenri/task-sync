@@ -147,7 +147,6 @@ jobs:
           echo "JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}" >> .env
           echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" >> .env
           echo "APP_URL=http://localhost:3000" >> .env
-          echo "LOGO_CDN_URL=${{ secrets.LOGO_CDN_URL }}" >> .env
           echo "SMTP_HOST=sandbox.smtp.mailtrap.io" >> .env
           echo "SMTP_PORT=2525" >> .env
           echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
@@ -302,14 +301,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install pnpm
+        run: npm install -g pnpm@10.15.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
-
-      - name: Install pnpm
-        run: npm install -g pnpm@10.15.0
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
