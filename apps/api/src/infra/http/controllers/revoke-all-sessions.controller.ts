@@ -3,12 +3,11 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import type { Response } from 'express'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { RevokeTokensUseCase } from '@/domain/auth/application/use-cases/revoke-tokens'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import { ApiZodResponse } from '../decorators/zod-openapi'
 import { JwtUnauthorizedResponse } from '../responses/jwt-unauthorized'
@@ -20,13 +19,13 @@ const revokeAllSessionsResponseSchema = z.object({
 @ApiTags('auth')
 @ApiBearerAuth()
 @Controller('/sessions/revoke-all')
-export class RevokeAllSessionsController {
+export class RevokeAllSessionsController extends ObservableController {
   constructor(
     private readonly revokeTokens: RevokeTokensUseCase,
     private readonly config: EnvService,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+  ) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -41,32 +40,23 @@ export class RevokeAllSessionsController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload, @Res() res: Response) {
-    this.logger.logBusinessEvent({
-      action: 'mass_logout_attempt',
-      resource: 'authentication',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents.labels('mass_logout', 'auth', 'attempt').inc()
+    return this.trackOperation(
+      async () => {
+        await this.revokeTokens.execute({
+          userId: user.sub,
+        })
 
-    await this.revokeTokens.execute({
-      userId: user.sub,
-    })
+        res.clearCookie('accessToken', {
+          httpOnly: true,
+          secure: this.config.get('NODE_ENV') === 'production',
+          path: '/',
+        })
 
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production',
-      path: '/',
-    })
-
-    this.logger.logBusinessEvent({
-      action: 'mass_logout_success',
-      resource: 'authentication',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents.labels('mass_logout', 'auth', 'success').inc()
-
-    return res
-      .status(200)
-      .send({ message: 'Todos os dispositivos foram desconectados.' })
+        return res
+          .status(200)
+          .send({ message: 'Todos os dispositivos foram desconectados.' })
+      },
+      { action: 'mass_logout', resource: 'auth', userIdentifier: user.sub },
+    )
   }
 }
