@@ -1,5 +1,4 @@
 import { Img, Section } from '@react-email/components'
-import { env } from '@task-sync/env'
 
 import { colors } from '../constants'
 
@@ -14,7 +13,7 @@ export function Header() {
       }}
     >
       <Img
-        src={env.LOGO_CDN_URL}
+        src="https://img.mailinblue.com/9063229/images/content_library/original/68b9b922cf9af01d237155a4.png"
         alt="Logo da Empresa"
         style={{ maxWidth: '200px', height: 'auto' }}
       />

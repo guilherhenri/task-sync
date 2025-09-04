@@ -15,7 +15,6 @@ export const envServerSchema = z.object({
   COOKIE_SECRET: z.string(),
 
   APP_URL: z.url(),
-  LOGO_CDN_URL: z.url(),
 
   SMTP_HOST: z.string(),
   SMTP_PORT: z.coerce.number(),
@@ -84,7 +83,6 @@ export const env = createEnv({
     COOKIE_SECRET: process.env.COOKIE_SECRET,
 
     APP_URL: process.env.APP_URL,
-    LOGO_CDN_URL: process.env.LOGO_CDN_URL,
 
     SMTP_HOST: process.env.SMTP_HOST,
     SMTP_PORT: process.env.SMTP_PORT,

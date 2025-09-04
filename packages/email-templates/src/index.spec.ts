@@ -19,7 +19,6 @@ jest.mock('@react-email/components', () => ({
 jest.mock('@task-sync/env', () => ({
   env: {
     APP_URL: 'http://localhost:3000',
-    LOGO_CDN_URL: 'http://avatar-placeholder.com',
   },
 }))
 
