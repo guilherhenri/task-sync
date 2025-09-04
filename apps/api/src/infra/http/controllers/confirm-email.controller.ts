@@ -10,12 +10,11 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm-email'
 import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { Public } from '@/infra/auth/decorators/public'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodGoneResponse,
@@ -49,12 +48,10 @@ const confirmEmailQueryDescription: Record<
 @ApiTags('auth')
 @Controller('/confirm-email')
 @Public()
-export class ConfirmEmailController {
-  constructor(
-    private readonly confirmEmail: ConfirmEmailUseCase,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+export class ConfirmEmailController extends ObservableController {
+  constructor(private readonly confirmEmail: ConfirmEmailUseCase) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -86,49 +83,30 @@ export class ConfirmEmailController {
     custom: { field: 'token', message: 'O token é obrigatório.' },
   })
   async handle(@Query(queryValidationPipe) query: ConfirmEmailQuerySchema) {
-    this.logger.logBusinessEvent({
-      action: 'confirm_email_attempt',
-      resource: 'user',
-      userId: query.token,
-    })
-    this.metrics.businessEvents.labels('confirm_email', 'user', 'attempt').inc()
-
     const { token } = query
 
-    const result = await this.confirmEmail.execute({
-      token,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.confirmEmail.execute({
+          token,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      this.logger.logBusinessEvent({
-        action: 'confirm_email_failed',
-        resource: 'user',
-        userId: query.token,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents
-        .labels('confirm_email', 'user', 'failed')
-        .inc()
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case ResourceGoneError:
+              throw new GoneException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case ResourceGoneError:
-          throw new GoneException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
-
-    this.logger.logBusinessEvent({
-      action: 'confirm_email_success',
-      resource: 'user',
-      userId: query.token,
-    })
-    this.metrics.businessEvents.labels('confirm_email', 'user', 'success').inc()
-
-    return { message: 'Seu e-mail foi confirmado com sucesso.' }
+        return { message: 'Seu e-mail foi confirmado com sucesso.' }
+      },
+      { action: 'confirm_email', resource: 'user', userIdentifier: token },
+    )
   }
 }
