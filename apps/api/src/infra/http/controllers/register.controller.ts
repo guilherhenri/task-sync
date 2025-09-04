@@ -9,11 +9,10 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/errors/email-already-in-use'
 import { Public } from '@/infra/auth/decorators/public'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -66,12 +65,10 @@ const registerBodyDescription: Record<
 @ApiTags('auth')
 @Controller('/sign-up')
 @Public()
-export class RegisterController {
-  constructor(
-    private readonly enrollIdentity: EnrollIdentityUseCase,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+export class RegisterController extends ObservableController {
+  constructor(private readonly enrollIdentity: EnrollIdentityUseCase) {
+    super()
+  }
 
   @Post()
   @HttpCode(201)
@@ -100,47 +97,30 @@ export class RegisterController {
     custom: { field: 'email', message: 'O e-mail deve ser válido.' },
   })
   async handle(@Body(bodyValidationPipe) body: RegisterBodySchema) {
-    this.logger.logBusinessEvent({
-      action: 'register_attempt',
-      resource: 'user',
-      userId: body.email,
-    })
-    this.metrics.businessEvents.labels('register', 'user', 'attempt').inc()
-
     const { name, email, password } = body
 
-    const result = await this.enrollIdentity.execute({
-      name,
-      email,
-      password,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.enrollIdentity.execute({
+          name,
+          email,
+          password,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      this.logger.logBusinessEvent({
-        action: 'register_failed',
-        resource: 'user',
-        userId: body.email,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents.labels('register', 'user', 'failed').inc()
+          switch (error.constructor) {
+            case EmailAlreadyInUseError:
+              throw new ConflictException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-      switch (error.constructor) {
-        case EmailAlreadyInUseError:
-          throw new ConflictException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
-
-    this.logger.logBusinessEvent({
-      action: 'register_success',
-      resource: 'user',
-      userId: email,
-    })
-    this.metrics.businessEvents.labels('register', 'user', 'success').inc()
-
-    return { message: 'Usuário registrado com sucesso.' }
+        return { message: 'Usuário registrado com sucesso.' }
+      },
+      { action: 'register', resource: 'user', userIdentifier: email },
+    )
   }
 }
