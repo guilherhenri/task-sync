@@ -13,14 +13,13 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { InvalidAvatarTypeError } from '@/domain/auth/application/use-cases/errors/invalid-avatar-type'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { UploadAndUpdateAvatarUseCase } from '@/domain/auth/application/use-cases/upload-and-update-avatar'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -55,13 +54,13 @@ const uploadAvatarBodyDescription: Record<
 
 @ApiTags('auth')
 @Controller('/upload-avatar')
-export class UploadAvatarController {
+export class UploadAvatarController extends ObservableController {
   constructor(
     private readonly uploadAndUpdateAvatar: UploadAndUpdateAvatarUseCase,
     private readonly config: EnvService,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+  ) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -135,57 +134,38 @@ export class UploadAvatarController {
 
     file = await parsePipe.transform(file)
 
-    this.logger.logBusinessEvent({
-      action: 'avatar_upload_attempt',
-      resource: 'profile',
-      userId: user.sub,
-      metadata: { fileSize: file.size },
-    })
-    this.metrics.businessEvents
-      .labels('avatar_upload', 'profile', 'attempt')
-      .inc()
+    return this.trackOperation(
+      async () => {
+        const result = await this.uploadAndUpdateAvatar.execute({
+          userId: user.sub,
+          fileName: file.originalname,
+          fileType: file.mimetype,
+          body: file.buffer,
+        })
 
-    const result = await this.uploadAndUpdateAvatar.execute({
-      userId: user.sub,
-      fileName: file.originalname,
-      fileType: file.mimetype,
-      body: file.buffer,
-    })
+        if (result.isLeft()) {
+          const error = result.value
 
-    if (result.isLeft()) {
-      const error = result.value
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case InvalidAvatarTypeError:
+              throw new UnsupportedMediaTypeException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-      this.logger.logBusinessEvent({
-        action: 'avatar_upload_failed',
+        const { avatarUrl } = result.value
+
+        return { avatar_url: avatarUrl }
+      },
+      {
+        action: 'avatar_upload',
         resource: 'profile',
-        userId: user.sub,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents
-        .labels('avatar_upload', 'profile', 'failed')
-        .inc()
-
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case InvalidAvatarTypeError:
-          throw new UnsupportedMediaTypeException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
-
-    const { avatarUrl } = result.value
-
-    this.logger.logBusinessEvent({
-      action: 'avatar_upload_success',
-      resource: 'profile',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents
-      .labels('avatar_upload', 'profile', 'success')
-      .inc()
-
-    return { avatar_url: avatarUrl }
+        userIdentifier: user.sub,
+        metadata: { fileSize: file.size },
+      },
+    )
   }
 }
