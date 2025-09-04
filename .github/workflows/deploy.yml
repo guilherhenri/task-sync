@@ -178,15 +178,15 @@ jobs:
 
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.TURBO_TOKEN }}
-        working-directory: ./apps/storybook
+        working-directory: ./packages/storybook
 
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.TURBO_TOKEN }}
-        working-directory: ./apps/storybook
+        working-directory: ./packages/storybook
 
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.TURBO_TOKEN }}
-        working-directory: ./apps/storybook
+        working-directory: ./packages/storybook
 
   notify-success:
     needs: [deploy-api, deploy-storybook]
