@@ -1,8 +1,7 @@
 name: Unit and E2E Tests
 
 on:
-  push:
-  pull_request:
+  workflow_call:
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
