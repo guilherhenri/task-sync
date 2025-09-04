@@ -8,12 +8,11 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { RetrieveProfileUseCase } from '@/domain/auth/application/use-cases/retrieve-profile'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodNotFoundResponse,
@@ -41,12 +40,10 @@ const getProfileResponseExample: z.infer<typeof getProfileResponseSchema> = {
 @ApiTags('auth')
 @ApiBearerAuth()
 @Controller('/me')
-export class GetProfileController {
-  constructor(
-    private readonly retrieveProfile: RetrieveProfileUseCase,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+export class GetProfileController extends ObservableController {
+  constructor(private readonly retrieveProfile: RetrieveProfileUseCase) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -65,51 +62,28 @@ export class GetProfileController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload) {
-    this.logger.logBusinessEvent({
-      action: 'get_profile_attempt',
-      resource: 'profile',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents
-      .labels('get_profile', 'profile', 'attempt')
-      .inc()
+    return this.trackOperation(
+      async () => {
+        const result = await this.retrieveProfile.execute({
+          userId: user.sub,
+        })
 
-    const result = await this.retrieveProfile.execute({
-      userId: user.sub,
-    })
+        if (result.isLeft()) {
+          const error = result.value
 
-    if (result.isLeft()) {
-      const error = result.value
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-      this.logger.logBusinessEvent({
-        action: 'get_profile_failed',
-        resource: 'profile',
-        userId: user.sub,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents
-        .labels('get_profile', 'profile', 'failed')
-        .inc()
+        const profile = result.value.user
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
-
-    const profile = result.value.user
-
-    this.logger.logBusinessEvent({
-      action: 'get_profile_success',
-      resource: 'profile',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents
-      .labels('get_profile', 'profile', 'success')
-      .inc()
-
-    return { profile: UserPresenter.toHTTP(profile) }
+        return { profile: UserPresenter.toHTTP(profile) }
+      },
+      { action: 'get_profile', resource: 'profile', userIdentifier: user.sub },
+    )
   }
 }
