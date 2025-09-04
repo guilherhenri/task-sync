@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/guilherhenri/task-sync/compare/v1.1.0...v1.1.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* **ci:** pass release permissions to ci-cd ([11fbd60](https://github.com/guilherhenri/task-sync/commit/11fbd6037f0b10c5a29b60bd73ef227a4961aa60))
+
 # [1.1.0](https://github.com/guilherhenri/task-sync/compare/v1.0.0...v1.1.0) (2025-09-04)
 
 
