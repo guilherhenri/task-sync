@@ -2,7 +2,5 @@
   "buildCommand": "echo 'Build already completed'",
   "outputDirectory": "storybook-static",
   "installCommand": "echo 'Dependencies already installed'",
-  "framework": null,
-  "functions": {},
-  "rewrites": []
+  "framework": null
 }
