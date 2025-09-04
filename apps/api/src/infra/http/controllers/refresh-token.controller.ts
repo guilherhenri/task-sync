@@ -15,7 +15,6 @@ import {
 } from '@nestjs/swagger'
 import type { Response } from 'express'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { RefreshTokenExpiredError } from '@/domain/auth/application/use-cases/errors/refresh-token-expired'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { RenewTokenUseCase } from '@/domain/auth/application/use-cases/renew-token'
@@ -24,7 +23,7 @@ import { JwtRefreshAuthGuard } from '@/infra/auth/guards/jwt-refresh-auth.guard'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
 import { JwtUnauthorizedResponse } from '@/infra/http/responses/jwt-unauthorized'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import { ApiZodNotFoundResponse } from '../decorators/zod-openapi'
 import { JwtAuthException } from '../exceptions/jwt-auth'
@@ -33,13 +32,13 @@ import { JwtAuthException } from '../exceptions/jwt-auth'
 @ApiBearerAuth()
 @Controller('/auth/refresh')
 @UseGuards(JwtRefreshAuthGuard)
-export class RefreshTokenController {
+export class RefreshTokenController extends ObservableController {
   constructor(
     private readonly renewToken: RenewTokenUseCase,
     private readonly config: EnvService,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+  ) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -57,57 +56,38 @@ export class RefreshTokenController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload, @Res() res: Response) {
-    this.logger.logBusinessEvent({
-      action: 'token_refresh_attempt',
-      resource: 'authentication',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents.labels('token_refresh', 'auth', 'attempt').inc()
+    return this.trackOperation(
+      async () => {
+        const result = await this.renewToken.execute({
+          userId: user.sub,
+        })
 
-    const result = await this.renewToken.execute({
-      userId: user.sub,
-    })
+        if (result.isLeft()) {
+          const error = result.value
 
-    if (result.isLeft()) {
-      const error = result.value
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case RefreshTokenExpiredError:
+              throw new JwtAuthException('refresh.expired', error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-      this.logger.logBusinessEvent({
-        action: 'token_refresh_failed',
-        resource: 'authentication',
-        userId: user.sub,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents
-        .labels('token_refresh', 'auth', 'failed')
-        .inc()
+        const { accessToken } = result.value
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case RefreshTokenExpiredError:
-          throw new JwtAuthException('refresh.expired', error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+        res.cookie('accessToken', accessToken, {
+          httpOnly: true,
+          secure: this.config.get('NODE_ENV') === 'production',
+          path: '/',
+          maxAge: 10 * 60 * 1000, // 10 minutes
+          signed: true,
+        })
 
-    const { accessToken } = result.value
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production',
-      path: '/',
-      maxAge: 10 * 60 * 1000, // 10 minutes
-      signed: true,
-    })
-
-    this.logger.logBusinessEvent({
-      action: 'token_refresh_success',
-      resource: 'authentication',
-      userId: user.sub,
-    })
-    this.metrics.businessEvents.labels('token_refresh', 'auth', 'success').inc()
-
-    return res.status(200).send()
+        return res.status(200).send()
+      },
+      { action: 'token_refresh', resource: 'auth', userIdentifier: user.sub },
+    )
   }
 }
