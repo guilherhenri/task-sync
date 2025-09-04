@@ -1,5 +1,4 @@
 name: Release
-
 on:
   push:
     branches: [main]
@@ -19,13 +18,17 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean local tags
+        run: |
+          git tag -l | xargs git tag -d || true
+          git fetch --tags
 
       - name: Install pnpm
         run: npm install -g pnpm@10.15.0
@@ -64,6 +67,11 @@ jobs:
 
       - name: Build packages
         run: pnpm turbo build --cache-dir=.turbo
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
 
       - name: Run Semantic Release
         run: pnpm semantic-release
