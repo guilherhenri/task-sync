@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import type { EmailTemplateType } from '@task-sync/api-types'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import type { EmailRequest } from '../../enterprise/entities/email-request'
 import { EmailRequestsRepository } from '../repositories/email-requests-repository'
@@ -18,8 +21,16 @@ type UpdateEmailRequestStatusUseCaseResponse = Either<
 
 @Injectable()
 export class UpdateEmailRequestStatusUseCase {
-  constructor(private emailRequestsRepository: EmailRequestsRepository) {}
+  constructor(
+    private emailRequestsRepository: EmailRequestsRepository,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
+  ) {}
 
+  @WithObservability({
+    operation: 'update_email_request',
+    identifier: 'emailRequestId',
+  })
   async execute({
     emailRequestId,
     statusTransition,

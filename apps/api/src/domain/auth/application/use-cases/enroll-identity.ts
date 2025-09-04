@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { User } from '../../enterprise/entities/user'
 import { VerificationToken } from '../../enterprise/entities/verification-token'
@@ -23,8 +26,14 @@ export class EnrollIdentityUseCase {
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
     private hasher: Hasher,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'enroll_identity',
+    identifier: 'email',
+  })
   async execute({
     name,
     email,

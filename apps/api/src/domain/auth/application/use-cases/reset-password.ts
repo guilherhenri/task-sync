@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { Hasher } from '../cryptography/hasher'
 import { UsersRepository } from '../repositories/users-repository'
@@ -25,8 +28,14 @@ export class ResetPasswordUseCase {
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
     private hasher: Hasher,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'reset_password',
+    identifier: 'token',
+  })
   async execute({
     token,
     newPassword,

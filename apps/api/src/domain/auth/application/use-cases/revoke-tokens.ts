@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { AuthTokensRepository } from '../repositories/auth-tokens-repository'
 import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
@@ -16,8 +19,14 @@ export class RevokeTokensUseCase {
   constructor(
     private authTokensRepository: AuthTokensRepository,
     private verificationTokensRepository: VerificationTokensRepository,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'revoke_tokens',
+    identifier: 'userId',
+  })
   async execute({
     userId,
   }: RevokeTokensUseCaseRequest): Promise<RevokeTokensUseCaseResponse> {

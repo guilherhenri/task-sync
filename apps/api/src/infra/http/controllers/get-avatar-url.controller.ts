@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
 import { FileAccessController } from '@/domain/auth/application/storage/file-access-controller'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodParam,
@@ -33,8 +34,10 @@ const getAvatarUrlResponseSchema = z.object({
 
 @ApiTags('auth')
 @Controller('/avatar/url/:key')
-export class GetAvatarUrlController {
-  constructor(private readonly fileAccessController: FileAccessController) {}
+export class GetAvatarUrlController extends ObservableController {
+  constructor(private readonly fileAccessController: FileAccessController) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -67,14 +70,23 @@ export class GetAvatarUrlController {
     const { key } = query
     const expiresIn = 24 * 60 * 60 // 24h in seconds
 
-    const signedUrl = await this.fileAccessController.getSignedUrl(
-      key,
-      expiresIn,
-    )
+    return this.trackOperation(
+      async () => {
+        const signedUrl = await this.fileAccessController.getSignedUrl(
+          key,
+          expiresIn,
+        )
 
-    return {
-      url: signedUrl,
-      expires_at: new Date(Date.now() + expiresIn * 1000), // 24h in milliseconds
-    }
+        return {
+          url: signedUrl,
+          expires_at: new Date(Date.now() + expiresIn * 1000), // 24h in milliseconds
+        }
+      },
+      {
+        action: 'get_avatar',
+        resource: 'profile',
+        metadata: { avatarUrl: key },
+      },
+    )
   }
 }

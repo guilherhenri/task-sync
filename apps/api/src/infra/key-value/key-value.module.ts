@@ -4,6 +4,8 @@ import { AuthTokensRepository } from '@/domain/auth/application/repositories/aut
 import { VerificationTokensRepository } from '@/domain/auth/application/repositories/verification-tokens-repository'
 
 import { EnvModule } from '../env/env.module'
+import { MetricsModule } from '../metrics/metrics.module'
+import { ObservabilityModule } from '../observability/observability.module'
 import { KeyValuesRepository } from './key-values-repository'
 import { RedisService } from './redis/redis.service'
 import { RedisAuthTokensRepository } from './redis/repositories/redis-auth-tokens-repository'
@@ -11,7 +13,7 @@ import { RedisKeyValueRepository } from './redis/repositories/redis-key-values-r
 import { RedisVerificationTokensRepository } from './redis/repositories/redis-verification-tokens-repository'
 
 @Module({
-  imports: [EnvModule],
+  imports: [EnvModule, MetricsModule, ObservabilityModule],
   providers: [
     RedisService,
     {

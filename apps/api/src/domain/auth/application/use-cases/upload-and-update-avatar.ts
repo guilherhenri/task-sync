@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { UsersRepository } from '../repositories/users-repository'
 import { FileStorage } from '../storage/file-storage'
@@ -24,8 +27,14 @@ export class UploadAndUpdateAvatarUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private uploader: FileStorage,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'upload_and_update_avatar',
+    identifier: 'userId',
+  })
   async execute({
     userId,
     fileName,

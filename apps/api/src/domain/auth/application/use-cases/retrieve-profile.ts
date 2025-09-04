@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import type { User } from '../../enterprise/entities/user'
 import { UsersRepository } from '../repositories/users-repository'
@@ -17,8 +20,16 @@ type RetrieveProfileUseCaseResponse = Either<
 
 @Injectable()
 export class RetrieveProfileUseCase {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
+  ) {}
 
+  @WithObservability({
+    operation: 'retrieve_profile',
+    identifier: 'userId',
+  })
   async execute({
     userId,
   }: RetrieveProfileUseCaseRequest): Promise<RetrieveProfileUseCaseResponse> {

@@ -4,11 +4,23 @@ import cookieParser from 'cookie-parser'
 
 import { AppModule } from './app.module'
 import { EnvService } from './env/env.service'
+import { WinstonService } from './logging/winston.service'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  app.setGlobalPrefix('/api/v1', { exclude: ['health'] })
+  const winston = app.get(WinstonService)
+
+  app.setGlobalPrefix('/api/v1', {
+    exclude: ['health', 'logging-health', 'metrics'],
+  })
+
+  app.enableCors({
+    origin: ['*'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
 
   const configSwagger = new DocumentBuilder()
     .setTitle('TaskSync API')
@@ -25,6 +37,11 @@ async function bootstrap() {
 
   app.use(cookieParser(cookieSecret))
 
+  setInterval(() => {
+    winston.logSystemMetrics()
+  }, 30000)
+
   await app.listen(port, '0.0.0.0')
 }
+
 bootstrap()

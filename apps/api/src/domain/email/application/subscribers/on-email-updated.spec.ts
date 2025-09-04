@@ -1,6 +1,8 @@
 import type { EmailTemplateType } from '@task-sync/api-types'
 import { makeUser } from '@test/factories/make-user'
 import { makeVerificationToken } from '@test/factories/make-verification-token'
+import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryEmailRequestsRepository } from '@test/repositories/in-memory-email-requests-repository'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { InMemoryVerificationTokensRepository } from '@test/repositories/in-memory-verification-tokens-repository'
@@ -24,6 +26,8 @@ let inMemoryVerificationTokensRepository: InMemoryVerificationTokensRepository
 let inMemoryAuthUserService: InMemoryAuthUserService
 let inMemoryEmailRequestsRepository: InMemoryEmailRequestsRepository
 let inMemoryEmailQueueService: InMemoryEmailQueueService
+let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: CreateEmailRequestUseCase
 
 let createEmailRequestExecuteSpy: jest.SpyInstance<
@@ -47,14 +51,18 @@ describe('On Email Updated', () => {
     )
     inMemoryEmailRequestsRepository = new InMemoryEmailRequestsRepository()
     inMemoryEmailQueueService = new InMemoryEmailQueueService()
+    fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
     sut = new CreateEmailRequestUseCase(
       inMemoryEmailRequestsRepository,
       inMemoryEmailQueueService,
+      fakeLogger,
+      fakeMetrics,
     )
 
     createEmailRequestExecuteSpy = jest.spyOn(sut, 'execute')
 
-    new OnEmailUpdated(inMemoryAuthUserService, sut)
+    new OnEmailUpdated(inMemoryAuthUserService, sut, fakeLogger, fakeMetrics)
   })
 
   it('should add an email request to the queue when a verify token is registered', async () => {

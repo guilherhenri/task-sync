@@ -1,17 +1,99 @@
 import { Injectable } from '@nestjs/common'
 
+import { ObservableRepository } from '@/infra/observability/observable-repository'
+
 import { KeyValuesRepository } from '../../key-values-repository'
 import { RedisService } from '../redis.service'
 
 @Injectable()
-export class RedisKeyValueRepository implements KeyValuesRepository {
-  constructor(private readonly redis: RedisService) {}
-
-  async lpush(queue: string, value: string): Promise<void> {
-    await this.redis.lpush(queue, value)
+export class RedisKeyValueRepository
+  extends ObservableRepository
+  implements KeyValuesRepository
+{
+  constructor(private readonly redis: RedisService) {
+    super()
   }
 
+  async lpush(queue: string, value: string): Promise<void> {
+    await this.trackOperation(() => this.redis.lpush(queue, value), {
+      operation: 'LPUSH',
+      query: 'LPUSH to queue',
+      table: 'queue',
+    })
+  }
+
+  // async lpush(queue: string, value: string): Promise<void> {
+  //   const startTime = Date.now()
+
+  //   try {
+  //     await this.redis.lpush(queue, value)
+
+  //     this.winston.logDatabaseQuery({
+  //       query: 'LPUSH to queue',
+  //       duration: Date.now() - startTime,
+  //       success: true,
+  //       table: queue,
+  //       operation: 'LPUSH',
+  //     })
+  //     this.metrics.recordDbMetrics('LPUSH', queue, Date.now() - startTime, true)
+  //   } catch (error) {
+  //     this.winston.logDatabaseQuery({
+  //       query: 'LPUSH to queue',
+  //       duration: Date.now() - startTime,
+  //       success: false,
+  //       table: queue,
+  //       operation: 'LPUSH',
+  //       error: (error as Error).message,
+  //     })
+  //     this.metrics.recordDbMetrics(
+  //       'LPUSH',
+  //       queue,
+  //       Date.now() - startTime,
+  //       false,
+  //     )
+
+  //     throw error
+  //   }
+  // }
+
   async publish(channel: string, message: string): Promise<void> {
-    await this.redis.publish(channel, message)
+    await this.trackOperation(() => this.redis.publish(channel, message), {
+      query: 'PUBLISH to channel',
+      table: 'channel',
+      operation: 'PUBLISH',
+    })
+    // try {
+
+    // this.winston.logDatabaseQuery({
+    //   query: 'PUBLISH to channel',
+    //   duration: Date.now() - startTime,
+    //   success: true,
+    //   table: channel,
+    //   operation: 'PUBLISH',
+    // })
+    // this.metrics.recordDbMetrics(
+    //   'PUBLISH',
+    //   channel,
+    //   Date.now() - startTime,
+    //   true,
+    // )
+    // } catch (error) {
+    // this.winston.logDatabaseQuery({
+    //   query: 'PUBLISH to channel',
+    //   duration: Date.now() - startTime,
+    //   success: false,
+    //   table: channel,
+    //   operation: 'PUBLISH',
+    //   error: (error as Error).message,
+    // })
+    // this.metrics.recordDbMetrics(
+    //   'PUBLISH',
+    //   channel,
+    //   Date.now() - startTime,
+    //   false,
+    // )
+
+    //   throw error
+    // }
   }
 }

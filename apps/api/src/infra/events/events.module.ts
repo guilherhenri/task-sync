@@ -8,10 +8,11 @@ import { OnUserRegistered } from '@/domain/email/application/subscribers/on-user
 import { CreateEmailRequestUseCase } from '@/domain/email/application/use-cases/create-email-request'
 
 import { DatabaseModule } from '../database/database.module'
+import { ObservabilityModule } from '../observability/observability.module'
 import { ServicesModule } from '../services/services.module'
 
 @Module({
-  imports: [DatabaseModule, ServicesModule],
+  imports: [DatabaseModule, ServicesModule, ObservabilityModule],
   providers: [
     OnUserRegistered,
     OnEmailVerificationRequested,

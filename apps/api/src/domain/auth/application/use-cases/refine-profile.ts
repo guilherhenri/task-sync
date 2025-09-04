@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { VerificationToken } from '../../enterprise/entities/verification-token'
 import { Hasher } from '../cryptography/hasher'
@@ -27,8 +30,14 @@ export class RefineProfileUseCase {
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
     private hasher: Hasher,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'refine_profile',
+    identifier: 'userId',
+  })
   async execute({
     userId,
     name,

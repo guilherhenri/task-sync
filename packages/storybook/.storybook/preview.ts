@@ -12,7 +12,12 @@ const preview: Preview = {
       },
     },
     a11y: {
-      test: 'todo',
+      config: {
+        rules: [
+          { id: 'color-contrast', enabled: true },
+          { id: 'focus-trap', enabled: true },
+        ],
+      },
     },
     docs: {
       theme: themes.dark,

@@ -3,6 +3,7 @@ import type { Transporter } from 'nodemailer'
 
 import { EnvModule } from '@/infra/env/env.module'
 import { EnvService } from '@/infra/env/env.service'
+import { ObservabilityModule } from '@/infra/observability/observability.module'
 
 import { EmailService } from '../contracts/email-service'
 import { NodemailerEmailService } from './nodemailer-email.service'
@@ -15,7 +16,7 @@ describe('Nodemailer Email Service', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [EnvModule],
+      imports: [EnvModule, ObservabilityModule],
       providers: [{ provide: EmailService, useClass: NodemailerEmailService }],
     }).compile()
 

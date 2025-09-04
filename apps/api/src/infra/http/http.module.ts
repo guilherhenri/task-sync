@@ -16,6 +16,7 @@ import { CryptographyModule } from '../cryptography/cryptography.module'
 import { DatabaseModule } from '../database/database.module'
 import { EnvModule } from '../env/env.module'
 import { KeyValueModule } from '../key-value/key-value.module'
+import { MetricsModule } from '../metrics/metrics.module'
 import { StorageModule } from '../storage/storage.module'
 import { AuthenticateController } from './controllers/authenticate.controller'
 import { ConfirmEmailController } from './controllers/confirm-email.controller'
@@ -30,9 +31,12 @@ import { RevokeAllSessionsController } from './controllers/revoke-all-sessions.c
 import { UpdateProfileController } from './controllers/update-profile.controller'
 import { UploadAvatarController } from './controllers/upload-avatar.controller'
 import { HealthCheckerController } from './health/health-checker.controller'
+import { LoggingHealthCheckerController } from './health/logging-health-checker.controller'
+import { MetricsController } from './metrics/metrics.controller'
 
 @Module({
   imports: [
+    MetricsModule,
     DatabaseModule,
     KeyValueModule,
     CryptographyModule,
@@ -53,6 +57,8 @@ import { HealthCheckerController } from './health/health-checker.controller'
     UploadAvatarController,
     GetAvatarUrlController,
     HealthCheckerController,
+    LoggingHealthCheckerController,
+    MetricsController,
   ],
   providers: [
     EnrollIdentityUseCase,

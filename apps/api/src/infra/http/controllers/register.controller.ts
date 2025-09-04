@@ -12,6 +12,7 @@ import { z } from 'zod/v4'
 import { EnrollIdentityUseCase } from '@/domain/auth/application/use-cases/enroll-identity'
 import { EmailAlreadyInUseError } from '@/domain/auth/application/use-cases/errors/email-already-in-use'
 import { Public } from '@/infra/auth/decorators/public'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -64,8 +65,10 @@ const registerBodyDescription: Record<
 @ApiTags('auth')
 @Controller('/sign-up')
 @Public()
-export class RegisterController {
-  constructor(private readonly enrollIdentity: EnrollIdentityUseCase) {}
+export class RegisterController extends ObservableController {
+  constructor(private readonly enrollIdentity: EnrollIdentityUseCase) {
+    super()
+  }
 
   @Post()
   @HttpCode(201)
@@ -96,23 +99,28 @@ export class RegisterController {
   async handle(@Body(bodyValidationPipe) body: RegisterBodySchema) {
     const { name, email, password } = body
 
-    const result = await this.enrollIdentity.execute({
-      name,
-      email,
-      password,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.enrollIdentity.execute({
+          name,
+          email,
+          password,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case EmailAlreadyInUseError:
-          throw new ConflictException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case EmailAlreadyInUseError:
+              throw new ConflictException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    return { message: 'Usuário registrado com sucesso.' }
+        return { message: 'Usuário registrado com sucesso.' }
+      },
+      { action: 'register', resource: 'user', userIdentifier: email },
+    )
   }
 }

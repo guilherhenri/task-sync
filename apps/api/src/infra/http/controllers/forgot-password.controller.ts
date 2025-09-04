@@ -10,6 +10,7 @@ import { z } from 'zod/v4'
 
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
 import { Public } from '@/infra/auth/decorators/public'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import { ApiUnionResponse } from '../decorators/api-union-response'
 import {
@@ -40,10 +41,12 @@ type ForgotPasswordBodySchema = z.infer<typeof forgotPasswordBodySchema>
 @ApiTags('auth')
 @Controller('/forgot-password')
 @Public()
-export class ForgotPasswordController {
+export class ForgotPasswordController extends ObservableController {
   constructor(
     private readonly initiatePasswordRecovery: InitiatePasswordRecoveryUseCase,
-  ) {}
+  ) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -77,16 +80,25 @@ export class ForgotPasswordController {
   async handle(@Body(bodyValidationPipe) body: ForgotPasswordBodySchema) {
     const { email } = body
 
-    const result = await this.initiatePasswordRecovery.execute({
-      email,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.initiatePasswordRecovery.execute({
+          email,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      throw new BadRequestException(error.message)
-    }
+          throw new BadRequestException(error.message)
+        }
 
-    return { message: 'Um e-mail de recuperação foi enviado para você.' }
+        return { message: 'Um e-mail de recuperação foi enviado para você.' }
+      },
+      {
+        action: 'request_recovery_password',
+        resource: 'auth',
+        userIdentifier: email,
+      },
+    )
   }
 }

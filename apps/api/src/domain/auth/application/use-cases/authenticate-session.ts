@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
 import { Encryptor } from '../cryptography/encryptor'
@@ -26,8 +29,14 @@ export class AuthenticateSessionUseCase {
     private authTokensRepository: AuthTokensRepository,
     private encryptor: Encryptor,
     private hasher: Hasher,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'authenticate_session',
+    identifier: 'email',
+  })
   async execute({
     email,
     password,
@@ -35,7 +44,9 @@ export class AuthenticateSessionUseCase {
     const user = await this.usersRepository.findByEmail(email)
 
     if (!user) {
-      return left(new InvalidCredentialsError())
+      const error = new InvalidCredentialsError()
+
+      return left(error)
     }
 
     const isPasswordMatch = await this.hasher.compare(

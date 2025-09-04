@@ -11,11 +11,11 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import type { Response } from 'express'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { AuthenticateSessionUseCase } from '@/domain/auth/application/use-cases/authenticate-session'
 import { InvalidCredentialsError } from '@/domain/auth/application/use-cases/errors/invalid-credentials'
 import { Public } from '@/infra/auth/decorators/public'
 import { EnvService } from '@/infra/env/env.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -61,12 +61,13 @@ const authenticateBodyDescription: Record<
 @ApiTags('auth')
 @Controller('/sessions')
 @Public()
-export class AuthenticateController {
+export class AuthenticateController extends ObservableController {
   constructor(
     private readonly authenticateSession: AuthenticateSessionUseCase,
     private readonly config: EnvService,
-    private readonly logger: LoggerPort,
-  ) {}
+  ) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -96,44 +97,39 @@ export class AuthenticateController {
     @Body(bodyValidationPipe) body: AuthenticateBodySchema,
     @Res() res: Response,
   ) {
-    this.logger.logBusinessEvent({
-      action: 'login_attempt',
-      resource: 'authentication',
-      userId: body.email,
-      metadata: {
-        method: 'email_password',
-        userAgent: 'extracted from request context',
-      },
-    })
-
     const { email, password } = body
 
-    const result = await this.authenticateSession.execute({
-      email,
-      password,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.authenticateSession.execute({
+          email,
+          password,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case InvalidCredentialsError:
-          throw new UnauthorizedException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case InvalidCredentialsError:
+              throw new UnauthorizedException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    const { accessToken } = result.value
+        const { accessToken } = result.value
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production',
-      path: '/',
-      maxAge: 10 * 60 * 1000, // 10 minutes
-      signed: true,
-    })
+        res.cookie('accessToken', accessToken, {
+          httpOnly: true,
+          secure: this.config.get('NODE_ENV') === 'production',
+          path: '/',
+          maxAge: 10 * 60 * 1000, // 10 minutes
+          signed: true,
+        })
 
-    return res.status(200).send()
+        return res.status(200).send()
+      },
+      { action: 'login', resource: 'auth', userIdentifier: email },
+    )
   }
 }

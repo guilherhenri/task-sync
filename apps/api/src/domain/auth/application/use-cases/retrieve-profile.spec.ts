@@ -1,4 +1,6 @@
 import { makeUser } from '@test/factories/make-user'
+import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
@@ -7,12 +9,20 @@ import { ResourceNotFoundError } from './errors/resource-not-found'
 import { RetrieveProfileUseCase } from './retrieve-profile'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
+let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: RetrieveProfileUseCase
 
 describe('Retrieve Profile Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
-    sut = new RetrieveProfileUseCase(inMemoryUsersRepository)
+    fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
+    sut = new RetrieveProfileUseCase(
+      inMemoryUsersRepository,
+      fakeLogger,
+      fakeMetrics,
+    )
   })
 
   it('should be able to retrieve a profile for a valid user id', async () => {

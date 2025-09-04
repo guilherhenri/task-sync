@@ -11,15 +11,14 @@ export const createFileTransport = (config: FileTransportConfig) => {
     fs.mkdirSync(logDir, { recursive: true })
   }
 
-  const businessFilter = winston.format(
-    (info: winston.Logform.TransformableInfo) => {
-      return info.type &&
-        typeof info.type === 'string' &&
-        info.type.includes('business')
-        ? info
-        : false
-    },
-  )
+  const createTypeFilter = (expectedType: string) =>
+    winston.format((info) => {
+      return info.type === expectedType ? info : false
+    })
+
+  const businessFilter = createTypeFilter('business_event')
+  const securityFilter = createTypeFilter('security_event')
+  const performanceFilter = createTypeFilter('performance')
 
   return [
     new winston.transports.File({
@@ -31,7 +30,6 @@ export const createFileTransport = (config: FileTransportConfig) => {
       tailable: true,
       zippedArchive: true,
     }),
-
     new winston.transports.File({
       level: 'error',
       filename: path.join(logDir, 'error.log'),
@@ -41,7 +39,6 @@ export const createFileTransport = (config: FileTransportConfig) => {
       tailable: true,
       zippedArchive: true,
     }),
-
     new winston.transports.File({
       level: 'info',
       filename: path.join(logDir, 'business.log'),
@@ -51,21 +48,19 @@ export const createFileTransport = (config: FileTransportConfig) => {
       tailable: true,
       zippedArchive: true,
     }),
-
     new winston.transports.File({
       level: 'info',
       filename: path.join(logDir, 'security.log'),
-      format: winston.format.combine(businessFilter(), config.format),
+      format: winston.format.combine(securityFilter(), config.format),
       maxsize: parseSize(config.maxSize || '20m'),
       maxFiles: parseInt(config.maxFiles || '30', 10),
       tailable: true,
       zippedArchive: true,
     }),
-
     new winston.transports.File({
       level: 'info',
       filename: path.join(logDir, 'performance.log'),
-      format: winston.format.combine(businessFilter(), config.format),
+      format: winston.format.combine(performanceFilter(), config.format),
       maxsize: parseSize(config.maxSize ?? '20m'),
       maxFiles: parseInt(config.maxFiles ?? '7', 10),
       tailable: true,
