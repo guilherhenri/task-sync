@@ -10,12 +10,11 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-password'
 import { Public } from '@/infra/auth/decorators/public'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -61,12 +60,10 @@ const resetPasswordBodyDescription: Record<
 @ApiTags('auth')
 @Controller('/reset-password')
 @Public()
-export class ResetPasswordController {
-  constructor(
-    private readonly resetPassword: ResetPasswordUseCase,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+export class ResetPasswordController extends ObservableController {
+  constructor(private readonly resetPassword: ResetPasswordUseCase) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -101,54 +98,31 @@ export class ResetPasswordController {
     },
   })
   async handle(@Body(bodyValidationPipe) body: ResetPasswordBodySchema) {
-    this.logger.logBusinessEvent({
-      action: 'password_reset_attempt',
-      resource: 'authentication',
-      userId: body.token,
-    })
-    this.metrics.businessEvents
-      .labels('password_reset', 'auth', 'attempt')
-      .inc()
-
     const { token, newPassword } = body
 
-    const result = await this.resetPassword.execute({
-      token,
-      newPassword,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.resetPassword.execute({
+          token,
+          newPassword,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      this.logger.logBusinessEvent({
-        action: 'password_reset_failed',
-        resource: 'authentication',
-        userId: body.token,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents
-        .labels('password_reset', 'auth', 'failed')
-        .inc()
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case ResourceGoneError:
+              throw new GoneException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case ResourceGoneError:
-          throw new GoneException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
-
-    this.logger.logBusinessEvent({
-      action: 'password_reset_success',
-      resource: 'authentication',
-      userId: body.token,
-    })
-    this.metrics.businessEvents
-      .labels('password_reset', 'auth', 'success')
-      .inc()
-
-    return { message: 'Sua senha foi redefinida com sucesso.' }
+        return { message: 'Sua senha foi redefinida com sucesso.' }
+      },
+      { action: 'password_reset', resource: 'auth', userIdentifier: token },
+    )
   }
 }
