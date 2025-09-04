@@ -2,9 +2,8 @@ import { Controller, Get, HttpCode, Param } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { FileAccessController } from '@/domain/auth/application/storage/file-access-controller'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodParam,
@@ -35,12 +34,10 @@ const getAvatarUrlResponseSchema = z.object({
 
 @ApiTags('auth')
 @Controller('/avatar/url/:key')
-export class GetAvatarUrlController {
-  constructor(
-    private readonly fileAccessController: FileAccessController,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+export class GetAvatarUrlController extends ObservableController {
+  constructor(private readonly fileAccessController: FileAccessController) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -70,30 +67,26 @@ export class GetAvatarUrlController {
   })
   @JwtUnauthorizedResponse()
   async handle(@Param(paramValidationPipe) query: GetAvatarUrlParamSchema) {
-    this.logger.logBusinessEvent({
-      action: 'get_avatar_attempt',
-      resource: 'profile',
-      metadata: { avatarUrl: query.key },
-    })
-    this.metrics.businessEvents.labels('get_avatar', 'profile', 'attempt').inc()
-
     const { key } = query
     const expiresIn = 24 * 60 * 60 // 24h in seconds
 
-    const signedUrl = await this.fileAccessController.getSignedUrl(
-      key,
-      expiresIn,
+    return this.trackOperation(
+      async () => {
+        const signedUrl = await this.fileAccessController.getSignedUrl(
+          key,
+          expiresIn,
+        )
+
+        return {
+          url: signedUrl,
+          expires_at: new Date(Date.now() + expiresIn * 1000), // 24h in milliseconds
+        }
+      },
+      {
+        action: 'get_avatar',
+        resource: 'profile',
+        metadata: { avatarUrl: key },
+      },
     )
-
-    this.logger.logBusinessEvent({
-      action: 'get_avatar_success',
-      resource: 'profile',
-    })
-    this.metrics.businessEvents.labels('get_avatar', 'profile', 'success').inc()
-
-    return {
-      url: signedUrl,
-      expires_at: new Date(Date.now() + expiresIn * 1000), // 24h in milliseconds
-    }
   }
 }
