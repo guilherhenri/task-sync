@@ -8,10 +8,9 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod/v4'
 
-import { LoggerPort } from '@/core/ports/logger'
 import { InitiatePasswordRecoveryUseCase } from '@/domain/auth/application/use-cases/initiate-password-recovery'
 import { Public } from '@/infra/auth/decorators/public'
-import { MetricsService } from '@/infra/metrics/metrics.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import { ApiUnionResponse } from '../decorators/api-union-response'
 import {
@@ -42,12 +41,12 @@ type ForgotPasswordBodySchema = z.infer<typeof forgotPasswordBodySchema>
 @ApiTags('auth')
 @Controller('/forgot-password')
 @Public()
-export class ForgotPasswordController {
+export class ForgotPasswordController extends ObservableController {
   constructor(
     private readonly initiatePasswordRecovery: InitiatePasswordRecoveryUseCase,
-    private readonly logger: LoggerPort,
-    private readonly metrics: MetricsService,
-  ) {}
+  ) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -79,46 +78,27 @@ export class ForgotPasswordController {
     }),
   ])
   async handle(@Body(bodyValidationPipe) body: ForgotPasswordBodySchema) {
-    this.logger.logBusinessEvent({
-      action: 'request_recovery_password_attempt',
-      resource: 'authentication',
-      userId: body.email,
-    })
-    this.metrics.businessEvents
-      .labels('request_recovery_password', 'auth', 'attempt')
-      .inc()
-
     const { email } = body
 
-    const result = await this.initiatePasswordRecovery.execute({
-      email,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.initiatePasswordRecovery.execute({
+          email,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      this.logger.logBusinessEvent({
-        action: 'request_recovery_password_failed',
-        resource: 'authentication',
-        userId: body.email,
-        metadata: { reason: error.constructor.name },
-      })
-      this.metrics.businessEvents
-        .labels('request_recovery_password', 'auth', 'failed')
-        .inc()
+          throw new BadRequestException(error.message)
+        }
 
-      throw new BadRequestException(error.message)
-    }
-
-    this.logger.logBusinessEvent({
-      action: 'request_recovery_password_success',
-      resource: 'authentication',
-      userId: body.email,
-    })
-    this.metrics.businessEvents
-      .labels('request_recovery_password', 'auth', 'success')
-      .inc()
-
-    return { message: 'Um e-mail de recuperação foi enviado para você.' }
+        return { message: 'Um e-mail de recuperação foi enviado para você.' }
+      },
+      {
+        action: 'request_recovery_password',
+        resource: 'auth',
+        userIdentifier: email,
+      },
+    )
   }
 }
