@@ -23,6 +23,7 @@ import { JwtRefreshAuthGuard } from '@/infra/auth/guards/jwt-refresh-auth.guard'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
 import { JwtUnauthorizedResponse } from '@/infra/http/responses/jwt-unauthorized'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import { ApiZodNotFoundResponse } from '../decorators/zod-openapi'
 import { JwtAuthException } from '../exceptions/jwt-auth'
@@ -31,11 +32,13 @@ import { JwtAuthException } from '../exceptions/jwt-auth'
 @ApiBearerAuth()
 @Controller('/auth/refresh')
 @UseGuards(JwtRefreshAuthGuard)
-export class RefreshTokenController {
+export class RefreshTokenController extends ObservableController {
   constructor(
     private readonly renewToken: RenewTokenUseCase,
     private readonly config: EnvService,
-  ) {}
+  ) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -53,33 +56,38 @@ export class RefreshTokenController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload, @Res() res: Response) {
-    const result = await this.renewToken.execute({
-      userId: user.sub,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.renewToken.execute({
+          userId: user.sub,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case RefreshTokenExpiredError:
-          throw new JwtAuthException('refresh.expired', error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case RefreshTokenExpiredError:
+              throw new JwtAuthException('refresh.expired', error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    const { accessToken } = result.value
+        const { accessToken } = result.value
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production',
-      path: '/',
-      maxAge: 10 * 60 * 1000, // 10 minutes
-      signed: true,
-    })
+        res.cookie('accessToken', accessToken, {
+          httpOnly: true,
+          secure: this.config.get('NODE_ENV') === 'production',
+          path: '/',
+          maxAge: 10 * 60 * 1000, // 10 minutes
+          signed: true,
+        })
 
-    return res.status(200).send()
+        return res.status(200).send()
+      },
+      { action: 'token_refresh', resource: 'auth', userIdentifier: user.sub },
+    )
   }
 }

@@ -14,6 +14,7 @@ import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/re
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { ResetPasswordUseCase } from '@/domain/auth/application/use-cases/reset-password'
 import { Public } from '@/infra/auth/decorators/public'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -59,8 +60,10 @@ const resetPasswordBodyDescription: Record<
 @ApiTags('auth')
 @Controller('/reset-password')
 @Public()
-export class ResetPasswordController {
-  constructor(private readonly resetPassword: ResetPasswordUseCase) {}
+export class ResetPasswordController extends ObservableController {
+  constructor(private readonly resetPassword: ResetPasswordUseCase) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -97,24 +100,29 @@ export class ResetPasswordController {
   async handle(@Body(bodyValidationPipe) body: ResetPasswordBodySchema) {
     const { token, newPassword } = body
 
-    const result = await this.resetPassword.execute({
-      token,
-      newPassword,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.resetPassword.execute({
+          token,
+          newPassword,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case ResourceGoneError:
-          throw new GoneException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case ResourceGoneError:
+              throw new GoneException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    return { message: 'Sua senha foi redefinida com sucesso.' }
+        return { message: 'Sua senha foi redefinida com sucesso.' }
+      },
+      { action: 'password_reset', resource: 'auth', userIdentifier: token },
+    )
   }
 }

@@ -23,39 +23,39 @@ export interface OpenAPISchema {
 /**
  * Generates realistic examples based on the schema type
  */
-function generateExample(schema: z.ZodTypeAny): any {
+function generateExample(schema: z.ZodType): unknown {
   if (schema instanceof z.ZodObject) {
     const shape = schema.shape
-    const example: Record<string, any> = {}
+    const example: Record<string, unknown> = {}
 
     for (const [key, value] of Object.entries(shape)) {
-      example[key] = generateExample(value as z.ZodTypeAny)
+      example[key] = generateExample(value as z.ZodType)
     }
 
     return example
   }
 
   if (schema instanceof z.ZodString) {
-    const checks = (schema as any)._def.checks || []
-
-    for (const check of checks) {
-      if (check.kind === 'email') {
-        return 'user@example.com'
-      }
-    }
-
     return 'string'
   }
 
+  if (schema instanceof z.ZodEmail) {
+    return 'user@example.com'
+  }
+
+  if (schema instanceof z.ZodURL) {
+    return 'https://example.com'
+  }
+
+  if (schema instanceof z.ZodUUID) {
+    return '550e8400-e29b-41d4-a716-446655440000'
+  }
+
+  if (schema instanceof z.ZodDate) {
+    return '2023-01-01T00:00:00.000Z'
+  }
+
   if (schema instanceof z.ZodNumber) {
-    const checks = (schema as any)._def.checks || []
-
-    for (const check of checks) {
-      if (check.kind === 'int') {
-        return 123
-      }
-    }
-
     return 123.45
   }
 
@@ -69,12 +69,12 @@ function generateExample(schema: z.ZodTypeAny): any {
   }
 
   if (schema instanceof z.ZodEnum) {
-    const values = (schema as any)._def.values
+    const values = schema.def.entries
     return values[0]
   }
 
   if (schema instanceof z.ZodLiteral) {
-    return (schema as any)._def.value
+    return schema.def.values[0]
   }
 
   if (schema instanceof z.ZodOptional) {
@@ -85,7 +85,7 @@ function generateExample(schema: z.ZodTypeAny): any {
     return generateExample((schema as any)._def.innerType)
   }
 
-  return 'string'
+  return 'example'
 }
 
 /**
@@ -93,10 +93,10 @@ function generateExample(schema: z.ZodTypeAny): any {
  * Works with primitive types and simple objects
  */
 export function zodToOpenAPI(
-  schema: z.ZodTypeAny,
+  schema: z.ZodType,
   includeExamples: boolean = true,
 ): OpenAPISchema {
-  const description = (schema as any)._def?.description
+  const description = schema.description
 
   if (schema instanceof z.ZodObject) {
     const shape = schema.shape
@@ -104,7 +104,8 @@ export function zodToOpenAPI(
     const required: string[] = []
 
     for (const [key, value] of Object.entries(shape)) {
-      properties[key] = zodToOpenAPI(value as z.ZodTypeAny, includeExamples)
+      properties[key] = zodToOpenAPI(value as z.ZodType, includeExamples)
+
       if (!(value instanceof z.ZodOptional)) {
         required.push(key)
       }
@@ -181,21 +182,24 @@ export function zodToOpenAPI(
 
   if (schema instanceof z.ZodBoolean) {
     const result: OpenAPISchema = { type: 'boolean' }
+
     if (description) result.description = description
     if (includeExamples) result.example = true
+
     return result
   }
 
   if (schema instanceof z.ZodArray) {
-    const items = zodToOpenAPI((schema as any)._def.element, includeExamples)
+    const items = zodToOpenAPI((schema as any).def.element, includeExamples)
     const result: OpenAPISchema = {
       type: 'array',
       items,
     }
+
     if (description) result.description = description
     if (includeExamples) {
       result.example = [
-        items.example || generateExample((schema as any)._def.type),
+        items.example ?? generateExample((schema as any).def.type),
       ]
     }
     return result
@@ -218,8 +222,10 @@ export function zodToOpenAPI(
       type: typeof values[0],
       enum: values,
     }
+
     if (description) result.description = description
     if (includeExamples) result.example = values
+
     return result
   }
 
@@ -228,6 +234,7 @@ export function zodToOpenAPI(
       (schema as any)._def.innerType,
       includeExamples,
     )
+
     return { ...innerSchema, nullable: true }
   }
 
@@ -236,6 +243,7 @@ export function zodToOpenAPI(
       (schema as any)._def.innerType,
       includeExamples,
     )
+
     return { ...innerSchema, nullable: true }
   }
 
@@ -265,14 +273,17 @@ export function zodToOpenAPI(
     }
 
     const result: OpenAPISchema = { type: 'string' }
+
     if (description) result.description = description
     if (includeExamples) result.example = 'custom'
+
     return result
   }
 
   const result: OpenAPISchema = { type: 'string' }
   if (description) result.description = description
   if (includeExamples) result.example = 'string'
+
   return result
 }
 

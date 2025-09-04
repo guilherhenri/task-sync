@@ -14,8 +14,16 @@ import type { EmailRequest } from '@/domain/email/enterprise/entities/email-requ
 import { EmailStatus } from '@/domain/email/enterprise/entities/value-objects/email-status'
 import { EmailService } from '@/infra/email/contracts/email-service'
 import { KeyValuesRepository } from '@/infra/key-value/key-values-repository'
+import { ObservabilityModule } from '@/infra/observability/observability.module'
 
 import { BullEmailQueueWorker } from './bull-email-queue.worker'
+
+jest.mock('@task-sync/env', () => ({
+  env: {
+    ...process.env,
+    NODE_ENV: 'test',
+  },
+}))
 
 type MockEmailService = {
   sendEmail: jest.MockedFunction<EmailService['sendEmail']>
@@ -83,7 +91,10 @@ describe('Bull Email Queue Worker', () => {
     }
 
     module = await Test.createTestingModule({
-      imports: [BullModule.registerQueue({ name: 'email-queue' })],
+      imports: [
+        BullModule.registerQueue({ name: 'email-queue' }),
+        ObservabilityModule,
+      ],
       providers: [
         BullEmailQueueWorker,
         { provide: KeyValuesRepository, useValue: keyValuesRepository },

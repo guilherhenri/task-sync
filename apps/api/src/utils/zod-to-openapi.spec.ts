@@ -218,7 +218,7 @@ describe('zodToOpenAPI', () => {
         required: ['name', 'isActive'],
         example: {
           name: 'string',
-          email: 'string',
+          email: 'user@example.com',
           isActive: true,
         },
       })

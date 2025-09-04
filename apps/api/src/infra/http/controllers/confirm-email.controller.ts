@@ -14,6 +14,7 @@ import { ConfirmEmailUseCase } from '@/domain/auth/application/use-cases/confirm
 import { ResourceGoneError } from '@/domain/auth/application/use-cases/errors/resource-gone'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 import { Public } from '@/infra/auth/decorators/public'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodGoneResponse,
@@ -47,8 +48,10 @@ const confirmEmailQueryDescription: Record<
 @ApiTags('auth')
 @Controller('/confirm-email')
 @Public()
-export class ConfirmEmailController {
-  constructor(private readonly confirmEmail: ConfirmEmailUseCase) {}
+export class ConfirmEmailController extends ObservableController {
+  constructor(private readonly confirmEmail: ConfirmEmailUseCase) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -60,7 +63,6 @@ export class ConfirmEmailController {
   @ApiZodQuery({
     name: 'token',
     schema: confirmEmailQuerySchema,
-    examples: { token: 'string' },
     description: confirmEmailQueryDescription,
   })
   @ApiZodResponse({
@@ -83,23 +85,28 @@ export class ConfirmEmailController {
   async handle(@Query(queryValidationPipe) query: ConfirmEmailQuerySchema) {
     const { token } = query
 
-    const result = await this.confirmEmail.execute({
-      token,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.confirmEmail.execute({
+          token,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case ResourceGoneError:
-          throw new GoneException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case ResourceGoneError:
+              throw new GoneException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    return { message: 'Seu e-mail foi confirmado com sucesso.' }
+        return { message: 'Seu e-mail foi confirmado com sucesso.' }
+      },
+      { action: 'confirm_email', resource: 'user', userIdentifier: token },
+    )
   }
 }

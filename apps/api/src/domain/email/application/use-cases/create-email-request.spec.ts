@@ -1,3 +1,5 @@
+import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryEmailRequestsRepository } from '@test/repositories/in-memory-email-requests-repository'
 import { InMemoryEmailQueueService } from '@test/services/in-memory-email-queue-service'
 
@@ -7,15 +9,21 @@ import { CreateEmailRequestUseCase } from './create-email-request'
 
 let inMemoryEmailRequestsRepository: InMemoryEmailRequestsRepository
 let inMemoryEmailQueueService: InMemoryEmailQueueService
+let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: CreateEmailRequestUseCase
 
 describe('Create Email Request Use-case', () => {
   beforeEach(() => {
     inMemoryEmailRequestsRepository = new InMemoryEmailRequestsRepository()
     inMemoryEmailQueueService = new InMemoryEmailQueueService()
+    fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
     sut = new CreateEmailRequestUseCase(
       inMemoryEmailRequestsRepository,
       inMemoryEmailQueueService,
+      fakeLogger,
+      fakeMetrics,
     )
   })
 

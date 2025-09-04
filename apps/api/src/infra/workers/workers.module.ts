@@ -9,6 +9,7 @@ import { EmailModule } from '../email/email.module'
 import { EnvModule } from '../env/env.module'
 import { EnvService } from '../env/env.service'
 import { KeyValueModule } from '../key-value/key-value.module'
+import { ObservabilityModule } from '../observability/observability.module'
 import { BullQueueService } from './queue/bull/services/bull-queue.service'
 import { BullEmailQueueWorker } from './queue/bull/workers/bull-email-queue.worker'
 import { EmailQueueWorker } from './queue/contracts/email-queue-worker'
@@ -37,6 +38,7 @@ const workersModuleMetadata: ModuleMetadata = {
     DatabaseModule,
     KeyValueModule,
     EmailModule,
+    ObservabilityModule,
   ],
   providers: [
     {

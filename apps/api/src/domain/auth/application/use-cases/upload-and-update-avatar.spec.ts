@@ -1,4 +1,6 @@
 import { makeUser } from '@test/factories/make-user'
+import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryUsersRepository } from '@test/repositories/in-memory-users-repository'
 import { FakeUploader } from '@test/storage/fake-uploader'
 
@@ -8,15 +10,21 @@ import { UploadAndUpdateAvatarUseCase } from './upload-and-update-avatar'
 
 let inMemoryUsersRepository: InMemoryUsersRepository
 let fakeUploader: FakeUploader
+let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: UploadAndUpdateAvatarUseCase
 
 describe('Upload and Update Avatar Use-case', () => {
   beforeEach(() => {
     inMemoryUsersRepository = new InMemoryUsersRepository()
     fakeUploader = new FakeUploader()
+    fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
     sut = new UploadAndUpdateAvatarUseCase(
       inMemoryUsersRepository,
       fakeUploader,
+      fakeLogger,
+      fakeMetrics,
     )
   })
 

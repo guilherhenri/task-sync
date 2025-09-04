@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import type { EmailTemplateType } from '@task-sync/api-types'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/errors/resource-not-found'
 
 import type { EmailRequest } from '../../enterprise/entities/email-request'
@@ -20,8 +23,14 @@ type GetEmailRequestByIdUseCaseResponse = Either<
 export class GetEmailRequestByIdUseCase {
   constructor(
     private readonly emailRequestsRepository: EmailRequestsRepository,
+    private readonly logger: LoggerPort,
+    private readonly metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'get_email_request',
+    identifier: 'emailRequestId',
+  })
   async execute({
     emailRequestId,
   }: GetEmailRequestByIdUseCaseRequest): Promise<GetEmailRequestByIdUseCaseResponse> {

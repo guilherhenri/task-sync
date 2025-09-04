@@ -9,7 +9,9 @@ WORKDIR /app
 # Copy all necessary files for workspace resolution
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/api/package.json apps/api/
-COPY packages/ packages/
+COPY packages/api-types/ packages/api-types/
+COPY packages/email-templates/ packages/email-templates/
+COPY packages/env/ packages/env/
 COPY config/eslint/package.json config/eslint/
 COPY config/tsconfig/ config/tsconfig/
 
@@ -31,9 +33,11 @@ RUN npm install -g pnpm@10.15.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
-COPY packages/ packages/
+COPY packages/api-types/package.json packages/api-types/
+COPY packages/email-templates/package.json packages/email-templates/
+COPY packages/env/package.json packages/env/
 COPY config/eslint/package.json config/eslint/
-COPY config/tsconfig/ config/tsconfig/
+COPY config/tsconfig/package.json config/tsconfig/
 
 # Install only production dependencies
 RUN pnpm install --prod --prefer-offline --ignore-scripts

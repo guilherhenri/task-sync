@@ -12,6 +12,7 @@ import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/error
 import { RetrieveProfileUseCase } from '@/domain/auth/application/use-cases/retrieve-profile'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodNotFoundResponse,
@@ -39,8 +40,10 @@ const getProfileResponseExample: z.infer<typeof getProfileResponseSchema> = {
 @ApiTags('auth')
 @ApiBearerAuth()
 @Controller('/me')
-export class GetProfileController {
-  constructor(private readonly retrieveProfile: RetrieveProfileUseCase) {}
+export class GetProfileController extends ObservableController {
+  constructor(private readonly retrieveProfile: RetrieveProfileUseCase) {
+    super()
+  }
 
   @Get()
   @HttpCode(200)
@@ -59,23 +62,28 @@ export class GetProfileController {
   })
   @JwtUnauthorizedResponse()
   async handle(@CurrentUser() user: UserPayload) {
-    const result = await this.retrieveProfile.execute({
-      userId: user.sub,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.retrieveProfile.execute({
+          userId: user.sub,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    const profile = result.value.user
+        const profile = result.value.user
 
-    return { profile: UserPresenter.toHTTP(profile) }
+        return { profile: UserPresenter.toHTTP(profile) }
+      },
+      { action: 'get_profile', resource: 'profile', userIdentifier: user.sub },
+    )
   }
 }

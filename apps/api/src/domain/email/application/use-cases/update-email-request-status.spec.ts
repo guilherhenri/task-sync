@@ -1,4 +1,6 @@
 import { makeEmailRequest } from '@test/factories/make-email-request'
+import { FakeLogger } from '@test/logging/fake-logger'
+import { FakeMetrics } from '@test/metrics/fake-metrics'
 import { InMemoryEmailRequestsRepository } from '@test/repositories/in-memory-email-requests-repository'
 
 import { UniqueEntityID } from '@/core/entities/unique-entity-id'
@@ -6,12 +8,20 @@ import { UniqueEntityID } from '@/core/entities/unique-entity-id'
 import { UpdateEmailRequestStatusUseCase } from './update-email-request-status'
 
 let inMemoryEmailRequestsRepository: InMemoryEmailRequestsRepository
+let fakeLogger: FakeLogger
+let fakeMetrics: FakeMetrics
 let sut: UpdateEmailRequestStatusUseCase
 
 describe('Update Email Request Status Use-case', () => {
   beforeEach(() => {
     inMemoryEmailRequestsRepository = new InMemoryEmailRequestsRepository()
-    sut = new UpdateEmailRequestStatusUseCase(inMemoryEmailRequestsRepository)
+    fakeLogger = new FakeLogger()
+    fakeMetrics = new FakeMetrics()
+    sut = new UpdateEmailRequestStatusUseCase(
+      inMemoryEmailRequestsRepository,
+      fakeLogger,
+      fakeMetrics,
+    )
   })
 
   it('should be able to move the email request to the next status', async () => {

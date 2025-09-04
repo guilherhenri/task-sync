@@ -43,6 +43,7 @@ import { WinstonService } from './winston.service'
         return createWinstonConfig(config)
       },
     }),
+    EnvModule,
   ],
   providers: [
     { provide: LoggerPort, useClass: WinstonService },

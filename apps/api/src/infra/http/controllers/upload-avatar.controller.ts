@@ -19,6 +19,7 @@ import { UploadAndUpdateAvatarUseCase } from '@/domain/auth/application/use-case
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
 import { EnvService } from '@/infra/env/env.service'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -53,11 +54,13 @@ const uploadAvatarBodyDescription: Record<
 
 @ApiTags('auth')
 @Controller('/upload-avatar')
-export class UploadAvatarController {
+export class UploadAvatarController extends ObservableController {
   constructor(
     private readonly uploadAndUpdateAvatar: UploadAndUpdateAvatarUseCase,
     private readonly config: EnvService,
-  ) {}
+  ) {
+    super()
+  }
 
   @Post()
   @HttpCode(200)
@@ -131,27 +134,38 @@ export class UploadAvatarController {
 
     file = await parsePipe.transform(file)
 
-    const result = await this.uploadAndUpdateAvatar.execute({
-      userId: user.sub,
-      fileName: file.originalname,
-      fileType: file.mimetype,
-      body: file.buffer,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.uploadAndUpdateAvatar.execute({
+          userId: user.sub,
+          fileName: file.originalname,
+          fileType: file.mimetype,
+          body: file.buffer,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
-      switch (error.constructor) {
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        case InvalidAvatarTypeError:
-          throw new UnsupportedMediaTypeException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+        if (result.isLeft()) {
+          const error = result.value
 
-    const { avatarUrl } = result.value
+          switch (error.constructor) {
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            case InvalidAvatarTypeError:
+              throw new UnsupportedMediaTypeException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    return { avatar_url: avatarUrl }
+        const { avatarUrl } = result.value
+
+        return { avatar_url: avatarUrl }
+      },
+      {
+        action: 'avatar_upload',
+        resource: 'profile',
+        userIdentifier: user.sub,
+        metadata: { fileSize: file.size },
+      },
+    )
   }
 }

@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { AuthToken } from '../../enterprise/entities/auth-token'
 import { Encryptor } from '../cryptography/encryptor'
@@ -25,8 +28,14 @@ export class RenewTokenUseCase {
     private usersRepository: UsersRepository,
     private authTokensRepository: AuthTokensRepository,
     private encryptor: Encryptor,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'renew_token',
+    identifier: 'userId',
+  })
   async execute({
     userId,
   }: RenewTokenUseCaseRequest): Promise<RenewTokenUseCaseResponse> {

@@ -95,7 +95,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ hashFiles('docker-compose.test.yml') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('docker/docker-compose.test.yml') }}
           restore-keys: |
             ${{ runner.os }}-docker-
 
@@ -107,17 +107,17 @@ jobs:
 
       - name: Start Docker Compose
         run: |
-          docker-compose -f docker-compose.test.yml up -d
+          docker-compose -f docker/docker-compose.test.yml up -d
 
       - name: Wait for services
         run: |
           echo "Waiting for services to be healthy..."
           services=("postgres" "mongodb" "redis")
           for service in "${services[@]}"; do
-            container_name=$(docker-compose -f docker-compose.test.yml ps -q $service | xargs docker inspect --format '{{.Name}}' | sed 's/^\///')
+            container_name=$(docker-compose -f docker/docker-compose.test.yml ps -q $service | xargs docker inspect --format '{{.Name}}' | sed 's/^\///')
             if [ -z "$container_name" ]; then
               echo "Container for $service not found. Showing logs..."
-              docker-compose -f docker-compose.test.yml logs $service
+              docker-compose -f docker/docker-compose.test.yml logs $service
               exit 1
             fi
             echo "Checking health for $container_name ($service)..."
@@ -126,13 +126,13 @@ jobs:
               sleep 2
               if [ \"\$(docker inspect --format='{{.State.Status}}' $container_name)\" != \"running\" ]; then
                 echo \"Service $service is not running. Showing logs...\"
-                docker-compose -f docker-compose.test.yml logs $service
+                docker-compose -f docker/docker-compose.test.yml logs $service
                 exit 1
               fi
             done"
             if [ $? -ne 0 ]; then
               echo "Timeout waiting for $service to be healthy. Showing logs..."
-              docker-compose -f docker-compose.test.yml logs $service
+              docker-compose -f docker/docker-compose.test.yml logs $service
               exit 1
             fi
             echo "$service is healthy!"
@@ -187,12 +187,12 @@ jobs:
 
       - name: Show Docker Compose logs on failure
         if: failure()
-        run: docker-compose -f docker-compose.test.yml logs
+        run: docker-compose -f docker/docker-compose.test.yml logs
 
       - name: Stop Docker Compose
         if: always()
         run: |
-          docker-compose -f docker-compose.test.yml down
+          docker-compose -f docker/docker-compose.test.yml down
 
   frontend:
     needs: setup

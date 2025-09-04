@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { DomainEvents } from '@/core/events/domain-events'
 import type { EventHandler } from '@/core/events/event-handler'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 import { AuthUserService } from '@/domain/auth/application/services/auth-user-service'
 import { UserRegisteredEvent } from '@/domain/auth/enterprise/events/user-registered-event'
 
@@ -12,6 +15,8 @@ export class OnUserRegistered implements EventHandler {
   constructor(
     private authUserService: AuthUserService,
     private createEmailRequestUseCase: CreateEmailRequestUseCase,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {
     this.setupSubscriptions()
   }
@@ -23,6 +28,11 @@ export class OnUserRegistered implements EventHandler {
     )
   }
 
+  @WithObservability({
+    operation: 'send_new_user_email',
+    identifier: 'user',
+    subIdentifier: 'id',
+  })
   private async sendNewUserEmail({ user }: UserRegisteredEvent) {
     const recipient = await this.authUserService.getUserForEmailDelivery(
       user.id.toString(),

@@ -12,6 +12,7 @@ import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
 import { EnvService } from '@/infra/env/env.service'
+import { MetricsService } from '@/infra/metrics/metrics.service'
 
 import { RequestWithUser } from '../logging.types'
 import { WinstonService } from '../winston.service'
@@ -21,6 +22,7 @@ export class LoggingInterceptor implements NestInterceptor {
   constructor(
     private readonly logger: WinstonService,
     private readonly config: EnvService,
+    private readonly metrics: MetricsService,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -40,9 +42,10 @@ export class LoggingInterceptor implements NestInterceptor {
 
     const startTime = Date.now()
     const { method, url, ip, headers } = request
-    const userAgent = headers['user-agent'] || 'Unknown'
+    const userAgent = headers['user-agent'] ?? 'Unknown'
     const userId = request.user?.id
     const userEmail = request.user?.email
+    const route = request.route?.path ?? url
 
     this.logger.debug('Incoming HTTP request', {
       method,
@@ -72,6 +75,8 @@ export class LoggingInterceptor implements NestInterceptor {
               userAgent,
             })
 
+            this.recordHttpMetrics(method, route, statusCode, duration)
+
             if (this.config.get('NODE_ENV') === 'development') {
               this.logger.debug('HTTP response sent', {
                 statusCode,
@@ -94,10 +99,28 @@ export class LoggingInterceptor implements NestInterceptor {
               ip,
               userAgent,
             })
+
+            this.recordHttpMetrics(method, route, statusCode, duration)
           },
         }),
       )
     })
+  }
+
+  private recordHttpMetrics(
+    method: string,
+    route: string,
+    statusCode: number,
+    duration: number,
+  ) {
+    const statusCodeStr = statusCode.toString()
+    const durationSeconds = duration / 1000
+
+    this.metrics.httpRequestsTotal.labels(method, route, statusCodeStr).inc()
+
+    this.metrics.httpRequestDuration
+      .labels(method, route, statusCodeStr)
+      .observe(durationSeconds)
   }
 
   private getCorrelationId(request: RequestWithUser): string {

@@ -15,6 +15,7 @@ import { ResourceNotFoundError } from '@/domain/auth/application/use-cases/error
 import { RefineProfileUseCase } from '@/domain/auth/application/use-cases/refine-profile'
 import { CurrentUser } from '@/infra/auth/decorators/current-user'
 import type { UserPayload } from '@/infra/auth/types/jwt-payload'
+import { ObservableController } from '@/infra/observability/observable-controller'
 
 import {
   ApiZodBody,
@@ -68,8 +69,10 @@ const updateProfileBodyDescription: Record<
 
 @ApiTags('auth')
 @Controller('/me')
-export class UpdateProfileController {
-  constructor(private readonly refineProfile: RefineProfileUseCase) {}
+export class UpdateProfileController extends ObservableController {
+  constructor(private readonly refineProfile: RefineProfileUseCase) {
+    super()
+  }
 
   @Put()
   @HttpCode(200)
@@ -103,26 +106,36 @@ export class UpdateProfileController {
   ) {
     const { name, email, newPassword } = body
 
-    const result = await this.refineProfile.execute({
-      userId: user.sub,
-      name,
-      email,
-      newPassword,
-    })
+    return this.trackOperation(
+      async () => {
+        const result = await this.refineProfile.execute({
+          userId: user.sub,
+          name,
+          email,
+          newPassword,
+        })
 
-    if (result.isLeft()) {
-      const error = result.value
+        if (result.isLeft()) {
+          const error = result.value
 
-      switch (error.constructor) {
-        case EmailAlreadyInUseError:
-          throw new ConflictException(error.message)
-        case ResourceNotFoundError:
-          throw new NotFoundException(error.message)
-        default:
-          throw new BadRequestException(error.message)
-      }
-    }
+          switch (error.constructor) {
+            case EmailAlreadyInUseError:
+              throw new ConflictException(error.message)
+            case ResourceNotFoundError:
+              throw new NotFoundException(error.message)
+            default:
+              throw new BadRequestException(error.message)
+          }
+        }
 
-    return { message: 'Perfil atualizado com sucesso.' }
+        return { message: 'Perfil atualizado com sucesso.' }
+      },
+      {
+        action: 'profile_update',
+        resource: 'profile',
+        userIdentifier: email,
+        metadata: { fields: Object.keys(body) },
+      },
+    )
   }
 }

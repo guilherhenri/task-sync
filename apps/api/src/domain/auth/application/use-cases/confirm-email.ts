@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
+import { WithObservability } from '@/core/decorators/observability.decorator'
 import { type Either, left, right } from '@/core/either'
+import { LoggerPort } from '@/core/ports/logger'
+import { MetricsPort } from '@/core/ports/metrics'
 
 import { UsersRepository } from '../repositories/users-repository'
 import { VerificationTokensRepository } from '../repositories/verification-tokens-repository'
@@ -22,8 +25,14 @@ export class ConfirmEmailUseCase {
   constructor(
     private usersRepository: UsersRepository,
     private verificationTokensRepository: VerificationTokensRepository,
+    private logger: LoggerPort,
+    private metrics: MetricsPort,
   ) {}
 
+  @WithObservability({
+    operation: 'confirm_email',
+    identifier: 'token',
+  })
   async execute({
     token,
   }: ConfirmEmailUseCaseRequest): Promise<ConfirmEmailUseCaseResponse> {
