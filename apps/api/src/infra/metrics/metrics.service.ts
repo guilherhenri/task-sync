@@ -22,11 +22,23 @@ export class MetricsService {
     buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
   })
 
-  public readonly businessEvents = new Counter({
+  private readonly businessEvents = new Counter({
     name: 'business_events_total',
     help: 'Business events',
     labelNames: ['action', 'resource', 'status'],
   })
+
+  public recordBusinessEvents({
+    action,
+    resource,
+    status,
+  }: {
+    action: string
+    resource: string
+    status: 'attempt' | 'failed' | 'success'
+  }) {
+    this.businessEvents.labels(action, resource, status).inc()
+  }
 
   public readonly useCaseExecutions = new Counter({
     name: 'use_case_executions_total',
@@ -65,38 +77,136 @@ export class MetricsService {
     labelNames: ['operation', 'table', 'status'],
   })
 
-  public readonly queueJobsTotal = new Counter({
+  private readonly queueJobsTotal = new Counter({
     name: 'queue_jobs_total',
     help: 'Total queue jobs',
     labelNames: ['queue', 'operation', 'status'],
   })
 
-  public readonly queueSize = new Gauge({
+  private readonly queueSize = new Gauge({
     name: 'queue_size_current',
     help: 'Current queue size',
     labelNames: ['queue', 'state'],
   })
 
-  public readonly queueOperationDuration = new Histogram({
+  private readonly queueOperationDuration = new Histogram({
     name: 'queue_operation_duration_seconds',
     help: 'Queue operation duration',
     labelNames: ['queue', 'operation'],
+  })
+
+  private readonly externalApiCalls = new Counter({
+    name: 'external_api_calls_total',
+    help: 'Total external API calls',
+    labelNames: ['service', 'endpoint', 'method', 'status_code'],
+  })
+
+  private readonly externalApiDuration = new Histogram({
+    name: 'external_api_duration_seconds',
+    help: 'External API call duration',
+    labelNames: ['service', 'endpoint', 'method'],
+  })
+
+  private readonly workerJobsTotal = new Counter({
+    name: 'worker_jobs_total',
+    help: 'Total worker jobs processed',
+    labelNames: ['worker', 'status'],
+  })
+
+  private readonly workerJobDuration = new Histogram({
+    name: 'worker_job_duration_seconds',
+    help: 'Worker job processing duration',
+    labelNames: ['worker', 'result'],
   })
 
   constructor() {
     collectDefaultMetrics({ prefix: 'nodejs_' })
   }
 
-  public recordDbMetrics(
-    operation: string,
-    table: string,
-    duration: number,
-    success: boolean,
-  ) {
+  public recordWorkerJobMetrics({
+    worker,
+    status,
+  }: {
+    worker: string
+    status:
+      | 'started'
+      | 'completed'
+      | 'retry_started'
+      | 'retry_succeeded'
+      | 'failed'
+      | 'dlq'
+  }) {
+    this.workerJobsTotal.labels(worker, status).inc()
+  }
+
+  public recordWorkerJobDuration({
+    worker,
+    result,
+    duration,
+  }: {
+    worker: string
+    result: 'completed' | 'failed'
+    duration: number
+  }) {
+    this.workerJobDuration.labels(worker, result).observe(duration / 1000)
+  }
+
+  public recordDbMetrics({
+    operation,
+    table,
+    duration,
+    success,
+  }: {
+    operation: string
+    table: string
+    duration: number
+    success: boolean
+  }) {
     this.dbQueryDuration.labels(operation, table).observe(duration / 1000)
     this.dbQueryTotal
       .labels(operation, table, success ? 'success' : 'error')
       .inc()
+  }
+
+  public recordExternalApiMetrics({
+    service,
+    endpoint,
+    method,
+    statusCode,
+    duration,
+  }: {
+    service: string
+    endpoint: string
+    method: string
+    statusCode: number
+    duration: number
+  }) {
+    this.externalApiCalls
+      .labels(service, endpoint, method, statusCode.toString())
+      .inc()
+    this.externalApiDuration
+      .labels(service, endpoint, method)
+      .observe(duration / 1000)
+  }
+
+  public recordQueueMetrics({
+    queue,
+    operation,
+    status,
+    duration,
+    size,
+  }: {
+    queue: string
+    operation: string
+    status: 'success' | 'error'
+    duration: number
+    size: number
+  }) {
+    this.queueJobsTotal.labels(queue, operation, status).inc()
+    this.queueOperationDuration
+      .labels(queue, operation)
+      .observe(duration / 1000)
+    this.queueSize.labels('email', 'waiting').set(size)
   }
 
   getMetrics() {
