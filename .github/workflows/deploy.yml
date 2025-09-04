@@ -173,14 +173,20 @@ jobs:
       - name: Build Storybook
         run: pnpm turbo build --filter=@task-sync/storybook --cache-dir=.turbo
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.TURBO_TOKEN }}
-          vercel-org-id: ${{ secrets.TURBO_TOKEN }}
-          vercel-project-id: ${{ secrets.STORYBOOK_VERCEL_PROJECT_ID }}
-          working-directory: ./apps/storybook
-          vercel-args: "--prod"
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.TURBO_TOKEN }}
+        working-directory: ./apps/storybook
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.TURBO_TOKEN }}
+        working-directory: ./apps/storybook
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.TURBO_TOKEN }}
+        working-directory: ./apps/storybook
 
   notify-success:
     needs: [deploy-api, deploy-storybook]
