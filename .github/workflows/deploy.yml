@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: ["Unit and E2E Tests"]
+    workflows: ["Unit and E2E Tests", "Release"]
     types:
       - completed
 
@@ -14,17 +14,49 @@ env:
   API_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/tasksync-api
 
 jobs:
-  check-tests:
-    if: github.event_name == 'workflow_run'
+  check-pre-requisites:
     runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check-conditions.outputs.should-deploy }}
+      is-release: ${{ steps.check-conditions.outputs.is-release }}
     steps:
-      - name: Check test workflow conclusion
-        if: github.event.workflow_run.conclusion != 'success'
+      - name: Check workflow conditions
+        id: check-conditions
         run: |
-          echo "Tests failed or were cancelled. Stopping deployment."
-          exit 1
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
+
+          if [ "${{ github.event.workflow_run.name }}" = "Release" ]; then
+            if [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
+              echo "should-deploy=true" >> $GITHUB_OUTPUT
+              echo "is-release=true" >> $GITHUB_OUTPUT
+              echo "✅ Release workflow completed successfully. Proceeding with deployment..."
+            else
+              echo "should-deploy=false" >> $GITHUB_OUTPUT
+              echo "is-release=false" >> $GITHUB_OUTPUT
+              echo "❌ Release workflow failed. Stopping deployment."
+              exit 1
+            fi
+          elif [ "${{ github.event.workflow_run.name }}" = "Unit and E2E Tests" ]; then
+            if [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
+              echo "should-deploy=true" >> $GITHUB_OUTPUT
+              echo "is-release=false" >> $GITHUB_OUTPUT
+              echo "✅ Tests passed! Proceeding with deployment..."
+            else
+              echo "should-deploy=false" >> $GITHUB_OUTPUT
+              echo "is-release=false" >> $GITHUB_OUTPUT
+              echo "❌ Tests failed or were cancelled. Stopping deployment."
+              exit 1
+            fi
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "is-release=false" >> $GITHUB_OUTPUT
+            echo "❌ Unknown workflow trigger. Stopping deployment."
+            exit 1
+          fi
 
   setup:
+    needs: check-pre-requisites
     runs-on: ubuntu-latest
     outputs:
       cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
@@ -65,12 +97,13 @@ jobs:
             .turbo
             **/dist
             **/build
+            **/storybook-static
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
 
   deploy-api:
-    needs: setup
+    needs: [setup, check-pre-requisites]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -112,6 +145,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Get latest tag (for releases)
+        id: get-tag
+        if: needs.check-pre-requisites.outputs.is-release == 'true'
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "latest-tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Found latest tag: $LATEST_TAG"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -119,7 +161,11 @@ jobs:
           images: ${{ env.API_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}},value=${{ steps.get-tag.outputs.latest-tag }},enable=${{ needs.check-pre-requisites.outputs.is-release == 'true' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.get-tag.outputs.latest-tag }},enable=${{ needs.check-pre-requisites.outputs.is-release == 'true' }}
+            type=semver,pattern={{major}},value=${{ steps.get-tag.outputs.latest-tag }},enable=${{ needs.check-pre-requisites.outputs.is-release == 'true' }}
+            type=raw,value=${{ steps.get-tag.outputs.latest-tag }},enable=${{ needs.check-pre-requisites.outputs.is-release == 'true' }}
+            type=sha,prefix={{branch}}-,enable=${{ needs.check-pre-requisites.outputs.is-release == 'false' }}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
@@ -135,8 +181,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
 
   deploy-storybook:
-    needs: setup
+    needs: [setup, check-pre-requisites]
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.TURBO_TEAM }}
+      VERCEL_PROJECT_ID: ${{ secrets.STORYBOOK_VERCEL_PROJECT_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -187,12 +236,18 @@ jobs:
         working-directory: ./packages/storybook
 
   notify-success:
-    needs: [deploy-api, deploy-storybook]
+    needs: [deploy-api, deploy-storybook, check-pre-requisites]
     runs-on: ubuntu-latest
     if: success()
     steps:
       - name: Notify deployment success
         run: |
-          echo "🚀 Deployment completed successfully!"
-          echo "✅ API deployed to Docker Hub"
-          echo "✅ Storybook deployed to Vercel"
+          if [ "${{ needs.check-pre-requisites.outputs.is-release }}" = "true" ]; then
+            echo "🚀 Release deployment completed successfully!"
+            echo "✅ API deployed to Docker Hub with version tags"
+            echo "✅ Storybook deployed to Vercel"
+          else
+            echo "🚀 Development deployment completed successfully!"
+            echo "✅ API deployed to Docker Hub"
+            echo "✅ Storybook deployed to Vercel"
+          fi

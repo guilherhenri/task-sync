@@ -9,7 +9,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", "build/**"],
+      "outputs": ["dist/**", "build/**", "storybook-static/**"],
       "env": ["*"],
       "cache": true
     },
