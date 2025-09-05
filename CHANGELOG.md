@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/guilherhenri/task-sync/compare/v1.1.1...v1.2.0) (2025-09-05)
+
+
+### Bug Fixes
+
+* **infra:** force ipv4 for database connection ([00f40ff](https://github.com/guilherhenri/task-sync/commit/00f40ffd36a8fa29906e75520c8c9c29826a97f9))
+
+
+### Features
+
+* **docker:** run database migrations on container startup ([419f5de](https://github.com/guilherhenri/task-sync/commit/419f5de8f6f5096aaae9a2845160cbad5bea5427))
+
 ## [1.1.1](https://github.com/guilherhenri/task-sync/compare/v1.1.0...v1.1.1) (2025-09-04)
 
 
