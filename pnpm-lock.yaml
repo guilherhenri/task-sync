@@ -100,6 +100,9 @@ importers:
       '@task-sync/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@types/node':
+        specifier: ^24.0.4
+        version: 24.3.0
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
@@ -112,6 +115,9 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
       ioredis:
         specifier: ^5.6.1
         version: 5.7.0
@@ -139,6 +145,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.13.5)(@types/node@24.3.0)(typescript@5.8.2)
       typeorm:
         specifier: ^0.3.25
         version: 0.3.26(ioredis@5.7.0)(mongodb@6.18.0)(pg@8.16.3)(reflect-metadata@0.2.2)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@24.3.0)(typescript@5.8.2))
@@ -194,9 +203,6 @@ importers:
       '@types/multer':
         specifier: ^2.0.0
         version: 2.0.0
-      '@types/node':
-        specifier: ^24.0.4
-        version: 24.3.0
       '@types/nodemailer':
         specifier: ^6.4.17
         version: 6.4.19
@@ -209,9 +215,6 @@ importers:
       cookie-signature:
         specifier: ^1.2.2
         version: 1.2.2
-      dotenv-cli:
-        specifier: ^8.0.0
-        version: 8.0.0
       jest:
         specifier: ^30.0.3
         version: 30.1.0(@types/node@24.3.0)(esbuild-register@3.6.0(esbuild@0.25.9))(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@24.3.0)(typescript@5.8.2))
@@ -227,9 +230,6 @@ importers:
       ts-jest:
         specifier: ^29.4.0
         version: 29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.0)(@jest/types@30.0.5)(babel-jest@30.1.0(@babel/core@7.28.3))(esbuild@0.25.9)(jest-util@30.0.5)(jest@30.1.0(@types/node@24.3.0)(esbuild-register@3.6.0(esbuild@0.25.9)))(typescript@5.8.2)
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.13.5)(@types/node@24.3.0)(typescript@5.8.2)
       typescript:
         specifier: 5.8.2
         version: 5.8.2
