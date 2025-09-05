@@ -1,0 +1,37 @@
+
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "_version": "22.0.0",
+
+  "compilerOptions": {
+    "lib": ["ESNext", "ESNext.Array", "ESNext.Collection"],
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictPropertyInitialization": false,
+    "strictBindCallApply": false,
+    
+    "declaration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    "jsx": "react-jsx",
+
+    "isolatedModules": true,
+
+    "sourceMap": true,
+    "outDir": "./dist",
+    
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@test/*": ["test/*"]
+    }
+  },
+  "include": ["src", "test", "scripts"]
+}
