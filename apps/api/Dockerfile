@@ -57,6 +57,9 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 # Copy built application
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json apps/api/package.json
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/src/infra/database/typeorm apps/api/src/infra/database/typeorm
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/src/infra/env apps/api/src/infra/env
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/tsconfig.production.json apps/api/tsconfig.json
 COPY --from=builder --chown=nestjs:nodejs /app/packages/email-templates/dist packages/email-templates/dist
 COPY --from=builder --chown=nestjs:nodejs /app/packages/email-templates/package.json packages/email-templates/package.json
 COPY --from=builder --chown=nestjs:nodejs /app/packages/env/dist  packages/env/dist
@@ -76,8 +79,10 @@ EXPOSE 3333
 
 # Health check with curl (lighter than wget)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3333/health || exit 
+  CMD curl -f http://localhost:3333/health || exit
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "apps/api/dist/infra/main.js"]
+
+# Run migrations and start the application
+CMD ["/bin/sh", "-c", "cd apps/api && pnpm migration:run && node dist/infra/main.js"]
