@@ -26,6 +26,9 @@ export const typeOrmConfig = (
   synchronize: config.get('NODE_ENV') === 'development',
   migrationsRun: config.get('NODE_ENV') === 'development',
   logging: config.get('NODE_ENV') === 'development' ? ['error', 'warn'] : false,
+  extra: {
+    family: 4,
+  },
 })
 
 export default typeOrmConfig
