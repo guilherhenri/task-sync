@@ -1,726 +1,305 @@
-# Turborepo starter
+# TaskSync
 
-This Turborepo starter is maintained by the Turborepo core team.
+A collaborative real-time task management platform designed for efficient team coordination. TaskSync provides comprehensive project and task management capabilities with instant updates, intelligent notifications, and a robust role-based access system.
 
-## Using this example
+## 🚀 Features
 
-Run the following command:
+### Authentication & User Management
 
-```sh
-npx create-turbo@latest
-```
+- ✅ User registration and email verification
+- ✅ JWT-based authentication (access + refresh tokens)
+- ✅ Password recovery and reset
+- ✅ Profile management with avatar upload
+- ✅ Session management and token revocation
 
-## What's inside?
+### Design System
 
-This Turborepo includes the following packages/apps:
+- ✅ Comprehensive component library with Storybook
+- ✅ Design tokens for consistent theming
+- ✅ Responsive components with accessibility support
+- ✅ Visual regression testing
 
-### Apps and Packages
+### Planned Features (Coming Soon)
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- 🔄 Real-time collaborative project management
+- 🔄 Task assignment and tracking
+- 🔄 WebSocket-based live updates
+- 🔄 Advanced notification system
+- 🔄 Role-based access control
+- 🔄 File attachments and comments
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## 🏗️ Architecture
 
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+TaskSync follows a **Clean Architecture** pattern with Domain-Driven Design principles:
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+┌─────────────────────────────────────────┐
+│            Presentation Layer            │
+│  Controllers • WebSocket • Middlewares  │
+└─────────────────────────────────────────┘
+                    │
+┌─────────────────────────────────────────┐
+│           Application Layer              │
+│    Use Cases • Services • DTOs          │
+└─────────────────────────────────────────┘
+                    │
+┌─────────────────────────────────────────┐
+│             Domain Layer                 │
+│   Entities • Interfaces • Events        │
+└─────────────────────────────────────────┘
+                    │
+┌─────────────────────────────────────────┐
+│         Infrastructure Layer             │
+│ Repositories • Database • External APIs │
+└─────────────────────────────────────────┘
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🛠️ Tech Stack
+
+### Backend
+
+- **Runtime**: Node.js with TypeScript 5.8
+- **Framework**: NestJS 11 with modular architecture
+- **Database**: PostgreSQL 17 with TypeORM, MongoDB 8 for analytics, Redis 8 for caching
+- **Authentication**: JWT with refresh token rotation
+- **Documentation**: Swagger/OpenAPI integration
+- **Testing**: Jest (unit, integration, e2e)
+
+### Frontend (Planned)
+
+- **Framework**: React 19 with TypeScript
+- **Communication**: Oval for end-to-end type safety
+- **Styling**: SCSS with 7-1 architecture
+- **Real-time**: Socket.io client
+
+### Infrastructure
+
+- **Containerization**: Docker with multi-stage builds
+- **Cloud**: Render + Supabase
+- **CI/CD**: GitHub Actions with automated testing and deployment
+- **Monitoring**: Prometheus + Grafana
+
+## 🚦 Getting Started
+
+### Prerequisites
+
+- pnpm
+- Docker and Docker Compose
+- PostgreSQL, MongoDB, and Redis (via Docker)
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/guilherhenri/task-sync.git
+   cd task-sync
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+
+   ```bash
+   cp .env.example .env
+   # Edit the .env file with your configuration
+   ```
+
+4. **Start infrastructure services**
+
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d
+   ```
+
+The API will be available at `http://localhost:3333` with Swagger documentation at `/api/docs`.
+
+### Available Scripts
+
+```bash
+# Development
+pnpm dev                    # Start all services in development mode
+
+# Testing
+pnpm test                     # Run unit tests
+pnpm test:cov                 # Run unit tests with coverage report
+pnpm test:e2e                 # Run end-to-end tests
+pnpm test:e2e:cov             # Run end-to-end tests with coverage report
+
+# Database
+pnpm migration:generate --filter=@task-sync/api  # Generate new migration
+pnpm migration:run --filter=@task-sync/api       # Run migrations
+pnpm seed:run --filter=@task-sync/api            # Seed database
+
+# Build
+pnpm build                                    # Build all packages
+pnpm build --filter=@task-sync/api            # Build API only
+pnpm build --filter=@task-sync/storybook      # Build Storybook
+
+# Linting & Formatting
+pnpm lint                 # Fix linting issues
+pnpm format               # Format code with Prettier
+```
+
+## 📁 Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+task-sync/
+├── apps/
+│   └── api/                      # Main API application
+│       ├── src/
+│       │   ├── core/             # Core framework utilities
+│       │   ├── domain/           # Domain logic (Auth, Email)
+│       │   │   ├── auth/         # Authentication domain
+│       │   │   └── email/        # Email domain
+│       │   └── infra/            # Infrastructure implementations
+│       └── test/                 # Test utilities and factories
+├── packages/
+│   ├── api-types/                # Shared API type definitions
+│   ├── design-tokens/            # Design system tokens
+│   ├── email-templates/          # React Email templates
+│   ├── icons/                    # Icon component library
+│   ├── storybook/                # Component documentation
+│   └── ui-components/            # Reusable UI components
+├── config/                       # Shared configuration
+└── docker/                       # Docker and monitoring setup
 ```
 
-### Develop
+## 🧪 Testing Strategy
 
-To develop all apps and packages, run the following command:
+TaskSync maintains high code quality with comprehensive testing:
 
-```
-cd my-turborepo
+- **Unit Tests**: >80% coverage requirement using Jest
+  - **Lines**: 80.7%
+  - **Functions**: 72.98%
+  - **Branches**: 68.56%
+  - **Statements**: 81.15%
+- **Integration Tests**: API endpoint testing with Supertest
+- **E2E Tests**: Critical user flow testing
+  - **Lines**: 83.22%
+  - **Functions**: 79.68%
+  - **Branches**: 63.44%
+  - **Statements**: 83.3%
+- **Visual Testing**: Storybook visual regression tests with Playwright
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+## 📊 Monitoring & Observability
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+The project includes a complete observability stack:
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- **Metrics**: Prometheus for application and infrastructure metrics
+- **Dashboards**: Grafana with pre-configured dashboards
+- **Logging**: Structured logging with Winston
+- **Distributed Tracing**: Performance monitoring across services
+- **Health Checks**: Application health monitoring
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+Start the monitoring stack:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+docker compose -f docker/docker-compose.monitoring.yml up -d
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Access Grafana at `http://localhost:3001` (admin/admin123).
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## 🎨 Design System
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+TaskSync includes a comprehensive design system built with Storybook:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+- **Components**: Reusable UI components with TypeScript
+- **Design Tokens**: Consistent spacing, colors, typography
+- **Documentation**: Interactive component documentation
+- **Testing**: Visual regression testing
 
-## Useful Links
+View the live Storybook: [TaskSync Design System](https://tasksync-storybook.vercel.app)
 
-Learn more about the power of Turborepo:
+## 🔒 Security Features
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+- JWT-based authentication with refresh token rotation
+- Password hashing with bcrypt (8 salt rounds)
+- Input validation and sanitization with Zod
+- Rate limiting and CORS protection
+- Secure headers with Helmet.js
+- File upload validation and restrictions
 
-```
-task-sync
-├─ .github
-│  ├─ workflows
-│  │  ├─ commitlint.yml
-│  │  ├─ release.yml
-│  │  ├─ test.yml
-├─ .dockerignore
-├─ .husky
-│  ├─ _
-│  │  ├─ applypatch-msg
-│  │  ├─ commit-msg
-│  │  ├─ h
-│  │  ├─ husky.sh
-│  │  ├─ post-applypatch
-│  │  ├─ post-checkout
-│  │  ├─ post-commit
-│  │  ├─ post-merge
-│  │  ├─ post-rewrite
-│  │  ├─ pre-applypatch
-│  │  ├─ pre-auto-gc
-│  │  ├─ pre-commit
-│  │  ├─ pre-merge-commit
-│  │  ├─ pre-push
-│  │  ├─ pre-rebase
-│  │  └─ prepare-commit-msg
-│  ├─ commit-msg
-│  └─ pre-commit
-├─ .npmrc
-├─ .releaserc.json
-├─ README.md
-├─ apps
-│  └─ api
-│     ├─ Dockerfile
-│     ├─ eslint.config.mjs
-│     ├─ jest.config.ts
-│     ├─ jest.e2e.config.ts
-│     ├─ nest-cli.json
-│     ├─ package.json
-│     ├─ scripts
-│     │  └─ generate-migration.ts
-│     ├─ src
-│     │  ├─ core
-│     │  │  ├─ either.spec.ts
-│     │  │  ├─ either.ts
-│     │  │  ├─ entities
-│     │  │  │  ├─ aggregate-root.ts
-│     │  │  │  ├─ entity.spec.ts
-│     │  │  │  ├─ entity.ts
-│     │  │  │  └─ unique-entity-id.ts
-│     │  │  ├─ errors
-│     │  │  │  └─ use-case-error.ts
-│     │  │  ├─ events
-│     │  │  │  ├─ domain-event.ts
-│     │  │  │  ├─ domain-events.spec.ts
-│     │  │  │  ├─ domain-events.ts
-│     │  │  │  └─ event-handler.ts
-│     │  │  ├─ ports
-│     │  │  │  ├─ logger.ts
-│     │  │  │  └─ logger.types.ts
-│     │  │  └─ types
-│     │  │     └─ optional.ts
-│     │  ├─ domain
-│     │  │  ├─ auth
-│     │  │  │  ├─ application
-│     │  │  │  │  ├─ cryptography
-│     │  │  │  │  │  ├─ encryptor.ts
-│     │  │  │  │  │  └─ hasher.ts
-│     │  │  │  │  ├─ repositories
-│     │  │  │  │  │  ├─ auth-tokens-repository.ts
-│     │  │  │  │  │  ├─ users-repository.ts
-│     │  │  │  │  │  └─ verification-tokens-repository.ts
-│     │  │  │  │  ├─ services
-│     │  │  │  │  │  └─ auth-user-service.ts
-│     │  │  │  │  ├─ storage
-│     │  │  │  │  │  ├─ file-access-controller.ts
-│     │  │  │  │  │  └─ file-storage.ts
-│     │  │  │  │  └─ use-cases
-│     │  │  │  │     ├─ authenticate-session.spec.ts
-│     │  │  │  │     ├─ authenticate-session.ts
-│     │  │  │  │     ├─ confirm-email.spec.ts
-│     │  │  │  │     ├─ confirm-email.ts
-│     │  │  │  │     ├─ enroll-identity.spec.ts
-│     │  │  │  │     ├─ enroll-identity.ts
-│     │  │  │  │     ├─ errors
-│     │  │  │  │     │  ├─ email-already-in-use.ts
-│     │  │  │  │     │  ├─ forbidden-action.ts
-│     │  │  │  │     │  ├─ invalid-avatar-type.ts
-│     │  │  │  │     │  ├─ invalid-credentials.ts
-│     │  │  │  │     │  ├─ refresh-token-expired.ts
-│     │  │  │  │     │  ├─ resource-gone.ts
-│     │  │  │  │     │  ├─ resource-invalid.ts
-│     │  │  │  │     │  └─ resource-not-found.ts
-│     │  │  │  │     ├─ initiate-password-recovery.spec.ts
-│     │  │  │  │     ├─ initiate-password-recovery.ts
-│     │  │  │  │     ├─ refine-profile.spec.ts
-│     │  │  │  │     ├─ refine-profile.ts
-│     │  │  │  │     ├─ renew-token.spec.ts
-│     │  │  │  │     ├─ renew-token.ts
-│     │  │  │  │     ├─ reset-password.spec.ts
-│     │  │  │  │     ├─ reset-password.ts
-│     │  │  │  │     ├─ retrieve-profile.spec.ts
-│     │  │  │  │     ├─ retrieve-profile.ts
-│     │  │  │  │     ├─ revoke-tokens.spec.ts
-│     │  │  │  │     ├─ revoke-tokens.ts
-│     │  │  │  │     ├─ terminate-session.spec.ts
-│     │  │  │  │     ├─ terminate-session.ts
-│     │  │  │  │     ├─ upload-and-update-avatar.spec.ts
-│     │  │  │  │     └─ upload-and-update-avatar.ts
-│     │  │  │  └─ enterprise
-│     │  │  │     ├─ entities
-│     │  │  │     │  ├─ auth-token.spec.ts
-│     │  │  │     │  ├─ auth-token.ts
-│     │  │  │     │  ├─ user.spec.ts
-│     │  │  │     │  ├─ user.ts
-│     │  │  │     │  ├─ verification-token.spec.ts
-│     │  │  │     │  └─ verification-token.ts
-│     │  │  │     └─ events
-│     │  │  │        ├─ email-update-verification-requested-event.ts
-│     │  │  │        ├─ email-verification-requested-event.ts
-│     │  │  │        ├─ event-classes.spec.ts
-│     │  │  │        ├─ password-recovery-requested-event.ts
-│     │  │  │        ├─ password-reset-event.ts
-│     │  │  │        └─ user-registered-event.ts
-│     │  │  └─ email
-│     │  │     ├─ application
-│     │  │     │  ├─ repositories
-│     │  │     │  │  └─ email-requests-repository.ts
-│     │  │     │  ├─ services
-│     │  │     │  │  ├─ email-queue-service.ts
-│     │  │     │  │  └─ email-sender-service.ts
-│     │  │     │  ├─ subscribers
-│     │  │     │  │  ├─ on-email-updated.spec.ts
-│     │  │     │  │  ├─ on-email-updated.ts
-│     │  │     │  │  ├─ on-email-verification-requested.spec.ts
-│     │  │     │  │  ├─ on-email-verification-requested.ts
-│     │  │     │  │  ├─ on-password-recovery-requested.spec.ts
-│     │  │     │  │  ├─ on-password-recovery-requested.ts
-│     │  │     │  │  ├─ on-password-reset.spec.ts
-│     │  │     │  │  ├─ on-password-reset.ts
-│     │  │     │  │  ├─ on-user-registered.spec.ts
-│     │  │     │  │  └─ on-user-registered.ts
-│     │  │     │  └─ use-cases
-│     │  │     │     ├─ create-email-request.spec.ts
-│     │  │     │     ├─ create-email-request.ts
-│     │  │     │     ├─ get-email-request-by-id.spec.ts
-│     │  │     │     ├─ get-email-request-by-id.ts
-│     │  │     │     ├─ update-email-request-status.spec.ts
-│     │  │     │     └─ update-email-request-status.ts
-│     │  │     └─ enterprise
-│     │  │        └─ entities
-│     │  │           ├─ email-request.spec.ts
-│     │  │           ├─ email-request.ts
-│     │  │           └─ value-objects
-│     │  │              ├─ email-status.spec.ts
-│     │  │              └─ email-status.ts
-│     │  ├─ infra
-│     │  │  ├─ app.module.ts
-│     │  │  ├─ auth
-│     │  │  │  ├─ auth.module.ts
-│     │  │  │  ├─ decorators
-│     │  │  │  │  ├─ current-user.ts
-│     │  │  │  │  └─ public.ts
-│     │  │  │  ├─ guards
-│     │  │  │  │  ├─ jwt-auth.guard.ts
-│     │  │  │  │  └─ jwt-refresh-auth.guard.ts
-│     │  │  │  ├─ strategies
-│     │  │  │  │  ├─ jwt-refresh.strategy.ts
-│     │  │  │  │  └─ jwt.strategy.ts
-│     │  │  │  └─ types
-│     │  │  │     └─ jwt-payload.ts
-│     │  │  ├─ cryptography
-│     │  │  │  ├─ bcrypt-hasher.ts
-│     │  │  │  ├─ cryptography.module.ts
-│     │  │  │  └─ jwt-encryptor.ts
-│     │  │  ├─ database
-│     │  │  │  ├─ database.module.ts
-│     │  │  │  ├─ mongoose
-│     │  │  │  │  ├─ mappers
-│     │  │  │  │  │  └─ mongoose-email-request-mapper.ts
-│     │  │  │  │  ├─ mongoose.config.ts
-│     │  │  │  │  ├─ mongoose.service.ts
-│     │  │  │  │  ├─ repositories
-│     │  │  │  │  │  └─ mongoose-email-requests-repository.ts
-│     │  │  │  │  └─ schemas
-│     │  │  │  │     └─ email-request.schema.ts
-│     │  │  │  └─ typeorm
-│     │  │  │     ├─ data-source.ts
-│     │  │  │     ├─ entities
-│     │  │  │     │  └─ user.entity.ts
-│     │  │  │     ├─ factories
-│     │  │  │     │  └─ user.factory.ts
-│     │  │  │     ├─ mappers
-│     │  │  │     │  └─ typeorm-user-mapper.ts
-│     │  │  │     ├─ migrations
-│     │  │  │     │  └─ 1753384781835-create-users-table.ts
-│     │  │  │     ├─ repositories
-│     │  │  │     │  └─ typeorm-users-repository.ts
-│     │  │  │     ├─ seeds
-│     │  │  │     │  └─ user.seeder.ts
-│     │  │  │     ├─ typeorm.config.ts
-│     │  │  │     └─ typeorm.service.ts
-│     │  │  ├─ email
-│     │  │  │  ├─ contracts
-│     │  │  │  │  └─ email-service.ts
-│     │  │  │  ├─ email.module.ts
-│     │  │  │  └─ nodemailer
-│     │  │  │     ├─ nodemailer-email.service.spec.ts
-│     │  │  │     └─ nodemailer-email.service.ts
-│     │  │  ├─ env
-│     │  │  │  ├─ env.module.ts
-│     │  │  │  └─ env.service.ts
-│     │  │  ├─ events
-│     │  │  │  ├─ events.module.ts
-│     │  │  │  ├─ on-email-updated.e2e-spec.ts
-│     │  │  │  ├─ on-email-verification-requested.e2e-spec.ts
-│     │  │  │  ├─ on-password-recovery-requested.e2e-spec.ts
-│     │  │  │  ├─ on-password-reset.e2e-spec.ts
-│     │  │  │  └─ on-user-registered.e2e-spec.ts
-│     │  │  ├─ http
-│     │  │  │  ├─ controllers
-│     │  │  │  │  ├─ authenticate.controller.e2e-spec.ts
-│     │  │  │  │  ├─ authenticate.controller.ts
-│     │  │  │  │  ├─ confirm-email.controller.e2e-spec.ts
-│     │  │  │  │  ├─ confirm-email.controller.ts
-│     │  │  │  │  ├─ forgot-password.controller.e2e-spec.ts
-│     │  │  │  │  ├─ forgot-password.controller.ts
-│     │  │  │  │  ├─ get-avatar-url.controller.e2e-spec.ts
-│     │  │  │  │  ├─ get-avatar-url.controller.ts
-│     │  │  │  │  ├─ get-profile.controller.e2e-spec.ts
-│     │  │  │  │  ├─ get-profile.controller.ts
-│     │  │  │  │  ├─ logout.controller.e2e-spec.ts
-│     │  │  │  │  ├─ logout.controller.ts
-│     │  │  │  │  ├─ refresh-token.controller.e2e-spec.ts
-│     │  │  │  │  ├─ refresh-token.controller.ts
-│     │  │  │  │  ├─ register.controller.e2e-spec.ts
-│     │  │  │  │  ├─ register.controller.ts
-│     │  │  │  │  ├─ reset-password.controller.e2e-spec.ts
-│     │  │  │  │  ├─ reset-password.controller.ts
-│     │  │  │  │  ├─ revoke-all-sessions.controller.e2e-spec.ts
-│     │  │  │  │  ├─ revoke-all-sessions.controller.ts
-│     │  │  │  │  ├─ update-profile.controller.e2e-spec.ts
-│     │  │  │  │  ├─ update-profile.controller.ts
-│     │  │  │  │  ├─ upload-avatar.controller.e2e-spec.ts
-│     │  │  │  │  └─ upload-avatar.controller.ts
-│     │  │  │  ├─ decorators
-│     │  │  │  │  ├─ api-union-response.ts
-│     │  │  │  │  ├─ types.ts
-│     │  │  │  │  └─ zod-openapi
-│     │  │  │  │     ├─ api-zod-bad-response.ts
-│     │  │  │  │     ├─ api-zod-body.ts
-│     │  │  │  │     ├─ api-zod-conflict-response.ts
-│     │  │  │  │     ├─ api-zod-gone-response.ts
-│     │  │  │  │     ├─ api-zod-not-found-response.ts
-│     │  │  │  │     ├─ api-zod-param.ts
-│     │  │  │  │     ├─ api-zod-query.ts
-│     │  │  │  │     ├─ api-zod-response.ts
-│     │  │  │  │     ├─ api-zod-unauthorized-response.ts
-│     │  │  │  │     ├─ api-zod-unsupported-media-type-response.ts
-│     │  │  │  │     ├─ api-zod-validation-failed-response.ts
-│     │  │  │  │     └─ index.ts
-│     │  │  │  ├─ exceptions
-│     │  │  │  │  └─ jwt-auth.ts
-│     │  │  │  ├─ health
-│     │  │  │  │  └─ health-checker.controller.ts
-│     │  │  │  ├─ http.module.ts
-│     │  │  │  ├─ pipes
-│     │  │  │  │  └─ zod-validation-pipe.ts
-│     │  │  │  ├─ presenters
-│     │  │  │  │  └─ user-presenter.ts
-│     │  │  │  ├─ responses
-│     │  │  │  │  ├─ bad-response.ts
-│     │  │  │  │  ├─ conflict.ts
-│     │  │  │  │  ├─ gone.ts
-│     │  │  │  │  ├─ jwt-unauthorized.ts
-│     │  │  │  │  ├─ not-found.ts
-│     │  │  │  │  ├─ unauthorized.ts
-│     │  │  │  │  ├─ unsupported-media-type.ts
-│     │  │  │  │  └─ validation-failed.ts
-│     │  │  │  └─ validators
-│     │  │  │     └─ file-upload-validators.ts
-│     │  │  ├─ key-value
-│     │  │  │  ├─ key-value.module.ts
-│     │  │  │  ├─ key-values-repository.ts
-│     │  │  │  └─ redis
-│     │  │  │     ├─ mappers
-│     │  │  │     │  ├─ redis-auth-token-mapper.ts
-│     │  │  │     │  └─ redis-verification-token-mapper.ts
-│     │  │  │     ├─ redis.service.ts
-│     │  │  │     └─ repositories
-│     │  │  │        ├─ redis-auth-tokens-repository.ts
-│     │  │  │        ├─ redis-key-values-repository.ts
-│     │  │  │        └─ redis-verification-tokens-repository.ts
-│     │  │  ├─ logging
-│     │  │  │  ├─ formatters
-│     │  │  │  │  ├─ development.formatter.ts
-│     │  │  │  │  ├─ json.formatter.ts
-│     │  │  │  │  └─ production.formatter.ts
-│     │  │  │  ├─ interceptors
-│     │  │  │  │  ├─ error-logging.interceptor.ts
-│     │  │  │  │  └─ logging.interceptor.ts
-│     │  │  │  ├─ logging.module.ts
-│     │  │  │  ├─ logging.types.ts
-│     │  │  │  ├─ transports
-│     │  │  │  │  ├─ console.transport.ts
-│     │  │  │  │  ├─ external.transport.ts
-│     │  │  │  │  └─ file.transport.ts
-│     │  │  │  ├─ winston.config.ts
-│     │  │  │  └─ winston.service.ts
-│     │  │  ├─ main.ts
-│     │  │  ├─ services
-│     │  │  │  ├─ data
-│     │  │  │  │  └─ infra-auth-user.service.ts
-│     │  │  │  ├─ queue
-│     │  │  │  │  ├─ redis-email-queue.service.e2e-spec.ts
-│     │  │  │  │  └─ redis-email-queue.service.ts
-│     │  │  │  └─ services.module.ts
-│     │  │  ├─ storage
-│     │  │  │  ├─ storage.module.ts
-│     │  │  │  └─ supabase-storage.ts
-│     │  │  └─ workers
-│     │  │     ├─ queue
-│     │  │     │  ├─ bull
-│     │  │     │  │  ├─ services
-│     │  │     │  │  │  ├─ bull-queue.service.spec.ts
-│     │  │     │  │  │  └─ bull-queue.service.ts
-│     │  │     │  │  └─ workers
-│     │  │     │  │     ├─ bull-email-queue.worker.spec.ts
-│     │  │     │  │     └─ bull-email-queue.worker.ts
-│     │  │     │  └─ contracts
-│     │  │     │     ├─ email-queue-worker.ts
-│     │  │     │     └─ queue-service.ts
-│     │  │     └─ workers.module.ts
-│     │  └─ utils
-│     │     ├─ bytes-to-readable.ts
-│     │     ├─ zod-to-openapi.spec.ts
-│     │     └─ zod-to-openapi.ts
-│     ├─ test
-│     │  ├─ cryptography
-│     │  │  ├─ fake-encryptor.ts
-│     │  │  └─ fake-hasher.ts
-│     │  ├─ e2e
-│     │  │  └─ sample-upload.jpg
-│     │  ├─ factories
-│     │  │  ├─ make-auth-token.ts
-│     │  │  ├─ make-email-request.spec.ts
-│     │  │  ├─ make-email-request.ts
-│     │  │  ├─ make-user.ts
-│     │  │  └─ make-verification-token.ts
-│     │  ├─ logging
-│     │  │  └─ fake-logger.ts
-│     │  ├─ mocks
-│     │  │  ├─ @task-sync
-│     │  │  │  └─ email-templates.ts
-│     │  │  └─ chalk.ts
-│     │  ├─ modules
-│     │  │  ├─ auth-test.module.ts
-│     │  │  └─ test-app.module.ts
-│     │  ├─ repositories
-│     │  │  ├─ in-memory-auth-tokens-repository.ts
-│     │  │  ├─ in-memory-email-requests-repository.ts
-│     │  │  ├─ in-memory-users-repository.ts
-│     │  │  └─ in-memory-verification-tokens-repository.ts
-│     │  ├─ services
-│     │  │  ├─ in-memory-auth-user-service.spec.ts
-│     │  │  ├─ in-memory-auth-user-service.ts
-│     │  │  ├─ in-memory-email-queue-service.spec.ts
-│     │  │  └─ in-memory-email-queue-service.ts
-│     │  ├─ setup-e2e.ts
-│     │  ├─ storage
-│     │  │  └─ fake-uploader.ts
-│     │  └─ utils
-│     │     ├─ create-isolated-workers-test-setup.ts
-│     │     ├─ wait-for.spec.ts
-│     │     └─ wait-for.ts
-│     ├─ tsconfig.json
-│     ├─ tsconfig.seed.json
-│     └─ webpack.config.js
-├─ commitlint.config.ts
-├─ config
-│  ├─ eslint
-│  │  ├─ base.js
-│  │  ├─ node.js
-│  │  ├─ package.json
-│  │  └─ react.js
-│  └─ tsconfig
-│     ├─ base.json
-│     ├─ node.json
-│     ├─ package.json
-│     └─ react.json
-├─ docker-compose.test.yml
-├─ docker-compose.yml
-├─ eslint.config.mjs
-├─ package.json
-├─ packages
-│  ├─ api-types
-│  │  ├─ package.json
-│  │  ├─ src
-│  │  │  ├─ email-types.ts
-│  │  │  └─ index.ts
-│  │  └─ tsconfig.json
-│  ├─ design-tokens
-│  │  ├─ package.json
-│  │  ├─ src
-│  │  │  ├─ border-widths.ts
-│  │  │  ├─ breakpoints.ts
-│  │  │  ├─ colors.ts
-│  │  │  ├─ font-sizes.ts
-│  │  │  ├─ font-weights.ts
-│  │  │  ├─ fonts.ts
-│  │  │  ├─ index.ts
-│  │  │  ├─ line-heights.ts
-│  │  │  ├─ motions.ts
-│  │  │  ├─ radius.ts
-│  │  │  ├─ shadows.ts
-│  │  │  └─ space.ts
-│  │  ├─ tsconfig.json
-│  │  └─ tsup.config.ts
-│  ├─ email-templates
-│  │  ├─ .babelrc
-│  │  ├─ eslint.config.mjs
-│  │  ├─ jest.config.js
-│  │  ├─ package.json
-│  │  ├─ src
-│  │  │  ├─ components
-│  │  │  │  ├─ content.tsx
-│  │  │  │  ├─ footer.tsx
-│  │  │  │  ├─ header.tsx
-│  │  │  │  ├─ main.tsx
-│  │  │  │  └─ title.tsx
-│  │  │  ├─ constants
-│  │  │  │  └─ index.ts
-│  │  │  ├─ emails
-│  │  │  │  ├─ email-verification.tsx
-│  │  │  │  ├─ password-recovery.tsx
-│  │  │  │  ├─ password-reset-confirmation.tsx
-│  │  │  │  ├─ update-email-verification.tsx
-│  │  │  │  └─ welcome.tsx
-│  │  │  ├─ index.spec.ts
-│  │  │  └─ index.ts
-│  │  └─ tsconfig.json
-│  ├─ env
-│  │  ├─ create-env.ts
-│  │  ├─ index.ts
-│  │  ├─ package.json
-│  │  └─ tsconfig.json
-│  ├─ icons
-│  │  ├─ eslint.config.mjs
-│  │  ├─ package.json
-│  │  ├─ src
-│  │  │  ├─ components
-│  │  │  │  └─ icon.tsx
-│  │  │  ├─ icons
-│  │  │  │  ├─ arrow-left.tsx
-│  │  │  │  ├─ arrow-right.tsx
-│  │  │  │  ├─ check.tsx
-│  │  │  │  ├─ chevron-down.tsx
-│  │  │  │  ├─ hide.tsx
-│  │  │  │  ├─ key.tsx
-│  │  │  │  ├─ mail.tsx
-│  │  │  │  ├─ show.tsx
-│  │  │  │  ├─ warn.tsx
-│  │  │  │  └─ x.tsx
-│  │  │  ├─ index.ts
-│  │  │  └─ types
-│  │  │     └─ index.ts
-│  │  └─ tsconfig.json
-│  ├─ storybook
-│  │  ├─ .storybook
-│  │  │  ├─ main.ts
-│  │  │  ├─ manager.ts
-│  │  │  ├─ preview-head.html
-│  │  │  └─ preview.ts
-│  │  ├─ README.md
-│  │  ├─ eslint.config.js
-│  │  ├─ index.html
-│  │  ├─ package.json
-│  │  ├─ playwright.config.ts
-│  │  ├─ public
-│  │  │  └─ vite.svg
-│  │  ├─ src
-│  │  │  ├─ components
-│  │  │  │  ├─ colors-grid.tsx
-│  │  │  │  └─ tokens-grid.tsx
-│  │  │  ├─ pages
-│  │  │  │  ├─ home.mdx
-│  │  │  │  └─ tokens
-│  │  │  │     ├─ border-width.mdx
-│  │  │  │     ├─ breakpoints.mdx
-│  │  │  │     ├─ colors.mdx
-│  │  │  │     ├─ font-sizes.mdx
-│  │  │  │     ├─ font-weights.mdx
-│  │  │  │     ├─ fonts.mdx
-│  │  │  │     ├─ line-heights.mdx
-│  │  │  │     ├─ motion.mdx
-│  │  │  │     ├─ radius.mdx
-│  │  │  │     ├─ shadows.mdx
-│  │  │  │     └─ spaces.mdx
-│  │  │  ├─ stories
-│  │  │  │  ├─ button.stories.tsx
-│  │  │  │  ├─ card.stories.tsx
-│  │  │  │  ├─ checkbox.stories.tsx
-│  │  │  │  ├─ input.stories.tsx
-│  │  │  │  ├─ label.stories.tsx
-│  │  │  │  ├─ text.stories.tsx
-│  │  │  │  └─ toast.stories.tsx
-│  │  │  ├─ styles
-│  │  │  │  ├─ colors-grid.css
-│  │  │  │  └─ tokens-grid.css
-│  │  │  └─ vite-env.d.ts
-│  │  ├─ test-results
-│  │  │  └─ .last-run.json
-│  │  ├─ tests
-│  │  │  └─ visual
-│  │  │     ├─ button.spec.ts
-│  │  │     ├─ button.spec.ts-snapshots
-│  │  │     │  ├─ button-fullwidth-darwin.png
-│  │  │     │  └─ button-primary-darwin.png
-│  │  │     ├─ card.spec.ts
-│  │  │     ├─ card.spec.ts-snapshots
-│  │  │     │  └─ card-primary-darwin.png
-│  │  │     ├─ checkbox.spec.ts
-│  │  │     ├─ checkbox.spec.ts-snapshots
-│  │  │     │  └─ checkbox-primary-darwin.png
-│  │  │     ├─ input.spec.ts
-│  │  │     ├─ input.spec.ts-snapshots
-│  │  │     │  └─ input-primary-darwin.png
-│  │  │     ├─ label.spec.ts
-│  │  │     ├─ label.spec.ts-snapshots
-│  │  │     │  └─ label-primary-darwin.png
-│  │  │     ├─ text.spec.ts
-│  │  │     ├─ text.spec.ts-snapshots
-│  │  │     │  └─ text-default-darwin.png
-│  │  │     ├─ toast.spec.ts
-│  │  │     └─ toast.spec.ts-snapshots
-│  │  │        ├─ toast-error-darwin.png
-│  │  │        ├─ toast-success-darwin.png
-│  │  │        └─ toast-warning-darwin.png
-│  │  ├─ tsconfig.app.json
-│  │  ├─ tsconfig.json
-│  │  ├─ tsconfig.node.json
-│  │  └─ vite.config.ts
-│  └─ ui-components
-│     ├─ eslint.config.mjs
-│     ├─ jest.config.js
-│     ├─ package.json
-│     ├─ src
-│     │  ├─ components
-│     │  │  ├─ button.spec.tsx
-│     │  │  ├─ button.tsx
-│     │  │  ├─ card.spec.tsx
-│     │  │  ├─ card.tsx
-│     │  │  ├─ checkbox.spec.tsx
-│     │  │  ├─ checkbox.tsx
-│     │  │  ├─ input.spec.tsx
-│     │  │  ├─ input.tsx
-│     │  │  ├─ label.spec.tsx
-│     │  │  ├─ label.tsx
-│     │  │  ├─ text.spec.tsx
-│     │  │  ├─ text.tsx
-│     │  │  └─ toast
-│     │  │     ├─ index.ts
-│     │  │     ├─ toast-component.spec.tsx
-│     │  │     ├─ toast-component.tsx
-│     │  │     ├─ toast-context.spec.tsx
-│     │  │     ├─ toast-context.tsx
-│     │  │     ├─ toast-functions.spec.ts
-│     │  │     └─ toast-functions.ts
-│     │  ├─ index.ts
-│     │  └─ styles
-│     │     ├─ abstracts
-│     │     │  ├─ _index.scss
-│     │     │  ├─ _mixins.scss
-│     │     │  └─ _variables.scss
-│     │     └─ components
-│     │        ├─ _button.scss
-│     │        ├─ _card.scss
-│     │        ├─ _checkbox.scss
-│     │        ├─ _input.scss
-│     │        ├─ _label.scss
-│     │        └─ _toast.scss
-│     ├─ tests
-│     │  └─ setup.ts
-│     ├─ tsconfig.json
-│     └─ tsup.config.ts
-├─ pnpm-lock.yaml
-├─ pnpm-workspace.yaml
-└─ turbo.json
+## 📈 API Documentation
 
-```
+The API is fully documented with Swagger/OpenAPI:
+
+- **Local**: `http://localhost:3000/api/docs`
+- **Production**: `https://tasksync-api-i5r7.onrender.com`
+
+### Current Endpoints
+
+**Authentication**
+
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User authentication
+- `POST /api/v1/auth/refresh` - Token refresh
+- `POST /api/v1/auth/logout` - Session termination
+- `POST /api/v1/auth/forgot-password` - Password recovery
+- `POST /api/v1/auth/reset-password` - Password reset
+
+**Profile Management**
+
+- `GET /api/v1/profile` - Get user profile
+- `PUT /api/v1/profile` - Update user profile
+- `POST /api/v1/profile/avatar` - Upload profile avatar
+- `GET /api/v1/profile/avatar` - Get avatar URL
+
+**Utilities**
+
+- `GET /api/v1/health` - Health check
+- `GET /api/v1/metrics` - Application metrics
+
+## 🚀 Deployment
+
+### Docker Deployment
+
+1. **Build the image**
+
+   ```bash
+   docker build -f apps/api/Dockerfile -t task-sync-api .
+   ```
+
+2. **Run with Docker Compose**
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d
+   ```
+
+### AWS Deployment
+
+The project is configured for AWS deployment with:
+
+- **EC2**: Auto Scaling Groups for the API
+- **RDS**: PostgreSQL for primary data
+- **DocumentDB**: MongoDB for analytics
+- **ElastiCache**: Redis for caching
+- **S3**: File storage
+- **CloudFront**: CDN for static assets
+
+### Code Standards
+
+- **TypeScript**: Strict mode enabled
+- **ESLint**: Extended from @typescript-eslint/recommended
+- **Prettier**: Code formatting
+- **Husky**: Pre-commit hooks for quality checks
+- **Conventional Commits**: Semantic commit messages
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [NestJS](https://nestjs.com/) framework
+- UI components inspired by modern design systems
+- Clean Architecture principles by Robert C. Martin
+- Domain-Driven Design by Eric Evans
+
+---
+
+**Status**: 🚧 In Development - Authentication and Design System Complete
+
+**Next Milestone**: Project and Task Management Implementation
