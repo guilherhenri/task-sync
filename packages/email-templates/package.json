@@ -13,7 +13,8 @@
     "dev": "pnpm env:load email dev",
     "export": "pnpm env:load email export",
     "env:load": "dotenv -e ../../.env --",
-    "test": "pnpm jest"
+    "test": "pnpm jest",
+    "test:cov": "pnpm jest --coverage"
   },
   "dependencies": {
     "@react-email/components": "0.3.2",

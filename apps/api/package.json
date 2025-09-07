@@ -15,7 +15,8 @@
     "test": "pnpm env:load jest --config ./jest.config.ts",
     "test:watch": "pnpm env:load jest --config ./jest.config.ts --watch",
     "test:cov": "pnpm env:load jest --config ./jest.config.ts --coverage",
-    "test:e2e": "pnpm env:load jest --config ./jest.e2e.config.ts"
+    "test:e2e": "pnpm env:load jest --config ./jest.e2e.config.ts",
+    "test:e2e:cov": "pnpm env:load jest --config ./jest.e2e.config.ts --coverage"
   },
   "keywords": [],
   "author": "",
