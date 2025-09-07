@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
-      pnpm-cache-key: ${{ steps.cache-deps.outputs.cache-primary-key }}
+      cache-primary-key: ${{ steps.cache-deps.outputs.cache-primary-key }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,7 +98,7 @@ jobs:
             ${{ env.STORE_PATH }}
             node_modules
             **/node_modules
-          key: ${{ needs.setup.outputs.pnpm-cache-key }}
+          key: ${{ needs.setup.outputs.cache-primary-key }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
@@ -207,7 +207,7 @@ jobs:
             ${{ env.STORE_PATH }}
             node_modules
             **/node_modules
-          key: ${{ needs.setup.outputs.pnpm-cache-key }}
+          key: ${{ needs.setup.outputs.cache-primary-key }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
