@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/guilherhenri/task-sync/compare/v1.2.1...v1.2.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* **ci:** input cache key name ([9fe1c9c](https://github.com/guilherhenri/task-sync/commit/9fe1c9caf1c35cb8d4e9638c19b67dc00c95e034))
+
 ## [1.2.1](https://github.com/guilherhenri/task-sync/compare/v1.2.0...v1.2.1) (2025-09-07)
 
 
