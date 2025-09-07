@@ -48,9 +48,33 @@
         "__tests__/**"
       ]
     },
+    "test:cov": {
+      "dependsOn": ["^test:cov"],
+      "outputs": ["coverage/**"],
+      "cache": true,
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "playwright.config.*",
+        "e2e/**",
+        "tests/**/*.e2e.*",
+        "docker-compose.test.yml"
+      ]
+    },
     "test:e2e": {
       "dependsOn": ["^test:e2e"],
       "outputs": ["test-results/**", "playwright-report/**", "e2e-results/**"],
+      "cache": false,
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "playwright.config.*",
+        "e2e/**",
+        "tests/**/*.e2e.*",
+        "docker-compose.test.yml"
+      ]
+    },
+    "test:e2e:cov": {
+      "dependsOn": ["^test:e2e:cov"],
+      "outputs": ["coverage/**"],
       "cache": false,
       "inputs": [
         "$TURBO_DEFAULT$",

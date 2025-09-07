@@ -9,7 +9,9 @@
     "check-types": "turbo run check-types",
     "prepare": "husky",
     "test": "turbo run test",
-    "test:e2e": "turbo run test:e2e"
+    "test:cov": "turbo run test:cov",
+    "test:e2e": "turbo run test:e2e",
+    "test:e2e:cov": "turbo run test:e2e:cov"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
