@@ -1,5 +1,15 @@
 # TaskSync
 
+![TaskSync Cover](/cover.png)
+
+![Node.js](https://img.shields.io/badge/Node.js-22-green) ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue) ![NestJS](https://img.shields.io/badge/NestJS-11-red) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue) ![MongoDB](https://img.shields.io/badge/MongoDB-8-green) ![Redis](https://img.shields.io/badge/Redis-8-red) ![Docker](https://img.shields.io/badge/Docker-✓-blue) ![Coverage](https://img.shields.io/badge/coverage-80.7%25-brightgreen) ![Figma](https://img.shields.io/badge/Figma-✓-orange)
+![Storybook](https://img.shields.io/badge/Storybook-9.1-pink)
+![Design System](https://img.shields.io/badge/Design%20System-✓-purple)
+![Grafana](https://img.shields.io/badge/Grafana-12-orange)
+![Prometheus](https://img.shields.io/badge/Prometheus-✓-red)
+![Observability](https://img.shields.io/badge/Observability-✓-blue)
+![Monitoring](https://img.shields.io/badge/Monitoring-✓-green)
+
 A collaborative real-time task management platform designed for efficient team coordination. TaskSync provides comprehensive project and task management capabilities with instant updates, intelligent notifications, and a robust role-based access system.
 
 ## 🚀 Features
@@ -34,22 +44,22 @@ TaskSync follows a **Clean Architecture** pattern with Domain-Driven Design prin
 
 ```
 ┌─────────────────────────────────────────┐
-│            Presentation Layer            │
+│            Presentation Layer           │
 │  Controllers • WebSocket • Middlewares  │
 └─────────────────────────────────────────┘
                     │
 ┌─────────────────────────────────────────┐
-│           Application Layer              │
+│           Application Layer             │
 │    Use Cases • Services • DTOs          │
 └─────────────────────────────────────────┘
                     │
 ┌─────────────────────────────────────────┐
-│             Domain Layer                 │
+│             Domain Layer                │
 │   Entities • Interfaces • Events        │
 └─────────────────────────────────────────┘
                     │
 ┌─────────────────────────────────────────┐
-│         Infrastructure Layer             │
+│         Infrastructure Layer            │
 │ Repositories • Database • External APIs │
 └─────────────────────────────────────────┘
 ```
@@ -78,6 +88,21 @@ TaskSync follows a **Clean Architecture** pattern with Domain-Driven Design prin
 - **Cloud**: Render + Supabase
 - **CI/CD**: GitHub Actions with automated testing and deployment
 - **Monitoring**: Prometheus + Grafana
+
+## 🎨 Design System & Figma
+
+TaskSync features a comprehensive design system built with modern accessibility standards and visual consistency in mind:
+
+- **Color System**: Carefully crafted contrast ratios meeting WCAG guidelines
+- **Typography**: Inter font family with optimized sizing scales
+- **Components**: Reusable UI elements with multiple variants
+- **Responsive Grids**: Mobile-first approach with tablet and desktop breakpoints
+- **Motion Design**: Subtle animations enhancing user experience
+
+The complete design system is available in Figma and implemented in Storybook:
+
+- **Figma Project**: [TaskSync Design System](https://www.figma.com/design/V9WGY62qCWciEcJzWky9XW/TaskSync?node-id=256-84&t=2FnDbcN2Bj2cHQU9-1)
+- **Live Storybook**: [TaskSync Components](https://tasksync-storybook.vercel.app)
 
 ## 🚦 Getting Started
 
@@ -110,7 +135,6 @@ TaskSync follows a **Clean Architecture** pattern with Domain-Driven Design prin
    ```
 
 4. **Start infrastructure services**
-
    ```bash
    docker compose -f docker/docker-compose.yml up -d
    ```
@@ -185,34 +209,51 @@ TaskSync maintains high code quality with comprehensive testing:
   - **Statements**: 83.3%
 - **Visual Testing**: Storybook visual regression tests with Playwright
 
-## 📊 Monitoring & Observability
+## 📊 Observability & Logging
 
-The project includes a complete observability stack:
+The project includes a complete observability stack with structured logging and monitoring:
+
+### Monitoring Stack
 
 - **Metrics**: Prometheus for application and infrastructure metrics
 - **Dashboards**: Grafana with pre-configured dashboards
-- **Logging**: Structured logging with Winston
 - **Distributed Tracing**: Performance monitoring across services
 - **Health Checks**: Application health monitoring
 
-Start the monitoring stack:
+### Logging System
 
-```bash
-docker compose -f docker/docker-compose.monitoring.yml up -d
-```
+- **Structured Logging**: Winston with JSON formatting
+- **Log Aggregation**: Vector + Elasticsearch + Kibana stack
+- **Multiple Transports**: Console, file, and external logging support
 
-Access Grafana at `http://localhost:3001` (admin/admin123).
+### Setup
 
-## 🎨 Design System
+1. **Configure environment variables** (required for external logging):
 
-TaskSync includes a comprehensive design system built with Storybook:
+   ```bash
+   LOG_LEVEL=error
+   LOG_ENABLE_CONSOLE=true
+   LOG_ENABLE_FILE=false
+   LOG_ENABLE_EXTERNAL=true
+   VECTOR_ENDPOINT=http://vector:8080/logs
+   ```
 
-- **Components**: Reusable UI components with TypeScript
-- **Design Tokens**: Consistent spacing, colors, typography
-- **Documentation**: Interactive component documentation
-- **Testing**: Visual regression testing
+2. **Start the observability stack**:
 
-View the live Storybook: [TaskSync Design System](https://tasksync-storybook.vercel.app)
+   ```bash
+   docker compose -f docker/docker-compose.observability.yml up -d
+   ```
+
+3. **Start the monitoring stack**:
+
+   ```bash
+   docker compose -f docker/docker-compose.monitoring.yml up -d
+   ```
+
+4. **Access monitoring tools**:
+   - **Grafana**: `http://localhost:3001` (admin/admin123)
+   - **Kibana**: `http://localhost:5601`
+   - **Elasticsearch**: `http://localhost:9200`
 
 ## 🔒 Security Features
 
@@ -227,7 +268,7 @@ View the live Storybook: [TaskSync Design System](https://tasksync-storybook.ver
 
 The API is fully documented with Swagger/OpenAPI:
 
-- **Local**: `http://localhost:3000/api/docs`
+- **Local**: `http://localhost:3333/api/docs`
 - **Production**: `https://tasksync-api-i5r7.onrender.com`
 
 ### Current Endpoints
@@ -257,35 +298,32 @@ The API is fully documented with Swagger/OpenAPI:
 
 ### Docker Deployment
 
-1. **Build the image**
+1. **Set up environment variables**
+
+   ```bash
+   cp .env.example .env
+   # Edit the .env file with your configuration
+   ```
+
+2. **Build the image**
 
    ```bash
    docker build -f apps/api/Dockerfile -t task-sync-api .
    ```
 
-2. **Run with Docker Compose**
+3. **Run with Docker Compose**
    ```bash
    docker compose -f docker/docker-compose.yml up -d
    ```
 
-### AWS Deployment
+### Production Deployment
 
-The project is configured for AWS deployment with:
+The project is configured for production deployment with:
 
-- **EC2**: Auto Scaling Groups for the API
-- **RDS**: PostgreSQL for primary data
-- **DocumentDB**: MongoDB for analytics
-- **ElastiCache**: Redis for caching
-- **S3**: File storage
-- **CloudFront**: CDN for static assets
-
-### Code Standards
-
-- **TypeScript**: Strict mode enabled
-- **ESLint**: Extended from @typescript-eslint/recommended
-- **Prettier**: Code formatting
-- **Husky**: Pre-commit hooks for quality checks
-- **Conventional Commits**: Semantic commit messages
+- **Render**: API hosting with auto-deployment and databases
+- **Supabase**: File storage
+- **Vercel**: Storybook hosting
+- **GitHub Actions**: Automated CI/CD pipeline
 
 ## 📄 License
 
